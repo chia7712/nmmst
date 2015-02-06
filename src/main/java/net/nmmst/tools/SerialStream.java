@@ -12,59 +12,44 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import net.nmmst.player.PlayerInformation;
-
-public class SerialStream 
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class SerialStream {
     private final Socket client;
     private ObjectInputStream input = null;
     private ObjectOutputStream output = null;
-//	public static boolean sendAll(PlayerInformation[] playerInformations, final Serializable serial) throws InterruptedException, IOException
-//	{
-//		return sendAll(playerInformations, serial, Ports.REQUEST.get());
-//	}
-    public static boolean sendAll(PlayerInformation[] playerInformations, final Serializable serial, int port) throws InterruptedException, IOException
-    {
+    public static boolean sendAll(PlayerInformation[] playerInformations, final Serializable serial, int port) throws InterruptedException, IOException {
         final SerialStream[] handlers = new SerialStream[playerInformations.length];
-        for(int index = 0; index != playerInformations.length; ++index)
-        {
-            try 
-            {
+        for(int index = 0; index != playerInformations.length; ++index) {
+            try {
                 handlers[index] = new SerialStream(new Socket(playerInformations[index].getIP(), port));
-            } 
-            catch(IOException e)
-            {
-                for(SerialStream handler : handlers)
-                {
-                    if(handler != null)
+            } catch(IOException e) {
+                for(SerialStream handler : handlers) {
+                    if(handler != null) {
                         handler.close();
+                    }
                 }
                 throw e;
             }
         }
         ExecutorService service = Executors.newFixedThreadPool(playerInformations.length);
         final CountDownLatch latch = new CountDownLatch(playerInformations.length);
-        for(SerialStream handler : handlers)
-        {
+        for(SerialStream handler : handlers) {
             final SerialStream h = handler;
-            service.execute(new Runnable()
-            {
+            service.execute(new Runnable() {
 
                 @Override
-                public void run() 
-                {
+                public void run() {
                     latch.countDown();
-                    try 
-                    {
+                    try {
                         latch.await();
                         h.write(serial);
-                    } 
-                    catch (IOException | InterruptedException e) 
-                    {
+                    } catch (IOException | InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-                    }
-                    finally
-                    {
+                    } finally {
                         h.close();
                     }
 
@@ -75,44 +60,36 @@ public class SerialStream
         service.shutdown();
         return service.awaitTermination(5, TimeUnit.SECONDS);
     }
-    public SerialStream(Socket client) throws IOException
-    {
+    public SerialStream(Socket client) throws IOException {
         this.client = client;
     }
 
-    public SerialStream(String ip, int port) throws UnknownHostException, IOException 
-    {
+    public SerialStream(String ip, int port) throws UnknownHostException, IOException {
         this(new Socket(ip, port));
     }
 
-    public String getLocalAddress()
-    {
+    public String getLocalAddress() {
         return client.getLocalAddress().getHostAddress();
     }
-    public String getHostAddress()
-    {
+    public String getHostAddress() {
         return client.getInetAddress().getHostAddress();
     }
-    public Object read() throws ClassNotFoundException, IOException
-    {
-        if(input == null)
+    public Object read() throws ClassNotFoundException, IOException {
+        if(input == null) {
             input = new ObjectInputStream(client.getInputStream());
+        }
         return input.readObject();
     }
-    public void write(Serializable serial) throws IOException
-    {
-        if(output == null)
+    public void write(Serializable serial) throws IOException {
+        if(output == null) {
             output = new ObjectOutputStream(client.getOutputStream());
+        }
         output.writeObject(serial);
     }
-    public void close()
-    {
-        try 
-        {
+    public void close() {
+        try {
             client.close();
-        } 
-        catch (IOException e) 
-        {
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

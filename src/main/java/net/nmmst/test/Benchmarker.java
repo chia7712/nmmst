@@ -22,7 +22,7 @@ import net.nmmst.movie.Sample;
 
 /**
  *
- * @author 嘉平
+ * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class Benchmarker
 {

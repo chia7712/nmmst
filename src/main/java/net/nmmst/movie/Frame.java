@@ -1,7 +1,10 @@
 package net.nmmst.movie;
 
 import java.awt.image.BufferedImage;
-
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class Frame 
 {
     private final MovieAttribute attribute;

@@ -1,6 +1,9 @@
 package net.nmmst.movie;
 
-
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class Sample 
 {
     private final byte[]  data;

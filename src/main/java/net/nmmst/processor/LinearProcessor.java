@@ -6,9 +6,11 @@ import java.io.Serializable;
 
 import net.nmmst.movie.Frame;
 import net.nmmst.player.PlayerInformation;
-
-public class LinearProcessor implements FrameProcessor
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class LinearProcessor implements FrameProcessor {
     private final double xInitV;
     private final double xFinalV;
     private final double yInitV;
@@ -21,32 +23,28 @@ public class LinearProcessor implements FrameProcessor
     private final LinearEquationInTwo  yEquation;
     private final PlayerInformation.Location location;
     @Override
-    public boolean equals(Object obj)
-    {
-        if(obj == null)
+    public boolean equals(Object obj) {
+        if(obj == null) {
             return false;
-        if(obj instanceof LinearProcessor)
-        {
-            if(((LinearProcessor) obj).location == location)
+        }
+        if(obj instanceof LinearProcessor) {
+            if(((LinearProcessor) obj).location == location) {
                 return true;
+            }
         }
         return false;
     }
     @Override
-    public String toString()
-    {
+    public String toString() {
         return location.toString() + " LinearIFrameProcessor";
     }
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return toString().hashCode();
     }
-    public LinearProcessor(PlayerInformation.Location location, Format format)
-    {
+    public LinearProcessor(PlayerInformation.Location location, Format format) {
         this.location = location; 
-        switch(location)
-        {
+        switch(location) {
             case LU:
                 xEquation = new LinearEquationInTwo(1.0 - format.getXOverlay(), format.getXScaleMax(), 1.0, format.getXScaleMin());
                 yEquation = new LinearEquationInTwo(1.0 - format.getYOverlay(), format.getYScaleMax(), 1.0, format.getYScaleMin());
@@ -109,39 +107,33 @@ public class LinearProcessor implements FrameProcessor
                 break;
         }
     }
-    public void process(BufferedImage image)
-    {
+    public void process(BufferedImage image) {
         final byte[] data = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
         final int width = image.getWidth();
         final int height = image.getHeight();
         //Vertical, use xEquation
-        for(int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x)
-        {
-
+        for(int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x) {
             final double weight = xEquation.getY((double)x / (double)width);
-            if(weight >= 1.0)
+            if(weight >= 1.0) {
                 continue;
-            for(int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y)
-            {
+            }
+            for(int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index)
-                {
+                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
             }
         }
         //horizontal, use yEquation
-        for(int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y)
-        {
+        for(int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y) {
             final double weight = yEquation.getY((double)y / (double)height);
-            if(weight >= 1.0)
+            if(weight >= 1.0) {
                 continue;
-            for(int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x)
-            {
+            }
+            for(int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index)
-                {
+                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
@@ -149,17 +141,14 @@ public class LinearProcessor implements FrameProcessor
         }
     }
     @Override
-    public synchronized void process(Frame frame)
-    {
+    public synchronized void process(Frame frame) {
         process(frame.getImage());
     }
     @Override
-    public boolean needProcess(Frame frame) 
-    {
+    public boolean needProcess(Frame frame) {
         return true;
     }
-    public static class Format implements Serializable
-    {
+    public static class Format implements Serializable {
         private static final long serialVersionUID = -2453141672510568349L;
         private final double x_overlay;
         private final double y_overlay;
@@ -167,8 +156,7 @@ public class LinearProcessor implements FrameProcessor
         private final double x_scale_max;
         private final double y_scale_min;
         private final double y_scale_max;
-        public Format(double x_overlay, double y_overlay, double x_scale_min, double x_scale_max, double y_scale_min, double y_scale_max)
-        {
+        public Format(double x_overlay, double y_overlay, double x_scale_min, double x_scale_max, double y_scale_min, double y_scale_max) {
             this.x_overlay = x_overlay;
             this.y_overlay = y_overlay;
             this.x_scale_min = x_scale_min;
@@ -176,55 +164,41 @@ public class LinearProcessor implements FrameProcessor
             this.y_scale_min = y_scale_min;
             this.y_scale_max = y_scale_max;
         }
-        public double getXOverlay()
-        {
+        public double getXOverlay() {
             return x_overlay;
         }
-        public double getYOverlay()
-        {
+        public double getYOverlay() {
             return y_overlay;
         }
-        public double getXScaleMin()
-        {
+        public double getXScaleMin() {
             return x_scale_min;
         }
-        public double getXScaleMax()
-        {
+        public double getXScaleMax() {
             return x_scale_max;
         }
-        public double getYScaleMin()
-        {
+        public double getYScaleMin() {
             return y_scale_min;
         }
-        public double getYScaleMax()
-        {
+        public double getYScaleMax() {
             return y_scale_max;
         }
     }
-    private static class LinearEquationInTwo
-    {
+    private static class LinearEquationInTwo {
         private final double argA;
         private final double argB;
-        public LinearEquationInTwo(double x1, double y1, double x2, double y2)
-        {
-            if(x1 == x2 && y1 == y2)
+        public LinearEquationInTwo(double x1, double y1, double x2, double y2) {
+            if(x1 == x2 && y1 == y2) {
                 throw new IllegalArgumentException();
-            else if(x1 == x2)
-            {
+            } else if(x1 == x2) {
                 argA = 0;
                 argB = 0;
-            }
-            else
-            {
+            } else {
                 argA = (y1 - y2) / (x1 - x2);
                 argB = y1 - argA * x1;
             }
         }
-        public double getY(double x)
-        {
+        public double getY(double x) {
             return argA * x + argB;
-            
         }
-
     }
 }

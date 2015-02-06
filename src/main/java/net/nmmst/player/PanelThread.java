@@ -9,6 +9,10 @@ import net.nmmst.movie.MovieBuffer;
 import net.nmmst.processor.FrameProcessor;
 import net.nmmst.tools.BasicPanel;
 import net.nmmst.tools.Closure;
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class PanelThread implements Closure
 {
     private final BasicPanel panel;

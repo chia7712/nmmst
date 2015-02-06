@@ -8,57 +8,47 @@ import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.MovieBuffer;
 import net.nmmst.tools.Closure;
 import net.nmmst.tools.SerialStream;
-
-public class RegisterServer implements Closure
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class RegisterServer implements Closure {
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);	
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
     private final ServerSocket server;
-    public RegisterServer(int bindPort) throws IOException
-    {
+    public RegisterServer(int bindPort) throws IOException {
         server = new ServerSocket(bindPort);
     }
     @Override
-    public void close()
-    {
+    public void close() {
         close.set(true);
-        try 
-        {
+        try {
             server.close();
-        } 
-        catch (IOException e) 
-        {
+        } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
     @Override
-    public void run() 
-    {
-        while(!close.get() && !Thread.interrupted())
-        {
+    public void run() {
+        while(!close.get() && !Thread.interrupted()) {
             SerialStream client = null;
-            try 
-            {
+            try {
                 client = new SerialStream(server.accept());
                 client.write(new PlayerState(buffer.getFrameSize(), buffer.getSampleSize(), buffer.getMaxFrameSize(), buffer.getMaxSampleSize()));
-            } 
-            catch (IOException e) 
-            {
+            } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            }
-            finally
-            {
-                if(client != null)
+            } finally {
+                if(client != null) {
                     client.close();
+                }
             }
         }
     }
     @Override
-    public boolean isClosed() 
-    {
+    public boolean isClosed() {
         return isClosed.get();
     }
 }

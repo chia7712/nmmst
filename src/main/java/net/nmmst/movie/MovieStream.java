@@ -15,7 +15,10 @@ import java.util.Map;
 import javax.sound.sampled.AudioFormat;
 
 
-
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class MovieStream implements MovieAttribute
 {
 

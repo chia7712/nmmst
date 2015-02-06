@@ -20,56 +20,46 @@ import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WindowsFunctions;
-
-public class PlayerTest extends JFrame
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class PlayerTest extends JFrame {
     private static final long serialVersionUID = -2016746022673317548L;
     private final BasicPanel panel = new BasicPanel(Painter.fillColor(1920, 1080, Color.WHITE));
     private final ServerSocket server = new ServerSocket(Ports.TEST.get());
-    public PlayerTest(final PlayerInformation playerInformation) throws IOException
-    {
+    public PlayerTest(final PlayerInformation playerInformation) throws IOException {
         this.add(panel);
-        Executors.newSingleThreadExecutor().execute(new Runnable()
-        {
-
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
-            public void run() 
-            {
-                while(true)
-                {
+            public void run() {
+                while(true) {
                     SerialStream stream = null;
-                    try 
-                    {
+                    try {
                         stream = new SerialStream(server.accept());
                         Object obj = stream.read();
-                        if(obj instanceof BourkeProcessor.Format)
-                        {
+                        if(obj instanceof BourkeProcessor.Format) {
                             BourkeProcessor processor = new BourkeProcessor(playerInformation.getLocation(), (BourkeProcessor.Format)obj);
                             BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
                             processor.process(testImage);
                             panel.write(testImage);
                         }
-                        if(obj instanceof Boolean)
-                        {
+                        if(obj instanceof Boolean) {
                             Boolean b = (Boolean)obj;
-                            if(b)
+                            if(b) {
                                 WindowsFunctions.reboot();
-                            else
-                            {
+                            } else {
                                 BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
                                 panel.write(testImage);
                             }
                         }
-                    } 
-                    catch (IOException | ClassNotFoundException e) 
-                    {
+                    } catch (IOException | ClassNotFoundException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-                    }
-                    finally
-                    {
-                        if(stream != null)
+                    } finally {
+                        if(stream != null) {
                             stream.close();
+                        }
                     }
                 }
 
@@ -77,31 +67,27 @@ public class PlayerTest extends JFrame
 
         });
     }
-    public static void main(String[] args) throws IOException 
-    {
-            final JFrame f = new PlayerTest(getPlayerLocationa());
-            f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
-            SwingUtilities.invokeLater(new Runnable()
-            {
-                    @Override
-                    public void run()
-                    {
-                            f.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                            f.requestFocusInWindow();
-                            f.setUndecorated(true);
-                            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                            f.setVisible(true);
-                    }
-            });
-    }
-    private static PlayerInformation getPlayerLocationa() throws UnknownHostException
-    {
-            String localIP = InetAddress.getLocalHost().getHostAddress();
-            for(PlayerInformation playerInformation : PlayerInformation.get())
-            {
-                    if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0)
-                            return playerInformation;
+    public static void main(String[] args) throws IOException {
+        final JFrame f = new PlayerTest(getPlayerLocationa());
+        f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    f.requestFocusInWindow();
+                    f.setUndecorated(true);
+                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    f.setVisible(true);
             }
-            throw new IllegalArgumentException();
+        });
+    }
+    private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
+        String localIP = InetAddress.getLocalHost().getHostAddress();
+        for(PlayerInformation playerInformation : PlayerInformation.get()) {
+            if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
+                return playerInformation;
+            }
+        }
+        throw new IllegalArgumentException();
     }
 }

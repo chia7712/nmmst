@@ -13,8 +13,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
@@ -38,9 +36,11 @@ import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
 
-
-public class PlayerFrame extends JFrame
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class PlayerFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
     private final BufferedImage initImage = Painter.fillColor(1920, 1080, Color.BLACK);
     private final MovieOrder movieOrder = MovieOrder.getDefaultMovieOrder();
@@ -60,16 +60,15 @@ public class PlayerFrame extends JFrame
     private final List<Closure> closures = new LinkedList();
     private final PlayerInformation playerInfomation;
     private ExecutorService shortTermThreadsPool;
-    public PlayerFrame(PlayerInformation playerInfomation) throws IOException, LineUnavailableException
-    {
+    public PlayerFrame(PlayerInformation playerInfomation) throws IOException, LineUnavailableException {
         this.playerInfomation = playerInfomation;
         add(panel);
         init();
-        for(Runnable runnable : longTermThreads)
+        for(Runnable runnable : longTermThreads) {
             longTermThreadsPool.execute(runnable);
+        }
     }
-    private void init() throws IOException
-    {
+    private void init() throws IOException {
         System.out.println("init");
         buffer.clear();
         panel.write(initImage);
@@ -80,54 +79,48 @@ public class PlayerFrame extends JFrame
         closures.add(new SpeakerThread(speaker));
         closures.add(new PanelThread(panel));
         closures.add(new MovieReader(movieOrder, ProcessorFactory.newTwoTierProcessor(playerInfomation.getLocation())));
-        for(Closure closure : closures)
+        for(Closure closure : closures) {
             shortTermThreadsPool.execute(closure);
+        }
         System.out.println("init over");
     }
-    private static AudioFormat getAudioFormat(MovieAttribute[] attributes)
-    {
-        for(MovieAttribute attribute : attributes)
+    private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
+        for(MovieAttribute attribute : attributes) {
             return attribute.getAutioFormat();
+        }
         return null;
     }
-    private class ExecuteRequest implements Runnable
-    {
+    private class ExecuteRequest implements Runnable {
         @Override
-        public void run() 
-        {
-            while(true)
-            {
-                try 
-                {
+        public void run() {
+            while(true) {
+                try {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
-                    switch(request.getType())
-                    {
+                    switch(request.getType()) {
                         case START:
-                            if(buffer.isPause())
-                            {
-                                    buffer.setPause(false);
-
+                            if(buffer.isPause()) {
+                                buffer.setPause(false);
                             }
                             break;
                         case STOP:
-                            for(Closure closure : closures)
-                                    closure.close();
+                            for(Closure closure : closures) {
+                                closure.close();
+                            }
                             shortTermThreadsPool.shutdownNow();
                             break;
                         case PAUSE:
                             buffer.setPause(true);
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest)
-                            {
+                            if(request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length)
-                                {
-                                    for(int index = 0; index != indexs.length; ++index)
+                                if(indexs.length == values.length) {
+                                    for(int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
+                                    }
                                 }
                             }
                             break;
@@ -137,27 +130,29 @@ public class PlayerFrame extends JFrame
                         case SHUTDOWN:
                             WindowsFunctions.shutdown();
                             break;
-                        case TEST_1:
-                        {
+                        case TEST_1: {
                             BufferedImage image = getTestImage(true);
-                            if(image == null)
+                            if(image == null) {
                                 break;
+                            }
                             Object obj = request.getArgument();
-                            if(!(obj instanceof LinearProcessor.Format))
+                            if(!(obj instanceof LinearProcessor.Format)) {
                                 break;
+                            }
                             LinearProcessor processor = new LinearProcessor(playerInfomation.getLocation(), (LinearProcessor.Format)obj);
                             processor.process(image);
                             panel.write(image);
                             break;
                         }    
-                        case TEST_2:
-                        {
+                        case TEST_2: {
                             BufferedImage image = getTestImage(false);
-                            if(image == null)
+                            if(image == null) {
                                 break;
+                            }
                             Object obj = request.getArgument();
-                            if(!(obj instanceof LinearProcessor.Format))
+                            if(!(obj instanceof LinearProcessor.Format)) {
                                 break;
+                            }
                             LinearProcessor processor = new LinearProcessor(playerInfomation.getLocation(), (LinearProcessor.Format)obj);
                             processor.process(image);
                             panel.write(image);
@@ -166,60 +161,41 @@ public class PlayerFrame extends JFrame
                         default:
                             break;
                     }
-                } 
-                catch (InterruptedException | IOException e) 
-                {
+                } catch (InterruptedException | IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
         }
     }
-    private static BufferedImage getTestImage(boolean mode)
-    {
-        try 
-        {
+    private static BufferedImage getTestImage(boolean mode) {
+        try {
             File file = new File(mode ? "D:\\海科影片\\test.jpg" : "D:\\海科影片\\test2.jpg");
             return ImageIO.read(file);
-        } 
-        catch (IOException ex) 
-        {
+        } catch (IOException ex) {
             return null;
         }
     }
-    private class CheckThread implements Runnable
-    {
-
+    private class CheckThread implements Runnable {
         @Override
-        public void run() 
-        {
-            while(true)
-            {
-                try 
-                {
+        public void run() {
+            while(true) {
+                try {
                     TimeUnit.SECONDS.sleep(2);
-                } 
-                catch (InterruptedException e) 
-                {
+                } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 int count = 0;
-                for(Closure closure : closures)
-                {
-                    if(closure.isClosed())
-                    {
+                for(Closure closure : closures) {
+                    if(closure.isClosed()) {
                         ++count;
                     }
                 }
-                if(count == closures.size())
-                {
-                    try 
-                    {
+                if(count == closures.size()) {
+                    try {
                         init();
-                    } 
-                    catch (IOException e) 
-                    {
+                    } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -230,15 +206,12 @@ public class PlayerFrame extends JFrame
     }
 
 
-    public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException 
-    {
+    public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException  {
         final JFrame f = new PlayerFrame(getPlayerLocationa());
         f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
-        SwingUtilities.invokeLater(new Runnable()
-        {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 //f.setSize(new Dimension(600, 600));
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 f.requestFocusInWindow();
@@ -249,13 +222,12 @@ public class PlayerFrame extends JFrame
         });
 
     }
-    private static PlayerInformation getPlayerLocationa() throws UnknownHostException
-    {
+    private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
-        for(PlayerInformation playerInformation : PlayerInformation.get())
-        {
-            if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0)
+        for(PlayerInformation playerInformation : PlayerInformation.get()) {
+            if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
                 return playerInformation;
+            }
         }
         throw new IllegalArgumentException();
     }

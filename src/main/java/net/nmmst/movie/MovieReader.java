@@ -8,7 +8,10 @@ import net.nmmst.processor.FrameProcessor;
 import net.nmmst.tools.Closure;
 
 
-
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class MovieReader implements Closure
 {
     private final MovieOrder movieOrder;

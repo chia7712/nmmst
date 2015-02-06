@@ -44,9 +44,11 @@ import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
 
-
-public class ControlFrame extends JFrame
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class ControlFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
     private final BufferedImage dashboardImage = ImageIO.read(new File(NMConstants.CONTROLLER_DASHBOARD_JPG));
     private final BufferedImage stopImage = ImageIO.read(new File(NMConstants.CONTROLLER_STOP_JPG));
@@ -86,8 +88,7 @@ public class ControlFrame extends JFrame
         KeyDescriptor.STOP.toString()
     };
     private ExecutorService worker;
-    public ControlFrame() throws IOException, LineUnavailableException
-    {
+    public ControlFrame() throws IOException, LineUnavailableException {
         this.addKeyListener(new ButtonListener(keyQueue));
         this.add(mainPanel);
         mainPanel.setLayout(cardLayout);
@@ -99,8 +100,7 @@ public class ControlFrame extends JFrame
         for(Runnable runnable : longTermThreads)
             longTermPool.execute(runnable);
     }
-    private void init() throws IOException
-    {
+    private void init() throws IOException {
         buffer.clear();
         moviePanel.write(initImage);
         buffer.setPause(true);
@@ -113,138 +113,105 @@ public class ControlFrame extends JFrame
         for(Closure closure : closures)
             worker.execute(closure);
     }
-    private static AudioFormat getAudioFormat(MovieAttribute[] attributes)
-    {
+    private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
         for(MovieAttribute attribute : attributes)
             return attribute.getAutioFormat();
         return null;
     }
-    private class ExecuteThread implements Runnable
-    {
+    private class ExecuteThread implements Runnable {
         @Override
-        public void run() 
-        {
-            while(true)
-            {
-                try 
-                {
+        public void run() {
+            while(true) {
+                try {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
-                    switch(request.getType())
-                    {
+                    switch(request.getType()) {
                         case START:
-                            if(buffer.isPause())
-                            {
+                            if(buffer.isPause()) {
                                 buffer.setPause(false);
                             }
                             break;
                         case STOP:
-                            for(Closure closure : closures)
+                            for(Closure closure : closures) {
                                 closure.close();
+                            }
                             worker.shutdownNow();
                             break;
                         case PAUSE:
                             buffer.setPause(true);
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest)
-                            {
+                            if(request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length)
-                                {
-                                    for(int index = 0; index != indexs.length; ++index)
+                                if(indexs.length == values.length) {
+                                    for(int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
+                                    }
                                 }
                             }
                             break;
                         case REBOOT:
-                           WindowsFunctions.reboot();
+                            WindowsFunctions.reboot();
                             break;
                         case SHUTDOWN:
-                          WindowsFunctions.shutdown();
+                            WindowsFunctions.shutdown();
                             break;
                         default:
                             break;
                     }
                 } 
-                catch (InterruptedException | IOException e) 
-                {
-                }
+                catch (InterruptedException | IOException e) {}
             }
 
         }
 
     }
-    private class CardThread implements Runnable
-    {
+    private class CardThread implements Runnable {
         @Override
-        public void run() 
-        {
-            try
-            {
-                while(true)
-                {
+        public void run() {
+            try {
+                while(true) {
                     KeyDescriptor key = keyQueue.take();
                     cardLayout.show(mainPanel, key.toString());
                 }
             }
-            catch(InterruptedException e)
-            {
-
-            }
-
+            catch(InterruptedException e){}
         }
-
 }
-    private class CheckThread implements Runnable
-    {
+    private class CheckThread implements Runnable {
 
         @Override
-        public void run() 
-        {
-            while(true)
-            {
-                try 
-                {
+        public void run() {
+            while(true) {
+                try {
                     TimeUnit.SECONDS.sleep(2);
-                } 
-                catch (InterruptedException e) 
-                {
+                } catch (InterruptedException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 int count = 0;
-                for(Closure closure : closures)
-                {
-                    if(closure.isClosed())
-                    {
+                for(Closure closure : closures) {
+                    if(closure.isClosed()) {
                         ++count;
                     }
                 }
-                if(count == closures.size())
-                {
-                    try 
-                    {
+                if(count == closures.size()) {
+                    try {
                         init();
-                    } 
-                    catch (IOException e) 
-                    {
+                    } catch (IOException e) {
                     }
                 }
             }
         }
     }
-    public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException 
-    {
+    public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException {
         final JFrame f = new ControlFrame();
         f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
-        SwingUtilities.invokeLater(new Runnable()
-        {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

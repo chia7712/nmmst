@@ -30,9 +30,11 @@ import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WOL;
 
-
-public class MasterFrame extends JFrame
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class MasterFrame extends JFrame {
     private static final long serialVersionUID = -4475933827111956737L;
     private static final String rootPath = "D:\\海科圖片\\";
     private final BufferedImage startImage = ImageIO.read(new File(rootPath + "m_start.jpg"));
@@ -83,69 +85,56 @@ public class MasterFrame extends JFrame
     };
     private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
 
-    public MasterFrame() throws Exception
-    {
-        for(Runnable runnable : longTermThreads)
+    public MasterFrame() throws Exception {
+        for(Runnable runnable : longTermThreads) {
             longTermThreadsPool.execute(runnable);
+        }
         add(backgroundPanel);
         backgroundPanel.setLayout(new FlowLayout());
         startPanel.setPreferredSize(new Dimension(400, 400));
-        startPanel.addMouseListener(new MouseAdapter()
-        {
+        startPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseReleased(MouseEvent arg0) 
-            {
+            public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.START));
 
             }
 
         });
         stopPanel.setPreferredSize(new Dimension(100, 100));
-        stopPanel.addMouseListener(new MouseAdapter()
-        {
+        stopPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseReleased(MouseEvent arg0) 
-            {
+            public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.STOP));
 
             }
 
         });
         refreshPanel.setPreferredSize(new Dimension(100, 100));
-        refreshPanel.addMouseListener(new MouseAdapter()
-        {
+        refreshPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseReleased(MouseEvent arg0) 
-            {
+            public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.REBOOT));
 
             }
 
         });
         testPanel.setPreferredSize(new Dimension(100, 100));
-        testPanel.addMouseListener(new MouseAdapter()
-        {
+        testPanel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseReleased(MouseEvent arg0) 
-            {
+            public void mouseReleased(MouseEvent arg0)  {
                 //requestBuffer.offer(new Request(Request.Type.TEST_1));
-
             }
-
         });
         backgroundPanel.add(startPanel);
         backgroundPanel.add(stopPanel);
         backgroundPanel.add(refreshPanel);
         backgroundPanel.add(testPanel);
-        for(int index = 0; index != pairBtns.length; ++index)
-        {
+        for(int index = 0; index != pairBtns.length; ++index) {
             final int index_ = index;
-            pairBtns[index].addActionListener(new ActionListener()
-            {
+            pairBtns[index].addActionListener(new ActionListener() {
 
                 @Override
-                public void actionPerformed(ActionEvent arg0)
-                {
+                public void actionPerformed(ActionEvent arg0) {
                     requestBuffer.offer(pairRequests[index_]);
 
                 }
@@ -155,42 +144,29 @@ public class MasterFrame extends JFrame
         }
 
     }
-    private class ExecutorRequest implements Runnable
-    {
+    private class ExecutorRequest implements Runnable {
         @Override
-        public void run() 
-        {
+        public void run() {
             final AtomicBoolean start = new AtomicBoolean(false);
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            while(!close.get())
-            {
-                try 
-                {
+            while(!close.get()) {
+                try  {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
-                    switch(request.getType())
-                    {
+                    switch(request.getType()) {
                         case START:
-                            if(!start.get())
-                            {
+                            if(!start.get()) {
                                 start.set(true);
                                 executor = Executors.newSingleThreadExecutor();
-                                executor.execute(new Runnable()
-                                {
+                                executor.execute(new Runnable() {
 
                                     @Override
-                                    public void run() 
-                                    {
-                                        try 
-                                        {
+                                    public void run() {
+                                        try {
                                             Happen.start(playerInformations, registerClient, dioAction);
-                                        } 
-                                        catch (IOException | InterruptedException e) 
-                                        {
+                                        } catch (IOException | InterruptedException e) {
                                             e.printStackTrace();
-                                        }
-                                        finally
-                                        {
+                                        } finally {
                                             start.set(false);
                                         }
 
@@ -200,24 +176,22 @@ public class MasterFrame extends JFrame
                             }
                             break;
                         case STOP:
-                            if(start.get())
-                            {
+                            if(start.get()) {
                                 executor.shutdownNow();
                                 dioAction.light_off();
                                 SerialStream.sendAll(playerInformations, new Request(Request.Type.STOP), Ports.REQUEST.get());
                             }
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest)
-                            {
+                            if(request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length)
-                                {
-                                        for(int index = 0; index != indexs.length; ++index)
-                                                Happen.setValues(indexs[index], values[index]);
-                                        SerialStream.sendAll(playerInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
+                                if(indexs.length == values.length) {
+                                    for(int index = 0; index != indexs.length; ++index) {
+                                        Happen.setValues(indexs[index], values[index]);
+                                    }
+                                    SerialStream.sendAll(playerInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
                                 }
 
                             }
@@ -249,8 +223,7 @@ public class MasterFrame extends JFrame
                             SerialStream.sendAll(playerInformations, new Request(Request.Type.SHUTDOWN), Ports.REQUEST.get());
                             break;
                         case WOL:
-                            for(PlayerInformation playerInformation : playerInformations)
-                            {
+                            for(PlayerInformation playerInformation : playerInformations) {
 //                                WOL.wakeup("192.168.100.255", playerInformation.getMac());
 //                                System.out.println("192.168.100.255 " + playerInformation.getMac());
                                 WOL.wakeup(PlayerInformation.getBroadCast(), playerInformation.getMac());
@@ -262,14 +235,10 @@ public class MasterFrame extends JFrame
 
                     }
                     System.out.println(request.getType() + " over");
-                } 
-                catch (InterruptedException | IOException e) 
-                {
+                } catch (InterruptedException | IOException e)  {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
-                }
-                finally
-                {
+                } finally {
                     requestBuffer.clear();
 
                 }
@@ -277,14 +246,11 @@ public class MasterFrame extends JFrame
 
         }
     }
-    public static void main(String[] args) throws Exception 
-    {
+    public static void main(String[] args) throws Exception {
         final JFrame f = new MasterFrame();
-        SwingUtilities.invokeLater(new Runnable()
-        {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 //f.setSize(new Dimension(600, 600));
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 f.setUndecorated(true);

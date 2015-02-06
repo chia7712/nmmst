@@ -6,9 +6,11 @@ import java.io.Serializable;
 
 import net.nmmst.movie.Frame;
 import net.nmmst.player.PlayerInformation;
-
-public class BourkeProcessor implements FrameProcessor
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class BourkeProcessor implements FrameProcessor {
     private final double xMinV;
     private final double xMaxV;
     private final double yMinV;
@@ -21,34 +23,30 @@ public class BourkeProcessor implements FrameProcessor
     private final double gamma;
     private final PlayerInformation.Location location;
     @Override
-    public boolean equals(Object obj)
-    {
-        if(obj == null)
+    public boolean equals(Object obj) {
+        if(obj == null) {
             return false;
-        if(obj instanceof BourkeProcessor)
-        {
-            if(((BourkeProcessor) obj).location == location)
+        }
+        if(obj instanceof BourkeProcessor) {
+            if(((BourkeProcessor) obj).location == location) {
                 return true;
+            }
         }
         return false;
     }
     @Override
-    public String toString()
-    {
+    public String toString() {
         return location.toString() + " LinearIFrameProcessor";
     }
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return toString().hashCode();
     }
-    public BourkeProcessor(PlayerInformation.Location location, Format format)
-    {
+    public BourkeProcessor(PlayerInformation.Location location, Format format) {
         this.location = location; 
         this.curvature = format.getCurvature();
         this.gamma = format.getGamme();
-        switch(location)
-        {
+        switch(location) {
             case LU:
                 xMinV = 1.0 - format.getXOverlay();
                 xMaxV = 1.0;
@@ -93,19 +91,17 @@ public class BourkeProcessor implements FrameProcessor
                 throw new IllegalArgumentException();
         }
     }
-    public void process(BufferedImage image)
-    {
+    public void process(BufferedImage image) {
         final byte[] data = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
         final int width	= image.getWidth();
         final int height = image.getHeight();
 
-        for(int x = (int) (width * xMinV); x != (int)(width * xMaxV); ++x)
-        {
+        for(int x = (int) (width * xMinV); x != (int)(width * xMaxV); ++x) {
             double normalization = normalized((double)x / (double)width, xMaxV, xMinV);		
-            if(normalization > 1 || normalization < 0)
+            if(normalization > 1 || normalization < 0) {
                 continue;
-            switch(location)
-            {
+            }
+            switch(location) {
                 case LD:
                     break;
                 case LU:
@@ -120,110 +116,95 @@ public class BourkeProcessor implements FrameProcessor
                     break;
             }
             double weight = 0;
-            if(normalization >= 0.5)
+            if(normalization >= 0.5) {
                 weight = rightEquation(normalization);
-            else
+            } else {
                 weight = leftEquation(normalization);
-            if(weight >= 1 || weight < 0)
+            }
+            if(weight >= 1 || weight < 0) {
                 continue;
-            for(int y = (int) (height * yMinV); y != (int)(height * yMaxV); ++y)
-            {
+            }
+            for(int y = (int) (height * yMinV); y != (int)(height * yMaxV); ++y) {
                 final int rgb_init = (x + y * width) * 3;
-
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index)
-                {
+                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
             }
         }
-        for(int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y)
-        {
+        for(int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y) {
             double normalization = normalized((double)y / (double)height, yMaxH, yMinH);
             double weight = 0;
-            if(normalization > 1)
+            if(normalization > 1) {
                 continue;
-            else if(normalization > 0.5)
+            } else if(normalization > 0.5) {
                 weight = rightEquation(normalization);
-            else if(normalization >= 0)
+            } else if(normalization >= 0) {
                 weight = leftEquation(normalization);
-            else
+            } else {
                 continue;
-            if(weight >= 1)
+            }
+            if(weight >= 1) {
                 continue;
-            for(int x = (int) (width * xMinH); x != (int)(width * xMaxH); ++x)
-            {
+            }
+            for(int x = (int) (width * xMinH); x != (int)(width * xMaxH); ++x) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index)
-                {
+                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
             }
         }
     }
-    private double leftEquation(double value)
-    {
-            if(value < 0 || value >= 0.5)
-            {
-                    System.out.println(value);
-                    throw new IllegalArgumentException();
-            }
-            return gamma * Math.pow(2 * value, curvature);
+    private double leftEquation(double value) {
+        if(value < 0 || value >= 0.5) {
+            System.out.println(value);
+            throw new IllegalArgumentException();
+        }
+        return gamma * Math.pow(2 * value, curvature);
     }
-    private double rightEquation(double value)
-    {
-            if(value < 0.5 || value > 1)
-            {
-                    System.out.println(value);
-                    throw new IllegalArgumentException();
-            }
-            return 1 - (1 - gamma) * Math.pow((2 * (1 - value)), curvature);
+    private double rightEquation(double value) {
+        if(value < 0.5 || value > 1) {
+            System.out.println(value);
+            throw new IllegalArgumentException();
+        }
+        return 1 - (1 - gamma) * Math.pow((2 * (1 - value)), curvature);
     }
-    private static double normalized(double value, double max, double min)
-    {
-            //return value;
-            return (value - min) / (max - min);
+    private static double normalized(double value, double max, double min) {
+        //return value;
+        return (value - min) / (max - min);
     }
     @Override
-    public synchronized void process(Frame frame)
-    {
-            process(frame.getImage());
+    public synchronized void process(Frame frame) {
+        process(frame.getImage());
     }
     @Override
-    public boolean needProcess(Frame frame) 
-    {
-            return true;
+    public boolean needProcess(Frame frame) {
+        return true;
     }
-    public static class Format implements Serializable
-    {
-            private static 	final 	long 	serialVersionUID = -2453141672510568349L;
-            private			final	double	xOverlay;
-            private			final	double	yOverlay;
-            private			final	double	curvature;
-            private			final	double	gamma;
-            public Format(double xOverlay, double yOverlay, double curvature, double gamma)
-            {
-                    this.xOverlay	= xOverlay;
-                    this.yOverlay	= yOverlay;
-                    this.curvature	= curvature;
-                    this.gamma		= gamma;
-            }
-            public double getYOverlay()
-            {
-                    return yOverlay;
-            }
-            public double getXOverlay()
-            {
-                    return xOverlay;
-            }
-            public double getCurvature()
-            {
-                    return curvature;
-            }
-            public double getGamme()
-            {
-                    return gamma;
-            }
+    public static class Format implements Serializable {
+        private static final long serialVersionUID = -2453141672510568349L;
+        private final double xOverlay;
+        private final double yOverlay;
+        private final double curvature;
+        private final double gamma;
+        public Format(double xOverlay, double yOverlay, double curvature, double gamma) {
+            this.xOverlay = xOverlay;
+            this.yOverlay = yOverlay;
+            this.curvature = curvature;
+            this.gamma = gamma;
+        }
+        public double getYOverlay() {
+            return yOverlay;
+        }
+        public double getXOverlay() {
+            return xOverlay;
+        }
+        public double getCurvature() {
+            return curvature;
+        }
+        public double getGamme() {
+            return gamma;
+        }
     }
 }

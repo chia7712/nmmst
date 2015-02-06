@@ -6,48 +6,41 @@ import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.MovieBuffer;
 import net.nmmst.movie.Sample;
 import net.nmmst.tools.Closure;
-
-public class SpeakerThread implements Closure 
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class SpeakerThread implements Closure {
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
     private final Speaker speaker;
-    public SpeakerThread(Speaker speaker)
-    {
+    public SpeakerThread(Speaker speaker) {
         this.speaker = speaker;
     }
 
     @Override
-    public void close() 
-    {
+    public void close() {
         close.set(true);
     }
     @Override
-    public boolean isClosed() 
-    {
+    public boolean isClosed() {
         return isClosed.get();
     }
     @Override
-    public void run() 
-    {
-        try
-        {
-            while(!Thread.interrupted() && !close.get())
-            {
+    public void run() {
+        try {
+            while(!Thread.interrupted() && !close.get()) {
                 Sample sampler = buffer.readSample();
-                if(sampler.getData() == null)
+                if(sampler.getData() == null) {
                     break;
+                }
                 speaker.write(sampler.getData());
             }
-        }
-        catch(InterruptedException e)
-        {
+        } catch(InterruptedException e) {
             //TODO
             e.printStackTrace();
-        }
-        finally
-        {
+        } finally {
             speaker.flush();
             isClosed.set(true);
         }

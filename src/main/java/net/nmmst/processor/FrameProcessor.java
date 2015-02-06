@@ -3,9 +3,11 @@ package net.nmmst.processor;
 import net.nmmst.movie.Frame;
 
 
-
-public interface FrameProcessor 
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public interface FrameProcessor {
     public boolean needProcess(Frame frame);
     public void process(Frame frame);
 }

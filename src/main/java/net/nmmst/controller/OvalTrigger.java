@@ -20,9 +20,11 @@ import net.java.games.input.Controller;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieAttribute;
 import net.nmmst.processor.FrameProcessor;
-
-public class OvalTrigger implements FrameProcessor, ControlTrigger
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private static final Stroke STROKE = new BasicStroke(10);
     private static final Color DEFAULT_COLOR = Color.WHITE;
     private static final Color FOCUS_COLOR = Color.RED;
@@ -32,83 +34,66 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger
     private final Set<OvalInformation> pressedInformations = new HashSet();
     private int snapshotCount = 0;
     private OvalInformation curOvalInformation = null;
-    public OvalTrigger()
-    {
+    public OvalTrigger() {
         OvalInformation[] ovalInformationConfig = OvalInformation.get();
-        for(OvalInformation ovalInformation : ovalInformationConfig)
-        {
+        for(OvalInformation ovalInformation : ovalInformationConfig) {
             int index = ovalInformation.getIndex();
-            if(ovalWrapper.containsKey(index))
-            {
+            if(ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);
-            }
-            else
-            {
+            } else {
                 Set<OvalInformation> sets = new TreeSet();
                 sets.add(ovalInformation);
                 ovalWrapper.put(index, sets);
             }
         };
     }
-    public void reset()
-    {
-        synchronized(pressedInformations)
-        {
+    public void reset() {
+        synchronized(pressedInformations) {
             pressedInformations.clear();
         }
         count.set(0);
         pressed.set(false);
     }
-    public OvalInformation[] snapshoInformations()
-    {
-        synchronized(pressedInformations)
-        {
+    public OvalInformation[] snapshoInformations() {
+        synchronized(pressedInformations) {
             return pressedInformations.toArray(new OvalInformation[pressedInformations.size()]);
         }
     }
     @Override
-    public void triggerOff(Component component)
-    {
-        if(component.getName().contains("X"))
-        {
-            if(component.getPollData() >= 1.0f)
-            {
+    public void triggerOff(Component component) {
+        if(component.getName().contains("X")) {
+            if(component.getPollData() >= 1.0f) {
                 count.incrementAndGet();
             }
-            if(component.getPollData() <= -1.0f)
-            {
+            if(component.getPollData() <= -1.0f) {
                 count.decrementAndGet();
             }
         }
-        if(component.getName().contains("s"))
-        {
-            if(component.getPollData() == 1.0f)
+        if(component.getName().contains("s")) {
+            if(component.getPollData() == 1.0f) {
                 pressed.set(true);
-            else
+            } else {
                 pressed.set(false);
+            }
         }
     }
     @Override
-    public Controller.Type getType()
-    {
+    public Controller.Type getType() {
         return Controller.Type.STICK;
     }
 
     @Override
-    public boolean needProcess(Frame frame) 
-    {
+    public boolean needProcess(Frame frame) {
         return ovalWrapper.containsKey(frame.getMovieAttribute().getIndex());
     }
-    private static List<OvalInformation> getValidOvalInformations(Frame frame, Map<Integer, Set<OvalInformation>> ovalWrapper)
-    {
+    private static List<OvalInformation> getValidOvalInformations(Frame frame, Map<Integer, Set<OvalInformation>> ovalWrapper) {
         List<OvalInformation> ovalInformations = new LinkedList();
         MovieAttribute attribute = frame.getMovieAttribute();
-        if(!ovalWrapper.containsKey(attribute.getIndex()))
+        if(!ovalWrapper.containsKey(attribute.getIndex())) {
             return ovalInformations;
-        for(OvalInformation ovalInformation : ovalWrapper.get(attribute.getIndex()))
-        {
-            if( ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp())
-            {
+        }
+        for(OvalInformation ovalInformation : ovalWrapper.get(attribute.getIndex())) {
+            if( ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp()) {
                 continue;
             }
             ovalInformations.add(ovalInformation);
@@ -116,37 +101,30 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger
         return ovalInformations;
     }
     @Override
-    public void process(Frame frame) 
-    {
+    public void process(Frame frame) {
         int countSnapshot = count.get();
         boolean hasPressed = pressed.get();
         List<OvalInformation> ovalInformations = getValidOvalInformations(frame, ovalWrapper);
-        for(int index = 0; index != ovalInformations.size(); ++index)
-        {
+        for(int index = 0; index != ovalInformations.size(); ++index) {
             OvalInformation ovalInformation = ovalInformations.get(index);
             Graphics2D g = (Graphics2D)frame.getImage().getGraphics();
             g.setStroke(STROKE);
             //Draw the oval
-            if(countSnapshot % ovalInformations.size() == index)
-            {
+            if(countSnapshot % ovalInformations.size() == index) {
                 g.setColor(FOCUS_COLOR);
-                if(hasPressed)
-                {
-                    synchronized(pressedInformations)
-                    {
-                        if(pressedInformations.add(ovalInformation))
-                        {
+                if(hasPressed) {
+                    synchronized(pressedInformations) {
+                        if(pressedInformations.add(ovalInformation)) {
                             snapshotCount = 30;
                             curOvalInformation = ovalInformation;
                         }
                     }
                 }
-            }
-            else
+            } else {
                 g.setColor(DEFAULT_COLOR);
+            }
             //User capture the target, so we draw something on the frame
-            if(snapshotCount > 0 && curOvalInformation != null)
-            {
+            if(snapshotCount > 0 && curOvalInformation != null) {
                 BufferedImage snapshotImage = curOvalInformation.getImage();
                 g.drawImage(
                     snapshotImage, 

@@ -6,7 +6,10 @@ import java.util.List;
 
 import net.nmmst.tools.Pair;
 
-
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
 public class MovieOrder 
 {
     private final List<Pair<Boolean, String>> moviePaths = new LinkedList();

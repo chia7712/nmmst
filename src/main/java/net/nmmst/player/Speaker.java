@@ -5,39 +5,34 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-
-public class Speaker
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class Speaker {
     private final SourceDataLine line;
-    public Speaker(AudioFormat audioFormat) throws LineUnavailableException
-    {
+    public Speaker(AudioFormat audioFormat) throws LineUnavailableException {
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
         line = (SourceDataLine) AudioSystem.getLine(info);
         line.open(audioFormat);
         line.start();	
     }
-    public void write(byte[] data)
-    {
+    public void write(byte[] data) {
         int count = 0;
-        while((count += line.write(data, count, data.length - count)) != data.length)
-        {
+        while((count += line.write(data, count, data.length - count)) != data.length) {
             //DO NOTHING
         }
     }
-    public AudioFormat getAudioFormat()
-    {
+    public AudioFormat getAudioFormat() {
         return line.getFormat();
     }
-    public void drain()
-    {
+    public void drain() {
         line.drain();
     }	
-    public void flush()
-    {
+    public void flush() {
         line.flush();
     }
-    public void close()
-    {
+    public void close() {
         line.drain();
         line.close();
     }

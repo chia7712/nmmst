@@ -17,9 +17,11 @@ import javax.imageio.ImageIO;
 import net.nmmst.tools.NMConstants;
 
 import net.nmmst.tools.Painter;
-
-public class OvalInformation implements Comparable<OvalInformation>
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class OvalInformation implements Comparable<OvalInformation> {
     private final int movieIndex;
     private final long minMicroTime;
     private final long maxMicroTime;
@@ -27,30 +29,27 @@ public class OvalInformation implements Comparable<OvalInformation>
     private final int x;
     private final int y;
     private final BufferedImage	snapshotImage;
-    public static OvalInformation[] get()
-    {
+    public static OvalInformation[] get() {
         OvalInformation[] ovalInformations = internalGetFromConfiguration();
         return ovalInformations == null ? internalGetFromDefault() : ovalInformations;
     }
     //index mintime maxtime diameter x y snapshotPath
-    private static OvalInformation[] internalGetFromConfiguration()
-    {
+    private static OvalInformation[] internalGetFromConfiguration() {
         File configurationFile = new File(NMConstants.CONTROLLER_OVAL_INFORMATION);
-        if(!configurationFile.exists())
+        if(!configurationFile.exists()) {
             return null;
+        }
         BufferedReader reader = null;
-        try 
-        {
+        try {
             reader = new BufferedReader(new FileReader(configurationFile));
             Set<OvalInformation> ovalInformations = new HashSet();
             String line = null;
-            while((line = reader.readLine()) != null)
-            {
+            while((line = reader.readLine()) != null) {
                 String[] args = line.split(" ");
-                if(args.length != 7)
+                if(args.length != 7) {
                     continue;
-                try
-                {
+                }
+                try {
                     ovalInformations.add(new OvalInformation(
                         Integer.valueOf(args[0]),
                         Long.valueOf(args[1]),
@@ -60,36 +59,26 @@ public class OvalInformation implements Comparable<OvalInformation>
                         Integer.valueOf(args[5]),
                         ImageIO.read(new File(args[6]))));
                 }
-                catch(NumberFormatException e)
-                {
+                catch(NumberFormatException e) {
                     //TODO
                     e.printStackTrace();
                 }
             }
             return ovalInformations.toArray(new OvalInformation[ovalInformations.size()]);
-        } 
-        catch (IOException e) 
-        {
+        } catch (IOException e) {
             return null;
-        }
-        finally
-        {
-            if(reader != null)
-            {
-                try 
-                {
+        } finally {
+            if(reader != null) {
+                try {
                     reader.close();
-                } 
-                catch (IOException e) 
-                {
+                } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
         }
     }
-    private static BufferedImage getStringImage(String str, int width, int height, int fontSize)
-    {
+    private static BufferedImage getStringImage(String str, int width, int height, int fontSize) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = (Graphics2D)image.createGraphics();
         g2d.setFont(new Font("Serif", Font.BOLD, fontSize));
@@ -98,18 +87,14 @@ public class OvalInformation implements Comparable<OvalInformation>
         g2d.dispose();
         return image;
     }
-    private static OvalInformation[] internalGetFromDefault()
-    {
+    private static OvalInformation[] internalGetFromDefault() {
         List<OvalInformation> ovalInformations = new LinkedList();
-        for(int index = 0; index != 7; ++index)
-        {
-            final int selectNumber 	= (int)(Math.random() * 3) + 1;
-            final int duration		= 3 * 1000 * 1000;
-            for(int selectIndex = 0;selectIndex != selectNumber; ++selectIndex)
-            {
+        for(int index = 0; index != 7; ++index) {
+            final int selectNumber = (int)(Math.random() * 3) + 1;
+            final int duration = 3 * 1000 * 1000;
+            for(int selectIndex = 0;selectIndex != selectNumber; ++selectIndex) {
                 final int ovalNumber = (int)(Math.random() * 3) + 1;
-                for(int ovalIndex = 0; ovalIndex != ovalNumber; ++ovalIndex)
-                {
+                for(int ovalIndex = 0; ovalIndex != ovalNumber; ++ovalIndex) {
                     ovalInformations.add(new OvalInformation(
                         index,
                         duration * (selectIndex + 1),
@@ -124,8 +109,7 @@ public class OvalInformation implements Comparable<OvalInformation>
         }
         return ovalInformations.toArray(new OvalInformation[ovalInformations.size()]);
     }
-    private OvalInformation(int movieIndex, long minMicroTime, long maxMicroTime, int diameter, int x, int y, BufferedImage snapshotImage)
-    {
+    private OvalInformation(int movieIndex, long minMicroTime, long maxMicroTime, int diameter, int x, int y, BufferedImage snapshotImage) {
         this.movieIndex = movieIndex;
         this.minMicroTime = Math.min(minMicroTime, maxMicroTime);
         this.maxMicroTime = Math.max(minMicroTime, maxMicroTime);
@@ -134,63 +118,62 @@ public class OvalInformation implements Comparable<OvalInformation>
         this.y = y;
         this.snapshotImage = Painter.process(snapshotImage);
     }
-    public int getIndex()
-    {
+    public int getIndex() {
         return movieIndex;
     }
-    public long getMinMicroTime()
-    {
+    public long getMinMicroTime() {
         return minMicroTime;
     }
-    public long getMaxMicroTime()
-    {
+    public long getMaxMicroTime() {
         return maxMicroTime;
     }
-    public int getDiameter()
-    {
+    public int getDiameter() {
         return diameter;
     }
-    public int getX()
-    {
+    public int getX() {
         return x;
     }
-    public int getY()
-    {
+    public int getY() {
         return y;
     }
-    public BufferedImage getImage()
-    {
+    public BufferedImage getImage() {
         return snapshotImage;
     }
-    public OvalInformation copyOf()
-    {
+    public OvalInformation copyOf() {
         return new OvalInformation(movieIndex, minMicroTime, maxMicroTime, diameter, x, y, snapshotImage);
     }
     @Override
-    public int compareTo(OvalInformation arg0) 
-    {
+    public int compareTo(OvalInformation arg0) {
         return x == arg0.x ? 0 : x > arg0.x ? 1 : -1;
     }
     @Override
-    public boolean equals(Object obj)
-    {
-        if(obj == null)
+    public boolean equals(Object obj) {
+        if(obj == null) {
             return false;
-        if(obj instanceof OvalInformation)
-        {
+        }
+        if(obj instanceof OvalInformation) {
             OvalInformation dst = (OvalInformation)obj;
             return dst.toString().compareTo(toString()) == 0;
         }
         return false;
     }
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return toString().hashCode();
     }
     @Override
-    public String toString()
-    {
-        return (movieIndex + " " + minMicroTime + " " + maxMicroTime + " " + diameter + " " + x + " " + y);
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        return str.append(movieIndex)
+           .append(" ")
+           .append(minMicroTime)
+           .append(" ")
+           .append(maxMicroTime)
+           .append(" ")
+           .append(diameter)
+           .append(" ")
+           .append(x)
+           .append(" ")
+           .append(y).toString();
     }
 }

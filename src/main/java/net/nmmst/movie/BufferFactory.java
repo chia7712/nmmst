@@ -8,40 +8,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import net.nmmst.request.Request;
-
-public class BufferFactory 
-{
+/**
+ *
+ * @author Tsai ChiaPing <chia7712@gmail.com>
+ */
+public class BufferFactory {
     private final static SingleBuffer buffer = new SingleBuffer();
     private final static BlockingQueue<Request> requestBuffer = new LinkedBlockingQueue();
     private final static AtomicReference<Frame> frameRef	= new AtomicReference();
     private BufferFactory(){}
-    public static MovieBuffer getMovieBuffer()
-    {
+    public static MovieBuffer getMovieBuffer() {
         return buffer;
     }
-    public static BlockingQueue<Request> getRequestBuffer()
-    {
+    public static BlockingQueue<Request> getRequestBuffer() {
         return requestBuffer;
     }
 
-    public static AtomicReference<Frame> getFrameRef()
-    {
+    public static AtomicReference<Frame> getFrameRef() {
         return frameRef; 
     }
-    private static class SingleBuffer implements MovieBuffer
-    {
+    private static class SingleBuffer implements MovieBuffer {
         private	static final int framesSize = 100;
         private final BlockingQueue<Frame> frames = new ArrayBlockingQueue(framesSize);
         private final BlockingQueue<Sample> samples = new LinkedBlockingQueue();
         private final AtomicBoolean pause = new AtomicBoolean(false);
         private final AtomicBoolean hadPause = new AtomicBoolean(false);
-        private boolean waitForPause() throws InterruptedException
-        {
+        private boolean waitForPause() throws InterruptedException {
             boolean bePaused = false;
-            synchronized(pause)
-            {
-                while(pause.get())
-                {
+            synchronized(pause) {
+                while(pause.get()) {
                     pause.wait();
                     bePaused = true; 
                 }
@@ -49,40 +44,34 @@ public class BufferFactory
             return bePaused;
         }
         @Override
-        public Frame readFrame() throws InterruptedException 
-        {
-            if(waitForPause())
+        public Frame readFrame() throws InterruptedException {
+            if(waitForPause()) {
                 hadPause.set(true);
+            }
             return frames.take(); 	
         }
 
         @Override
-        public Sample readSample() throws InterruptedException 
-        {
+        public Sample readSample() throws InterruptedException {
             waitForPause();
             return samples.take();
         }
 
         @Override
-        public void writeFrame(Frame frame) throws InterruptedException 
-        {
+        public void writeFrame(Frame frame) throws InterruptedException {
             frames.put(frame);
         }
 
         @Override
-        public void writeSample(Sample sample) throws InterruptedException 
-        {
+        public void writeSample(Sample sample) throws InterruptedException {
             samples.put(sample);	
         }
 
         @Override
-        public void setPause(boolean value) 
-        {
+        public void setPause(boolean value) {
             pause.set(value);
-            if(!pause.get())
-            {
-                synchronized(pause)
-                {
+            if(!pause.get()) {
+                synchronized(pause) {
                     pause.notifyAll();
                 }
             }
@@ -90,40 +79,33 @@ public class BufferFactory
         }
 
         @Override
-        public void clear() 
-        {
+        public void clear() {
             frames.clear();
             samples.clear();
         }
         @Override
-        public int getFrameSize() 
-        {
+        public int getFrameSize() {
             return frames.size();
         }
 
         @Override
-        public int getSampleSize() 
-        {
+        public int getSampleSize() {
             return samples.size();
         }
         @Override
-        public boolean isPause() 
-        {
+        public boolean isPause() {
             return pause.get();
         }
         @Override
-        public boolean hadPause() 
-        {
+        public boolean hadPause() {
             return hadPause.getAndSet(false);
         }
         @Override
-        public int getMaxFrameSize() 
-        {
+        public int getMaxFrameSize() {
             return framesSize;
         }
         @Override
-        public int getMaxSampleSize() 
-        {
+        public int getMaxSampleSize() {
             return Integer.MAX_VALUE;
         }
 
