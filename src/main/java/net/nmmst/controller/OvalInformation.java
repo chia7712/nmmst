@@ -30,13 +30,13 @@ public class OvalInformation implements Comparable<OvalInformation> {
     private final int y;
     private final BufferedImage	snapshotImage;
     public static OvalInformation[] get() {
-        OvalInformation[] ovalInformations = internalGetFromConfiguration();
-        return ovalInformations == null ? internalGetFromDefault() : ovalInformations;
+        OvalInformation[] ovalInformations = getFromFile();
+        return ovalInformations == null ? getDefault() : ovalInformations;
     }
     //index mintime maxtime diameter x y snapshotPath
-    private static OvalInformation[] internalGetFromConfiguration() {
+    private static OvalInformation[] getFromFile() {
         File configurationFile = new File(NMConstants.CONTROLLER_OVAL_INFORMATION);
-        if(!configurationFile.exists()) {
+        if (!configurationFile.exists()) {
             return null;
         }
         BufferedReader reader = null;
@@ -46,7 +46,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
             String line = null;
             while((line = reader.readLine()) != null) {
                 String[] args = line.split(" ");
-                if(args.length != 7) {
+                if (args.length != 7) {
                     continue;
                 }
                 try {
@@ -78,21 +78,12 @@ public class OvalInformation implements Comparable<OvalInformation> {
             }
         }
     }
-    private static BufferedImage getStringImage(String str, int width, int height, int fontSize) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D g2d = (Graphics2D)image.createGraphics();
-        g2d.setFont(new Font("Serif", Font.BOLD, fontSize));
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(str, (image.getWidth() - fm.stringWidth(str)) / 2, image.getHeight() / 2);
-        g2d.dispose();
-        return image;
-    }
-    private static OvalInformation[] internalGetFromDefault() {
+    private static OvalInformation[] getDefault() {
         List<OvalInformation> ovalInformations = new LinkedList();
         for(int index = 0; index != 7; ++index) {
             final int selectNumber = (int)(Math.random() * 3) + 1;
             final int duration = 3 * 1000 * 1000;
-            for(int selectIndex = 0;selectIndex != selectNumber; ++selectIndex) {
+            for(int selectIndex = 0; selectIndex != selectNumber; ++selectIndex) {
                 final int ovalNumber = (int)(Math.random() * 3) + 1;
                 for(int ovalIndex = 0; ovalIndex != ovalNumber; ++ovalIndex) {
                     ovalInformations.add(new OvalInformation(
@@ -102,7 +93,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
                         100,
                         (int)(Math.random() * 1000),
                         (int)(Math.random() * 1000),
-                        getStringImage(index + " " + selectIndex + " " + ovalIndex, 500, 500, 100)));
+                        Painter.getStringImage(index + " " + selectIndex + " " + ovalIndex, 500, 500, 100)));
                 }
 
             }

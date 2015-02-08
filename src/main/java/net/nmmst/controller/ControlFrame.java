@@ -3,7 +3,7 @@ package net.nmmst.controller;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Point;
+import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -16,15 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
 import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.MovieAttribute;
 import net.nmmst.movie.MovieBuffer;
@@ -50,10 +47,38 @@ import net.nmmst.tools.WindowsFunctions;
  */
 public class ControlFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
-    private final BufferedImage dashboardImage = ImageIO.read(new File(NMConstants.CONTROLLER_DASHBOARD_JPG));
-    private final BufferedImage stopImage = ImageIO.read(new File(NMConstants.CONTROLLER_STOP_JPG));
+    private static BufferedImage getDashboardImage() {
+        File file = new File(NMConstants.CONTROLLER_DASHBOARD_JPG);
+        BufferedImage image = null; 
+        if (file.exists()) {
+            try {
+                image = ImageIO.read(file);
+            } catch (IOException e) {
+            }
+        }
+        if (image == null) {
+            image = Painter.getStringImage("Dashboard", 640, 480);
+        }
+        return image;
+    }
+    private static BufferedImage getStopImage() {
+        File file = new File(NMConstants.CONTROLLER_STOP_JPG);
+        BufferedImage image = null; 
+        if (file.exists()) {
+            try {
+                image = ImageIO.read(file);
+            } catch (IOException e) {
+            }
+        }
+        if (image == null) {
+            image = Painter.getStringImage("Stop", 640, 480);
+        }
+        return image;
+    }
+    private final BufferedImage dashboardImage = getDashboardImage();
+    private final BufferedImage stopImage = getStopImage();
     private final BufferedImage	initImage = Painter.fillColor(1920, 1080, Color.BLACK);
-    private final MovieOrder movieOrder = MovieOrder.getDefaultMovieOrder();
+    private final MovieOrder movieOrder = MovieOrder.get();
     private final BasicPanel moviePanel = new BasicPanel(initImage);
     private final Speaker speaker = new Speaker(getAudioFormat(movieOrder.getMovieAttribute()));
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
@@ -92,40 +117,42 @@ public class ControlFrame extends JFrame {
         this.addKeyListener(new ButtonListener(keyQueue));
         this.add(mainPanel);
         mainPanel.setLayout(cardLayout);
-        for(int index = 0; index != defaultComponents.length; ++index)
-        {
+        for (int index = 0; index != defaultComponents.length; ++index) {
             mainPanel.add(defaultComponents[index], defaultStrings[index]);
         }
         init();
-        for(Runnable runnable : longTermThreads)
+        for (Runnable runnable : longTermThreads) {
             longTermPool.execute(runnable);
+        }
     }
     private void init() throws IOException {
         buffer.clear();
         moviePanel.write(initImage);
         buffer.setPause(true);
         movieOrder.reset();
-        worker = Executors.newFixedThreadPool(3);
         closures.clear();
         closures.add(new SpeakerThread(speaker));
         closures.add(new PanelThread(moviePanel, ovalTrigger));
         closures.add(new MovieReader(movieOrder));
-        for(Closure closure : closures)
+        worker = Executors.newFixedThreadPool(closures.size());
+        for (Closure closure : closures) {
             worker.execute(closure);
+        }
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
-        for(MovieAttribute attribute : attributes)
+        for(MovieAttribute attribute : attributes) {
             return attribute.getAutioFormat();
+        }
         return null;
     }
     private class ExecuteThread implements Runnable {
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 try {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
-                    switch(request.getType()) {
+                    switch (request.getType()) {
                         case START:
                             if(buffer.isPause()) {
                                 buffer.setPause(false);
@@ -172,19 +199,18 @@ public class ControlFrame extends JFrame {
         @Override
         public void run() {
             try {
-                while(true) {
+                while (true) {
                     KeyDescriptor key = keyQueue.take();
                     cardLayout.show(mainPanel, key.toString());
                 }
-            }
-            catch(InterruptedException e){}
+            } catch(InterruptedException e){}
         }
 }
     private class CheckThread implements Runnable {
 
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 try {
                     TimeUnit.SECONDS.sleep(2);
                 } catch (InterruptedException e) {
@@ -192,7 +218,7 @@ public class ControlFrame extends JFrame {
                     e.printStackTrace();
                 }
                 int count = 0;
-                for(Closure closure : closures) {
+                for (Closure closure : closures) {
                     if(closure.isClosed()) {
                         ++count;
                     }
@@ -208,11 +234,13 @@ public class ControlFrame extends JFrame {
     }
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException {
         final JFrame f = new ControlFrame();
-        f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
+//        f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                f.setSize(new Dimension(600, 600));
+//                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setVisible(true);

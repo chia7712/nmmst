@@ -20,7 +20,7 @@ public class ControlEvent implements Closure {
     private final List<ControlTrigger> triggerList = new LinkedList();
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
-    public ControlEvent(List<ControlTrigger> triggerList) throws IOException {
+    public ControlEvent(List<ControlTrigger> triggerList) {
         this.triggerList.addAll(triggerList);
         for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
             for(ControlTrigger trigger : this.triggerList) {

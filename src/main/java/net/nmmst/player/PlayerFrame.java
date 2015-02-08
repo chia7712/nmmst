@@ -43,7 +43,7 @@ import net.nmmst.tools.WindowsFunctions;
 public class PlayerFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
     private final BufferedImage initImage = Painter.fillColor(1920, 1080, Color.BLACK);
-    private final MovieOrder movieOrder = MovieOrder.getDefaultMovieOrder();
+    private final MovieOrder movieOrder = MovieOrder.get();
     private final BasicPanel panel = new BasicPanel(initImage);
     private final Speaker speaker = new Speaker(getAudioFormat(movieOrder.getMovieAttribute()));
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();

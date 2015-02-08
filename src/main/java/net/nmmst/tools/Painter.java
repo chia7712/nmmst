@@ -109,7 +109,16 @@ public abstract class Painter {
             }
         };
     }
-    public static BufferedImage string(String str, int width, int height) {
+    public static BufferedImage getStringImage(String str, int width, int height, int fontSize) {
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        Graphics2D g2d = (Graphics2D)image.createGraphics();
+        g2d.setFont(new Font("Serif", Font.BOLD, fontSize));
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(str, (image.getWidth() - fm.stringWidth(str)) / 2, image.getHeight() / 2);
+        g2d.dispose();
+        return image;
+    }
+    public static BufferedImage getStringImage(String str, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g2d = (Graphics2D)image.createGraphics();
         g2d.setFont(new Font("Serif", Font.BOLD, 20));
@@ -118,7 +127,7 @@ public abstract class Painter {
         g2d.dispose();
         return image;
     }
-    public static BufferedImage string(BufferedImage image, String str, int size) {
+    public static BufferedImage getStringImage(BufferedImage image, String str, int size) {
         image = Painter.process(image);
         Graphics2D g2d = (Graphics2D)image.createGraphics();
         g2d.setFont(new Font("Serif", Font.BOLD, size));

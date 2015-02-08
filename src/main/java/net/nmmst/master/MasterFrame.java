@@ -13,12 +13,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import net.nmmst.movie.BufferFactory;
 import net.nmmst.player.PlayerInformation;
 import net.nmmst.register.RegisterClient;
@@ -29,7 +27,6 @@ import net.nmmst.tools.BasicPanel;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WOL;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -42,13 +39,11 @@ public class MasterFrame extends JFrame {
     private final BufferedImage refreshImage = ImageIO.read(new File(rootPath + "m_refresh.jpg"));
     private final BufferedImage backgroundImage = ImageIO.read(new File(rootPath + "m_background_all.jpg"));
     private final BufferedImage testImage = ImageIO.read(new File(rootPath + "m_test.jpg"));
-
     private final BasicPanel startPanel = new BasicPanel(startImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
     private final BasicPanel refreshPanel = new BasicPanel(refreshImage, BasicPanel.Mode.FILL);
     private final BasicPanel backgroundPanel = new BasicPanel(backgroundImage, BasicPanel.Mode.FILL);
     private final BasicPanel testPanel = new BasicPanel(testImage, BasicPanel.Mode.FILL);
-
     private final JButton deviceInitBtn = new JButton("展演準備");
     private final JButton shurdownBtn = new JButton("睡覺");
     private final JButton wakeupBtn = new JButton("起床");
@@ -71,7 +66,6 @@ public class MasterFrame extends JFrame {
         new Request(Request.Type.PARTY2),
         new Request(Request.Type.LIGHT_OFF)
     };
-
     private final BlockingQueue<Request>  requestBuffer = BufferFactory.getRequestBuffer();
     private final RequestServer requestServer = new RequestServer(Ports.REQUEST.get());
     private final RegisterClient registerClient = new RegisterClient(Ports.REGISTER.get());
@@ -84,7 +78,6 @@ public class MasterFrame extends JFrame {
         registerClient
     };
     private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
-
     public MasterFrame() throws Exception {
         for(Runnable runnable : longTermThreads) {
             longTermThreadsPool.execute(runnable);
@@ -96,27 +89,21 @@ public class MasterFrame extends JFrame {
             @Override
             public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.START));
-
             }
-
         });
         stopPanel.setPreferredSize(new Dimension(100, 100));
         stopPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.STOP));
-
             }
-
         });
         refreshPanel.setPreferredSize(new Dimension(100, 100));
         refreshPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent arg0) {
                 requestBuffer.offer(new Request(Request.Type.REBOOT));
-
             }
-
         });
         testPanel.setPreferredSize(new Dimension(100, 100));
         testPanel.addMouseListener(new MouseAdapter() {
@@ -132,17 +119,13 @@ public class MasterFrame extends JFrame {
         for(int index = 0; index != pairBtns.length; ++index) {
             final int index_ = index;
             pairBtns[index].addActionListener(new ActionListener() {
-
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
                     requestBuffer.offer(pairRequests[index_]);
-
                 }
-
             });
             backgroundPanel.add(pairBtns[index]);
         }
-
     }
     private class ExecutorRequest implements Runnable {
         @Override
@@ -159,7 +142,6 @@ public class MasterFrame extends JFrame {
                                 start.set(true);
                                 executor = Executors.newSingleThreadExecutor();
                                 executor.execute(new Runnable() {
-
                                     @Override
                                     public void run() {
                                         try {
@@ -169,9 +151,7 @@ public class MasterFrame extends JFrame {
                                         } finally {
                                             start.set(false);
                                         }
-
                                     }
-
                                 });
                             }
                             break;
@@ -193,7 +173,6 @@ public class MasterFrame extends JFrame {
                                     }
                                     SerialStream.sendAll(playerInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
                                 }
-
                             }
                             break;
                         case REBOOT:
@@ -232,7 +211,6 @@ public class MasterFrame extends JFrame {
                             break;
                         default:
                             break;
-
                     }
                     System.out.println(request.getType() + " over");
                 } catch (InterruptedException | IOException e)  {
@@ -240,10 +218,8 @@ public class MasterFrame extends JFrame {
                     e.printStackTrace();
                 } finally {
                     requestBuffer.clear();
-
                 }
             }
-
         }
     }
     public static void main(String[] args) throws Exception {
@@ -258,6 +234,5 @@ public class MasterFrame extends JFrame {
                 f.setVisible(true);
             }
         });
-
     }
 }

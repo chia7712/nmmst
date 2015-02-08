@@ -12,6 +12,6 @@ public enum KeyDescriptor  {
         this.key = key.toLowerCase();
     }
     public boolean isValid(String str) {
-        return key.compareTo(str.toLowerCase()) == 0;
+        return key.compareToIgnoreCase(str) == 0;
     }
 }
