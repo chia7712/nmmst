@@ -13,8 +13,7 @@ import net.nmmst.tools.Closure;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class PanelThread implements Closure
-{
+public class PanelThread implements Closure {
     private final BasicPanel panel;
     private final Sleeper sleeper = new Sleeper(0);
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
@@ -22,59 +21,48 @@ public class PanelThread implements Closure
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
     private final AtomicReference<Frame> frameRef = BufferFactory.getFrameRef();
     private final FrameProcessor processor;
-    public PanelThread(BasicPanel panel)
-    {
+    public PanelThread(BasicPanel panel) {
         this(panel, null);
     }
-    public PanelThread(BasicPanel panel, FrameProcessor processor)
-    {
+    public PanelThread(BasicPanel panel, FrameProcessor processor) {
         this.panel = panel;
         this.processor = processor;
     }
     @Override
-    public void run() 
-    {
-        try
-        {
+    public void run() {
+        try {
             MovieAttribute attribute = null;
-            while(!close.get() && !Thread.interrupted())
-            {
+            while (!close.get() && !Thread.interrupted()) {
                 Frame frame = buffer.readFrame();
-                if(frame.getImage() == null)
+                if (frame.getImage() == null) {
                     break;
-                if(attribute == null || frame.getMovieAttribute().getIndex() != attribute.getIndex())
-                {
+                }
+                if(attribute == null || frame.getMovieAttribute().getIndex() != attribute.getIndex()) {
                     attribute = frame.getMovieAttribute();
                     sleeper.reset();
                 }
-                if(buffer.hadPause())
+                if (buffer.hadPause()) {
                     sleeper.reset();
+                }
                 sleeper.sleepByTimeStamp(frame.getTimestamp());
                 frameRef.set(frame);
-                if(processor != null && processor.needProcess(frame))
+                if(processor != null && processor.needProcess(frame)) {
                     processor.process(frame);
+                }
                 panel.write(frame.getImage());
             }
-        }
-        catch(InterruptedException e)
-        {
+        } catch(InterruptedException e) {
             //TODO
-        }
-        finally
-        {
+        } finally {
             isClosed.set(true);
         }
-
     }
     @Override
-    public void close() 
-    {
+    public void close() {
         close.set(true);
-
     }
     @Override
-    public boolean isClosed() 
-    {
+    public boolean isClosed() {
         return isClosed.get();
     }
 }

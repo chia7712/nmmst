@@ -14,7 +14,7 @@ public abstract class Painter {
     public abstract BufferedImage paint(BufferedImage oriImage);
     public static BufferedImage process(BufferedImage oriImage, Painter ... painters) {
         BufferedImage dst_image = newCopyPainter().paint(oriImage);
-        for(Painter filter : painters) {
+        for (Painter filter : painters) {
             dst_image = filter.paint(dst_image);
         }
         return dst_image;

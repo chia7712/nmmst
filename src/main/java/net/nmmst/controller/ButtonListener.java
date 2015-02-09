@@ -15,7 +15,7 @@ public class ButtonListener extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent arg0) {
         String key = String.valueOf(arg0.getKeyChar());
-        for(KeyDescriptor event : KeyDescriptor.values()) {
+        for (KeyDescriptor event : KeyDescriptor.values()) {
             if(event.isValid(key)) {
                 buttonQueue.offer(event);
                 return;

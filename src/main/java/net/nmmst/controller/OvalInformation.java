@@ -80,12 +80,12 @@ public class OvalInformation implements Comparable<OvalInformation> {
     }
     private static OvalInformation[] getDefault() {
         List<OvalInformation> ovalInformations = new LinkedList();
-        for(int index = 0; index != 7; ++index) {
+        for (int index = 0; index != 7; ++index) {
             final int selectNumber = (int)(Math.random() * 3) + 1;
             final int duration = 3 * 1000 * 1000;
-            for(int selectIndex = 0; selectIndex != selectNumber; ++selectIndex) {
+            for (int selectIndex = 0; selectIndex != selectNumber; ++selectIndex) {
                 final int ovalNumber = (int)(Math.random() * 3) + 1;
-                for(int ovalIndex = 0; ovalIndex != ovalNumber; ++ovalIndex) {
+                for (int ovalIndex = 0; ovalIndex != ovalNumber; ++ovalIndex) {
                     ovalInformations.add(new OvalInformation(
                         index,
                         duration * (selectIndex + 1),

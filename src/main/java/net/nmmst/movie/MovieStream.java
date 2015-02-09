@@ -37,7 +37,7 @@ public class MovieStream implements MovieAttribute
     private static Map<Integer, IStreamCoder> newOpenedCoders(IContainer container) throws IOException
     {
         Map<Integer, IStreamCoder> openedCoders	= new HashMap();
-        for(int indexStream = 0; indexStream != container.getNumStreams(); ++indexStream)
+        for (int indexStream = 0; indexStream != container.getNumStreams(); ++indexStream)
         {
             IStream stream = container.getStream(indexStream);
             IStreamCoder coder = stream.getStreamCoder();
@@ -179,7 +179,7 @@ public class MovieStream implements MovieAttribute
     }
     public void close()
     {
-        for(Map.Entry<Integer, IStreamCoder> entry : openedCoders.entrySet())
+        for (Map.Entry<Integer, IStreamCoder> entry : openedCoders.entrySet())
             entry.getValue().close();
         openedCoders.clear();
         container.close();

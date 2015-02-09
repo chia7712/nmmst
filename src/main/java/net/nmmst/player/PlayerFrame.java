@@ -64,7 +64,7 @@ public class PlayerFrame extends JFrame {
         this.playerInfomation = playerInfomation;
         add(panel);
         init();
-        for(Runnable runnable : longTermThreads) {
+        for (Runnable runnable : longTermThreads) {
             longTermThreadsPool.execute(runnable);
         }
     }
@@ -79,13 +79,13 @@ public class PlayerFrame extends JFrame {
         closures.add(new SpeakerThread(speaker));
         closures.add(new PanelThread(panel));
         closures.add(new MovieReader(movieOrder, ProcessorFactory.newTwoTierProcessor(playerInfomation.getLocation())));
-        for(Closure closure : closures) {
+        for (Closure closure : closures) {
             shortTermThreadsPool.execute(closure);
         }
         System.out.println("init over");
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
-        for(MovieAttribute attribute : attributes) {
+        for (MovieAttribute attribute : attributes) {
             return attribute.getAutioFormat();
         }
         return null;
@@ -104,7 +104,7 @@ public class PlayerFrame extends JFrame {
                             }
                             break;
                         case STOP:
-                            for(Closure closure : closures) {
+                            for (Closure closure : closures) {
                                 closure.close();
                             }
                             shortTermThreadsPool.shutdownNow();
@@ -118,7 +118,7 @@ public class PlayerFrame extends JFrame {
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
                                 if(indexs.length == values.length) {
-                                    for(int index = 0; index != indexs.length; ++index) {
+                                    for (int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
                                     }
                                 }
@@ -136,7 +136,7 @@ public class PlayerFrame extends JFrame {
                                 break;
                             }
                             Object obj = request.getArgument();
-                            if(!(obj instanceof LinearProcessor.Format)) {
+                            if (!(obj instanceof LinearProcessor.Format)) {
                                 break;
                             }
                             LinearProcessor processor = new LinearProcessor(playerInfomation.getLocation(), (LinearProcessor.Format)obj);
@@ -150,7 +150,7 @@ public class PlayerFrame extends JFrame {
                                 break;
                             }
                             Object obj = request.getArgument();
-                            if(!(obj instanceof LinearProcessor.Format)) {
+                            if (!(obj instanceof LinearProcessor.Format)) {
                                 break;
                             }
                             LinearProcessor processor = new LinearProcessor(playerInfomation.getLocation(), (LinearProcessor.Format)obj);
@@ -187,7 +187,7 @@ public class PlayerFrame extends JFrame {
                     e.printStackTrace();
                 }
                 int count = 0;
-                for(Closure closure : closures) {
+                for (Closure closure : closures) {
                     if(closure.isClosed()) {
                         ++count;
                     }
@@ -224,7 +224,7 @@ public class PlayerFrame extends JFrame {
     }
     private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
-        for(PlayerInformation playerInformation : PlayerInformation.get()) {
+        for (PlayerInformation playerInformation : PlayerInformation.get()) {
             if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
                 return playerInformation;
             }

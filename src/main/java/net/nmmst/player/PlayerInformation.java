@@ -54,7 +54,7 @@ public class PlayerInformation {
     //location ip mac
     private static PlayerInformation[] internalGetFromConfiguration() {
         File configurationFile = new File("D:\\player-information.conf");
-        if(!configurationFile.exists()) {
+        if (!configurationFile.exists()) {
             return null;
         }
         BufferedReader reader = null;
@@ -68,7 +68,7 @@ public class PlayerInformation {
                         continue;
                 }
                 PlayerInformation.Location location = null;
-                for(PlayerInformation.Location loc : PlayerInformation.Location.values()) {
+                for (PlayerInformation.Location loc : PlayerInformation.Location.values()) {
                     if(loc.toString().compareTo(args[0]) == 0) {
                         location = loc;
                         break;

@@ -87,30 +87,68 @@ public class ControlFrame extends JFrame {
     private final OvalTrigger ovalTrigger = new OvalTrigger();
     private final WheelTrigger wheelTrigger = new WheelTrigger();
     private final RegisterServer registerServer = new RegisterServer(Ports.REGISTER.get());
+    private final CardLayout cardLayout = new CardLayout();
     private final Runnable[] longTermThreads = {
         requestServer, 
-        new CheckThread(),
+//        new CheckThread(),
+        new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        TimeUnit.SECONDS.sleep(2);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    int count = 0;
+                    for (Closure closure : closures) {
+                        if(closure.isClosed()) {
+                            ++count;
+                        }
+                    }
+                    if(count == closures.size()) {
+                        try {
+                            init();
+                        } catch (IOException e) {
+                        }
+                    }
+                }
+            }
+        },
         new ExecuteThread(),
         registerServer,
-        new CardThread(),
+        new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        KeyDescriptor key = keyQueue.take();
+                        cardLayout.show(mainPanel, key.toString());
+                    }
+                } catch(InterruptedException e){}
+            }
+        },
         new ControlEvent(Arrays.asList(ovalTrigger, wheelTrigger))
     };
     private final ExecutorService longTermPool = Executors.newFixedThreadPool(longTermThreads.length);
     private final List<Closure> closures = new LinkedList();
     private final BlockingQueue<KeyDescriptor> keyQueue = new LinkedBlockingQueue();
     private final JPanel mainPanel = new JPanel();
-    private final CardLayout cardLayout = new CardLayout();
     private final BasicPanel dashboardPanel = new BasicPanel(dashboardImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
+    private final SnapshotPanel snapshotPanel = new SnapshotPanel();
     private final Component[] defaultComponents	= {
         dashboardPanel, 
         moviePanel, 
-        stopPanel
+        stopPanel,
+        snapshotPanel
     };
     private final String[] defaultStrings = {
         KeyDescriptor.DASHBOARD.toString(),
         KeyDescriptor.MOVIE.toString(),
-        KeyDescriptor.STOP.toString()
+        KeyDescriptor.STOP.toString(),
+        KeyDescriptor.SNAPSHOTS.toString()
     };
     private ExecutorService worker;
     public ControlFrame() throws IOException, LineUnavailableException {
@@ -140,7 +178,7 @@ public class ControlFrame extends JFrame {
         }
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
-        for(MovieAttribute attribute : attributes) {
+        for (MovieAttribute attribute : attributes) {
             return attribute.getAutioFormat();
         }
         return null;
@@ -159,7 +197,7 @@ public class ControlFrame extends JFrame {
                             }
                             break;
                         case STOP:
-                            for(Closure closure : closures) {
+                            for (Closure closure : closures) {
                                 closure.close();
                             }
                             worker.shutdownNow();
@@ -173,7 +211,7 @@ public class ControlFrame extends JFrame {
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
                                 if(indexs.length == values.length) {
-                                    for(int index = 0; index != indexs.length; ++index) {
+                                    for (int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
                                     }
                                 }
@@ -194,43 +232,6 @@ public class ControlFrame extends JFrame {
 
         }
 
-    }
-    private class CardThread implements Runnable {
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    KeyDescriptor key = keyQueue.take();
-                    cardLayout.show(mainPanel, key.toString());
-                }
-            } catch(InterruptedException e){}
-        }
-}
-    private class CheckThread implements Runnable {
-
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(2);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                int count = 0;
-                for (Closure closure : closures) {
-                    if(closure.isClosed()) {
-                        ++count;
-                    }
-                }
-                if(count == closures.size()) {
-                    try {
-                        init();
-                    } catch (IOException e) {
-                    }
-                }
-            }
-        }
     }
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException {
         final JFrame f = new ControlFrame();

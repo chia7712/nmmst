@@ -22,11 +22,11 @@ public class SerialStream {
     private ObjectOutputStream output = null;
     public static boolean sendAll(PlayerInformation[] playerInformations, final Serializable serial, int port) throws InterruptedException, IOException {
         final SerialStream[] handlers = new SerialStream[playerInformations.length];
-        for(int index = 0; index != playerInformations.length; ++index) {
+        for (int index = 0; index != playerInformations.length; ++index) {
             try {
                 handlers[index] = new SerialStream(new Socket(playerInformations[index].getIP(), port));
             } catch(IOException e) {
-                for(SerialStream handler : handlers) {
+                for (SerialStream handler : handlers) {
                     if(handler != null) {
                         handler.close();
                     }
@@ -36,7 +36,7 @@ public class SerialStream {
         }
         ExecutorService service = Executors.newFixedThreadPool(playerInformations.length);
         final CountDownLatch latch = new CountDownLatch(playerInformations.length);
-        for(SerialStream handler : handlers) {
+        for (SerialStream handler : handlers) {
             final SerialStream h = handler;
             service.execute(new Runnable() {
 

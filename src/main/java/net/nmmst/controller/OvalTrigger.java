@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,7 +37,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private OvalInformation curOvalInformation = null;
     public OvalTrigger() {
         OvalInformation[] ovalInformationConfig = OvalInformation.get();
-        for(OvalInformation ovalInformation : ovalInformationConfig) {
+        for (OvalInformation ovalInformation : ovalInformationConfig) {
             int index = ovalInformation.getIndex();
             if(ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);
@@ -54,9 +55,10 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
         count.set(0);
         pressed.set(false);
     }
-    public OvalInformation[] snapshoInformations() {
+    public List<OvalInformation> getSnapshots() {
         synchronized(pressedInformations) {
-            return pressedInformations.toArray(new OvalInformation[pressedInformations.size()]);
+            return new ArrayList(pressedInformations);
+//            return pressedInformations.toArray(new OvalInformation[pressedInformations.size()]);
         }
     }
     @Override
@@ -89,11 +91,11 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private static List<OvalInformation> getValidOvalInformations(Frame frame, Map<Integer, Set<OvalInformation>> ovalWrapper) {
         List<OvalInformation> ovalInformations = new LinkedList();
         MovieAttribute attribute = frame.getMovieAttribute();
-        if(!ovalWrapper.containsKey(attribute.getIndex())) {
+        if (!ovalWrapper.containsKey(attribute.getIndex())) {
             return ovalInformations;
         }
-        for(OvalInformation ovalInformation : ovalWrapper.get(attribute.getIndex())) {
-            if( ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp()) {
+        for (OvalInformation ovalInformation : ovalWrapper.get(attribute.getIndex())) {
+            if (ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp()) {
                 continue;
             }
             ovalInformations.add(ovalInformation);
@@ -105,7 +107,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
         int countSnapshot = count.get();
         boolean hasPressed = pressed.get();
         List<OvalInformation> ovalInformations = getValidOvalInformations(frame, ovalWrapper);
-        for(int index = 0; index != ovalInformations.size(); ++index) {
+        for (int index = 0; index != ovalInformations.size(); ++index) {
             OvalInformation ovalInformation = ovalInformations.get(index);
             Graphics2D g = (Graphics2D)frame.getImage().getGraphics();
             g.setStroke(STROKE);

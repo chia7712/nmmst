@@ -79,7 +79,7 @@ public class MasterFrame extends JFrame {
     };
     private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
     public MasterFrame() throws Exception {
-        for(Runnable runnable : longTermThreads) {
+        for (Runnable runnable : longTermThreads) {
             longTermThreadsPool.execute(runnable);
         }
         add(backgroundPanel);
@@ -116,7 +116,7 @@ public class MasterFrame extends JFrame {
         backgroundPanel.add(stopPanel);
         backgroundPanel.add(refreshPanel);
         backgroundPanel.add(testPanel);
-        for(int index = 0; index != pairBtns.length; ++index) {
+        for (int index = 0; index != pairBtns.length; ++index) {
             final int index_ = index;
             pairBtns[index].addActionListener(new ActionListener() {
                 @Override
@@ -138,7 +138,7 @@ public class MasterFrame extends JFrame {
                     System.out.println(request.getType());
                     switch(request.getType()) {
                         case START:
-                            if(!start.get()) {
+                            if (!start.get()) {
                                 start.set(true);
                                 executor = Executors.newSingleThreadExecutor();
                                 executor.execute(new Runnable() {
@@ -168,7 +168,7 @@ public class MasterFrame extends JFrame {
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
                                 if(indexs.length == values.length) {
-                                    for(int index = 0; index != indexs.length; ++index) {
+                                    for (int index = 0; index != indexs.length; ++index) {
                                         Happen.setValues(indexs[index], values[index]);
                                     }
                                     SerialStream.sendAll(playerInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
@@ -202,7 +202,7 @@ public class MasterFrame extends JFrame {
                             SerialStream.sendAll(playerInformations, new Request(Request.Type.SHUTDOWN), Ports.REQUEST.get());
                             break;
                         case WOL:
-                            for(PlayerInformation playerInformation : playerInformations) {
+                            for (PlayerInformation playerInformation : playerInformations) {
 //                                WOL.wakeup("192.168.100.255", playerInformation.getMac());
 //                                System.out.println("192.168.100.255 " + playerInformation.getMac());
                                 WOL.wakeup(PlayerInformation.getBroadCast(), playerInformation.getMac());

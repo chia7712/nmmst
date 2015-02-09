@@ -22,8 +22,8 @@ public class ControlEvent implements Closure {
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
     public ControlEvent(List<ControlTrigger> triggerList) {
         this.triggerList.addAll(triggerList);
-        for(Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-            for(ControlTrigger trigger : this.triggerList) {
+        for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
+            for (ControlTrigger trigger : this.triggerList) {
                 if(controller.getType() == trigger.getType()) {
                     System.out.println("use device : " + controller);
                     controllers.add(controller);
@@ -39,12 +39,12 @@ public class ControlEvent implements Closure {
     @Override
     public void run() {
         while(!close.get()) {
-            for(Controller controller : controllers) {
+            for (Controller controller : controllers) {
                 controller.poll();
                 EventQueue queue = controller.getEventQueue();
                 Event event = new Event();
                 while(queue.getNextEvent(event)) {  
-                    for(ControlTrigger trigger : triggerList) {
+                    for (ControlTrigger trigger : triggerList) {
                         if(controller.getType() == trigger.getType()) {
                             trigger.triggerOff(event.getComponent());
                         }

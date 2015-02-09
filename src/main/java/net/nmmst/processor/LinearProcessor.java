@@ -28,7 +28,7 @@ public class LinearProcessor implements FrameProcessor {
             return false;
         }
         if(obj instanceof LinearProcessor) {
-            if(((LinearProcessor) obj).location == location) {
+            if (((LinearProcessor) obj).location == location) {
                 return true;
             }
         }
@@ -112,28 +112,28 @@ public class LinearProcessor implements FrameProcessor {
         final int width = image.getWidth();
         final int height = image.getHeight();
         //Vertical, use xEquation
-        for(int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x) {
+        for (int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x) {
             final double weight = xEquation.getY((double)x / (double)width);
             if(weight >= 1.0) {
                 continue;
             }
-            for(int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y) {
+            for (int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
+                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
             }
         }
         //horizontal, use yEquation
-        for(int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y) {
+        for (int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y) {
             final double weight = yEquation.getY((double)y / (double)height);
             if(weight >= 1.0) {
                 continue;
             }
-            for(int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x) {
+            for (int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
+                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }

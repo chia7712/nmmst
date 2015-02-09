@@ -28,7 +28,7 @@ public class BourkeProcessor implements FrameProcessor {
             return false;
         }
         if(obj instanceof BourkeProcessor) {
-            if(((BourkeProcessor) obj).location == location) {
+            if (((BourkeProcessor) obj).location == location) {
                 return true;
             }
         }
@@ -96,7 +96,7 @@ public class BourkeProcessor implements FrameProcessor {
         final int width	= image.getWidth();
         final int height = image.getHeight();
 
-        for(int x = (int) (width * xMinV); x != (int)(width * xMaxV); ++x) {
+        for (int x = (int) (width * xMinV); x != (int)(width * xMaxV); ++x) {
             double normalization = normalized((double)x / (double)width, xMaxV, xMinV);		
             if(normalization > 1 || normalization < 0) {
                 continue;
@@ -124,15 +124,15 @@ public class BourkeProcessor implements FrameProcessor {
             if(weight >= 1 || weight < 0) {
                 continue;
             }
-            for(int y = (int) (height * yMinV); y != (int)(height * yMaxV); ++y) {
+            for (int y = (int) (height * yMinV); y != (int)(height * yMaxV); ++y) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
+                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }
             }
         }
-        for(int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y) {
+        for (int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y) {
             double normalization = normalized((double)y / (double)height, yMaxH, yMinH);
             double weight = 0;
             if(normalization > 1) {
@@ -147,9 +147,9 @@ public class BourkeProcessor implements FrameProcessor {
             if(weight >= 1) {
                 continue;
             }
-            for(int x = (int) (width * xMinH); x != (int)(width * xMaxH); ++x) {
+            for (int x = (int) (width * xMinH); x != (int)(width * xMaxH); ++x) {
                 final int rgb_init = (x + y * width) * 3;
-                for(int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
+                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
                     int value = (int)((data[rgb_index] & 0xff) * weight);
                     data[rgb_index] = (byte)value;
                 }

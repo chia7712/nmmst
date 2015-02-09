@@ -63,7 +63,7 @@ public class Benchmarker {
         private int count;
         public Saver(String rootDir) throws IOException {
             File dir = new File(rootDir);
-            if(!dir.exists()) {
+            if (!dir.exists()) {
                 dir.mkdir();
                 this.rootDir = rootDir;
                 return;
@@ -97,7 +97,7 @@ public class Benchmarker {
                 try {
                     TimeUnit.MILLISECONDS.sleep(period);
                     StringBuilder str = new StringBuilder();
-                    for(Counter counter : counters) {
+                    for (Counter counter : counters) {
                         str.append(counter.toString()).append("\t");
                     }
                     System.out.print("\r" + str.toString());

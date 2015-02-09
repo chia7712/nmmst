@@ -31,7 +31,7 @@ public class MovieOrder {
     }
     private MovieOrder(List<Pair<Boolean, String>> moviePaths) throws IOException {
         int index = 0;
-        for(Pair<Boolean, String> path : moviePaths) {
+        for (Pair<Boolean, String> path : moviePaths) {
             this.moviePaths.add(path.copyOf());
             movieStreams.add(new Pair(path.getFirst(), new MovieStream(path.getSecond(), index)));
             ++index;
@@ -81,7 +81,7 @@ public class MovieOrder {
     public synchronized void reset() throws IOException {
         closeCurrentStream();
         List<Pair<Boolean, String>> initPaths = getDefault();
-        for(int index = 0; index != initPaths.size(); ++index) {
+        for (int index = 0; index != initPaths.size(); ++index) {
             setEnable(index, initPaths.get(index).getFirst());
         }
         nextIndex = 0;

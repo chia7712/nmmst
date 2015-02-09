@@ -70,14 +70,12 @@ public class BufferFactory {
         @Override
         public void setPause(boolean value) {
             pause.set(value);
-            if(!pause.get()) {
+            if (!pause.get()) {
                 synchronized(pause) {
                     pause.notifyAll();
                 }
             }
-
         }
-
         @Override
         public void clear() {
             frames.clear();

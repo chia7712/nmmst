@@ -6,6 +6,7 @@ package net.nmmst.controller;
 public enum KeyDescriptor  {
     DASHBOARD("a"),
     MOVIE("b"),
+    SNAPSHOTS("c"),
     STOP("e");
     private final String key;
     KeyDescriptor(String key) {

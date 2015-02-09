@@ -33,7 +33,7 @@ public class RegisterClient implements Closure {
                     System.out.println("current player number = " + playerStates.size());
                     return false;
                 }
-                for(Map.Entry<PlayerInformation, PlayerState> entry : playerStates.entrySet()) {
+                for (Map.Entry<PlayerInformation, PlayerState> entry : playerStates.entrySet()) {
                     int bufferSize = entry.getValue().getFrameBufferSize();
                     int frameBuffered = entry.getValue().getFrameBuffered();
                     double ratio = (double)frameBuffered / (double) bufferSize;
@@ -52,7 +52,7 @@ public class RegisterClient implements Closure {
         synchronized(playerStates) {
             playerStates.clear();
         }
-        for(PlayerInformation playerInformation : playerInformations) {
+        for (PlayerInformation playerInformation : playerInformations) {
             SerialStream client = null;
             try {
                 client = new SerialStream(new Socket(playerInformation.getIP(), bindPort));

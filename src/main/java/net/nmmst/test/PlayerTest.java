@@ -83,7 +83,7 @@ public class PlayerTest extends JFrame {
     }
     private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
-        for(PlayerInformation playerInformation : PlayerInformation.get()) {
+        for (PlayerInformation playerInformation : PlayerInformation.get()) {
             if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
                 return playerInformation;
             }

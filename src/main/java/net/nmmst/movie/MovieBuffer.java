@@ -4,8 +4,7 @@ package net.nmmst.movie;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public interface MovieBuffer 
-{
+public interface MovieBuffer {
     public Frame readFrame() throws InterruptedException;
     public Sample readSample() throws InterruptedException;
     public void writeFrame(Frame frame) throws InterruptedException;

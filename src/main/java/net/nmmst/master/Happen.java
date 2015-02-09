@@ -94,11 +94,11 @@ public class Happen {
     }
     public static boolean start(PlayerInformation[] playerInformations, RegisterClient server, DioAction dioAction) throws IOException, InterruptedException {
         try {
-            if(!server.isBuffered()) {
+            if (!server.isBuffered()) {
                 System.out.println("no buffer");
                 return false;
             }
-            if(!SerialStream.sendAll(playerInformations, new Request(Request.Type.START), Ports.REQUEST.get())) {
+            if (!SerialStream.sendAll(playerInformations, new Request(Request.Type.START), Ports.REQUEST.get())) {
                 return false;
             }
             start1(server, dioAction);
