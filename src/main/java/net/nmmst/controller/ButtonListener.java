@@ -18,6 +18,7 @@ public class ButtonListener extends KeyAdapter {
         for (KeyDescriptor event : KeyDescriptor.values()) {
             if (event.isValid(key)) {
                 buttonQueue.offer(event);
+                System.out.println(event);
                 return;
             }
         }

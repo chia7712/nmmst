@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -78,7 +79,7 @@ public class MasterFrame extends JFrame {
     private final RegisterClient registerClient = new RegisterClient(Ports.REGISTER.get());
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final DioAction dioAction = new DioAction();
-    private final PlayerInformation[] playerInformations = PlayerInformation.get();
+    private final List<PlayerInformation> playerInformations = PlayerInformation.get();
     private final Runnable[] longTermThreads = {
         requestServer,
         new ExecutorRequest(),

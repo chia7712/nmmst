@@ -5,11 +5,14 @@
  */
 package net.nmmst.controller;
 
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
 import net.nmmst.tools.BasicPanel;
+import net.nmmst.tools.Painter;
 
 /**
  *
@@ -17,10 +20,12 @@ import net.nmmst.tools.BasicPanel;
  */
 public class SnapshotPanel extends JPanel {
     private static final int ROWS = 0;
-    private static final int COLUMNS = 3;
+    private static final int COLUMNS = 1;
+    private final BufferedImage defaultImage = Painter.getStringImage("No Snaphosts", 640, 480);
     private final List<BasicPanel> currentPanel = new LinkedList();
     public SnapshotPanel() {
-        this.setLayout(new GridLayout(ROWS, COLUMNS));
+        setLayout(new GridLayout(ROWS, COLUMNS));
+//        setLayout(new FlowLayout(10, 10, 10));
     }
     public void setOvalInformations(List<OvalInformation> ovalInfos) {
         synchronized(currentPanel) {
@@ -31,9 +36,13 @@ public class SnapshotPanel extends JPanel {
             for (OvalInformation oval : ovalInfos) {
                 currentPanel.add(new BasicPanel(oval.getImage()));
             }
+            if (currentPanel.isEmpty()) {
+                currentPanel.add(new BasicPanel(defaultImage));
+            }
             for (BasicPanel panel : currentPanel) {
                 add(panel);
             }
+            revalidate();
             repaint();
         }
     }

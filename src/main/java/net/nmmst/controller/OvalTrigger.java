@@ -26,6 +26,7 @@ import net.nmmst.processor.FrameProcessor;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class OvalTrigger implements FrameProcessor, ControlTrigger {
+    private static final int OVAL_PERIOD = 30;
     private static final Stroke STROKE = new BasicStroke(10);
     private static final Color DEFAULT_COLOR = Color.WHITE;
     private static final Color FOCUS_COLOR = Color.RED;
@@ -36,8 +37,9 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private int snapshotCount = 0;
     private OvalInformation curOvalInformation = null;
     public OvalTrigger() {
-        OvalInformation[] ovalInformationConfig = OvalInformation.get();
-        for (OvalInformation ovalInformation : ovalInformationConfig) {
+        List<OvalInformation> ovalInformations = OvalInformation.get();
+        for (OvalInformation ovalInformation : ovalInformations) {
+            System.out.println(ovalInformation);
             int index = ovalInformation.getIndex();
             if (ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);
@@ -46,7 +48,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 sets.add(ovalInformation);
                 ovalWrapper.put(index, sets);
             }
-        };
+        }
     }
     public void reset() {
         synchronized(pressedInformations) {
@@ -58,7 +60,6 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     public List<OvalInformation> getSnapshots() {
         synchronized(pressedInformations) {
             return new ArrayList(pressedInformations);
-//            return pressedInformations.toArray(new OvalInformation[pressedInformations.size()]);
         }
     }
     @Override
@@ -117,7 +118,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 if (hasPressed) {
                     synchronized(pressedInformations) {
                         if (pressedInformations.add(ovalInformation)) {
-                            snapshotCount = 30;
+                            snapshotCount = OVAL_PERIOD;
                             curOvalInformation = ovalInformation;
                         }
                     }

@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,11 +22,12 @@ public class SerialStream {
     private final Socket client;
     private ObjectInputStream input = null;
     private ObjectOutputStream output = null;
-    public static boolean sendAll(PlayerInformation[] playerInformations, final Serializable serial, int port) throws InterruptedException, IOException {
-        final SerialStream[] handlers = new SerialStream[playerInformations.length];
-        for (int index = 0; index != playerInformations.length; ++index) {
+    public static boolean sendAll(List<PlayerInformation> playerInformations, final Serializable serial, int port) throws InterruptedException, IOException {
+        List<SerialStream> handlers = new ArrayList(playerInformations.size());
+//        final SerialStream[] handlers = new SerialStream[playerInformations.length];
+        for (PlayerInformation playerInfo : playerInformations) {
             try {
-                handlers[index] = new SerialStream(new Socket(playerInformations[index].getIP(), port));
+                handlers.add(new SerialStream(new Socket(playerInfo.getIP(), port)));
             } catch(IOException e) {
                 for (SerialStream handler : handlers) {
                     if (handler != null) {
@@ -34,12 +37,23 @@ public class SerialStream {
                 throw e;
             }
         }
-        ExecutorService service = Executors.newFixedThreadPool(playerInformations.length);
-        final CountDownLatch latch = new CountDownLatch(playerInformations.length);
+//        for (int index = 0; index != playerInformations.size(); ++index) {
+//            try {
+//                handlers[index] = new SerialStream(new Socket(playerInformations.get(index).getIP(), port));
+//            } catch(IOException e) {
+//                for (SerialStream handler : handlers) {
+//                    if (handler != null) {
+//                        handler.close();
+//                    }
+//                }
+//                throw e;
+//            }
+//        }
+        ExecutorService service = Executors.newFixedThreadPool(playerInformations.size());
+        final CountDownLatch latch = new CountDownLatch(playerInformations.size());
         for (SerialStream handler : handlers) {
             final SerialStream h = handler;
             service.execute(new Runnable() {
-
                 @Override
                 public void run() {
                     latch.countDown();

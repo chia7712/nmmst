@@ -4,7 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 /**
  *
@@ -15,21 +18,22 @@ public class PlayerInformation {
     private final Location location;
     private final String ip;
     private final String mac;
-    public static PlayerInformation[] get() {
-        PlayerInformation[] playerInformations = internalGetFromConfiguration();
-            return playerInformations == null ? internalGetFromDefault() : playerInformations;
+    public static List<PlayerInformation> get() {
+        List<PlayerInformation> playerInformations = getFromFile();
+            return playerInformations == null || playerInformations.isEmpty() ? 
+                    getDefault() 
+                    : playerInformations;
     }
     public static String getBroadCast() {
         return "192.168.100.255";
     }
-    private static PlayerInformation[] internalGetFromDefault() {
-        return new PlayerInformation[]{
-            new PlayerInformation(PlayerInformation.Location.LU, 	 "192.168.100.1",  "00-0B-AB-6D-7D-25"),
-            new PlayerInformation(PlayerInformation.Location.RU, 	 "192.168.100.2",  "00-0B-AB-67-4E-83"),
-            new PlayerInformation(PlayerInformation.Location.LD, 	 "192.168.100.3",  "00-0B-AB-67-4E-70"),
-            new PlayerInformation(PlayerInformation.Location.RD, 	 "192.168.100.4",  "00-0B-AB-67-4E-75"),
-            new PlayerInformation(PlayerInformation.Location.CENTER, "192.168.100.38", "00-0B-AB-67-4E-7F")
-        };
+    private static List<PlayerInformation> getDefault() {
+        return Arrays.asList(
+            new PlayerInformation(PlayerInformation.Location.LU, "192.168.100.1",  "00-0B-AB-6D-7D-25"),
+            new PlayerInformation(PlayerInformation.Location.RU, "192.168.100.2",  "00-0B-AB-67-4E-83"),
+            new PlayerInformation(PlayerInformation.Location.LD, "192.168.100.3",  "00-0B-AB-67-4E-70"),
+            new PlayerInformation(PlayerInformation.Location.RD, "192.168.100.4",  "00-0B-AB-67-4E-75"),
+            new PlayerInformation(PlayerInformation.Location.CENTER, "192.168.100.38", "00-0B-AB-67-4E-7F"));
     }
     private static String getModifiedIP(String ip) {
         String[] args = ip.split("\\.");
@@ -52,10 +56,10 @@ public class PlayerInformation {
 
     }
     //location ip mac
-    private static PlayerInformation[] internalGetFromConfiguration() {
+    private static List<PlayerInformation> getFromFile() {
         File configurationFile = new File("D:\\player-information.conf");
         if (!configurationFile.exists()) {
-            return null;
+            return new ArrayList();
         }
         BufferedReader reader = null;
         try {
@@ -86,7 +90,7 @@ public class PlayerInformation {
             if (playerInformations.size() != 5) {
                 return null;
             }
-            return playerInformations.toArray(new PlayerInformation[playerInformations.size()]);
+            return new ArrayList(playerInformations);
         } catch (IOException e) {
             return null;
         } finally {

@@ -4,6 +4,9 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -16,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
@@ -59,50 +63,6 @@ public class ControlFrame extends JFrame {
     private final WheelTrigger wheelTrigger = new WheelTrigger();
     private final RegisterServer registerServer = new RegisterServer(Ports.REGISTER.get());
     private final CardLayout cardLayout = new CardLayout();
-    private final Runnable[] longTermThreads = {
-        requestServer, 
-//        new CheckThread(),
-        new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    int count = 0;
-                    for (Closure closure : closures) {
-                        if (closure.isClosed()) {
-                            ++count;
-                        }
-                    }
-                    if (count == closures.size()) {
-                        try {
-                            init();
-                        } catch (IOException e) {
-                        }
-                    }
-                }
-            }
-        },
-        new ExecuteThread(),
-        registerServer,
-        new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while (true) {
-                        KeyDescriptor key = keyQueue.take();
-                        cardLayout.show(mainPanel, key.toString());
-                    }
-                } catch(InterruptedException e){}
-            }
-        },
-        new ControlEvent(Arrays.asList(ovalTrigger, wheelTrigger))
-    };
-    private final ExecutorService longTermPool = Executors.newFixedThreadPool(longTermThreads.length);
     private final List<Closure> closures = new LinkedList();
     private final BlockingQueue<KeyDescriptor> keyQueue = new LinkedBlockingQueue();
     private final JPanel mainPanel = new JPanel();
@@ -122,6 +82,59 @@ public class ControlFrame extends JFrame {
         KeyDescriptor.SNAPSHOTS.toString()
     };
     private ExecutorService worker;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final Runnable[] longTermThreads = {
+        requestServer, 
+//        new CheckThread(),
+        new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (!closed.get()) {
+                        TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
+                        int count = 0;
+                        for (Closure closure : closures) {
+                            if (closure.isClosed()) {
+                                ++count;
+                            }
+                        }
+                        if (count == closures.size()) {
+                            try {
+                                init();
+                            } catch (IOException e) {
+                            }
+                        }
+                        System.out.println("frame size = " + buffer.getFrameSize() + ", sample size = " + buffer.getSampleSize());
+                    }
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        },
+        new ExecuteThread(),
+        registerServer,
+        new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (!closed.get()) {
+                        KeyDescriptor key = keyQueue.take();
+                        switch(key) {
+                            case SNAPSHOTS:
+                                snapshotPanel.setOvalInformations(ovalTrigger.getSnapshots());
+                                break;
+                            default:
+                                break;
+                        }
+                        cardLayout.show(mainPanel, key.toString());
+                    }
+                } catch(InterruptedException e){}
+            }
+        },
+        new ControlEvent(Arrays.asList(ovalTrigger, wheelTrigger))
+    };
+    private final ExecutorService longTermPool = Executors.newFixedThreadPool(longTermThreads.length);
     public ControlFrame() throws IOException, LineUnavailableException {
         this.addKeyListener(new ButtonListener(keyQueue));
         this.add(mainPanel);
@@ -202,10 +215,19 @@ public class ControlFrame extends JFrame {
             }
         }
     }
+    public void setClosed(boolean value) {
+        closed.set(value);
+    }
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException {
-        final JFrame f = new ControlFrame();
+        final ControlFrame f = new ControlFrame();
 //        f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
-        
+        f.addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent e) {
+                f.setClosed(true);
+            }
+            
+        });
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

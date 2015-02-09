@@ -3,6 +3,7 @@ package net.nmmst.register;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,7 +15,7 @@ import net.nmmst.tools.SerialStream;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class RegisterClient implements Closure {
-    private final PlayerInformation[] playerInformations = PlayerInformation.get();
+    private final List<PlayerInformation> playerInformations = PlayerInformation.get();
     private final Map<PlayerInformation, PlayerState> playerStates = new HashMap();
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
@@ -29,7 +30,7 @@ public class RegisterClient implements Closure {
     public boolean isBuffered() {
         synchronized(playerStates) {
             try {
-                if (playerStates.size() != playerInformations.length) {
+                if (playerStates.size() != playerInformations.size()) {
                     System.out.println("current player number = " + playerStates.size());
                     return false;
                 }

@@ -1,6 +1,7 @@
 package net.nmmst.master;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import net.nmmst.player.PlayerInformation;
@@ -92,7 +93,7 @@ public class Happen {
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_5 - (spendTime * 1000));
         dioAction.light_off();
     }
-    public static boolean start(PlayerInformation[] playerInformations, RegisterClient server, DioAction dioAction) throws IOException, InterruptedException {
+    public static boolean start(List<PlayerInformation> playerInformations, RegisterClient server, DioAction dioAction) throws IOException, InterruptedException {
         try {
             if (!server.isBuffered()) {
                 System.out.println("no buffer");

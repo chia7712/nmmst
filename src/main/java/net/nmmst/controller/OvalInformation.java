@@ -1,13 +1,11 @@
 package net.nmmst.controller;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,12 +27,14 @@ public class OvalInformation implements Comparable<OvalInformation> {
     private final int x;
     private final int y;
     private final BufferedImage	snapshotImage;
-    public static OvalInformation[] get() {
-        OvalInformation[] ovalInformations = getFromFile();
-        return ovalInformations == null ? getDefault() : ovalInformations;
+    public static List<OvalInformation> get() {
+        List<OvalInformation> ovalInformations = getFromFile();
+        return ovalInformations == null || ovalInformations.isEmpty() ? 
+                getDefault() 
+                : ovalInformations;
     }
     //index mintime maxtime diameter x y snapshotPath
-    private static OvalInformation[] getFromFile() {
+    private static List<OvalInformation> getFromFile() {
         File configurationFile = new File(NMConstants.CONTROLLER_OVAL_INFORMATION);
         if (!configurationFile.exists()) {
             return null;
@@ -64,7 +64,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
                     e.printStackTrace();
                 }
             }
-            return ovalInformations.toArray(new OvalInformation[ovalInformations.size()]);
+            return new ArrayList(ovalInformations);
         } catch (IOException e) {
             return null;
         } finally {
@@ -78,7 +78,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
             }
         }
     }
-    private static OvalInformation[] getDefault() {
+    private static List<OvalInformation> getDefault() {
         List<OvalInformation> ovalInformations = new LinkedList();
         for (int index = 0; index != 7; ++index) {
             final int selectNumber = (int)(Math.random() * 3) + 1;
@@ -98,7 +98,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
 
             }
         }
-        return ovalInformations.toArray(new OvalInformation[ovalInformations.size()]);
+        return new ArrayList(ovalInformations);
     }
     private OvalInformation(int movieIndex, long minMicroTime, long maxMicroTime, int diameter, int x, int y, BufferedImage snapshotImage) {
         this.movieIndex = movieIndex;

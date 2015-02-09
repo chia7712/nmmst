@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import net.nmmst.request.Request;
+import net.nmmst.tools.Ports;
 
 /**
  *
@@ -16,9 +17,9 @@ import net.nmmst.request.Request;
  */
 public class CommandTest {
     public static void main(String[] args) throws IOException {
-        try (Socket socket = new Socket(args[0], Integer.valueOf(args[1]))) {
+        try (Socket socket = new Socket(args[0], Ports.REQUEST.get())) {
             ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-            output.writeObject(toRequest(args[2]));
+            output.writeObject(toRequest(args[1]));
             System.out.println("ok");
         }
     }
