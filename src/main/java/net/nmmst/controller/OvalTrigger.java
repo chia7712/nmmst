@@ -39,7 +39,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
         OvalInformation[] ovalInformationConfig = OvalInformation.get();
         for (OvalInformation ovalInformation : ovalInformationConfig) {
             int index = ovalInformation.getIndex();
-            if(ovalWrapper.containsKey(index)) {
+            if (ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);
             } else {
                 Set<OvalInformation> sets = new TreeSet();
@@ -63,16 +63,16 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     }
     @Override
     public void triggerOff(Component component) {
-        if(component.getName().contains("X")) {
-            if(component.getPollData() >= 1.0f) {
+        if (component.getName().contains("X")) {
+            if (component.getPollData() >= 1.0f) {
                 count.incrementAndGet();
             }
-            if(component.getPollData() <= -1.0f) {
+            if (component.getPollData() <= -1.0f) {
                 count.decrementAndGet();
             }
         }
-        if(component.getName().contains("s")) {
-            if(component.getPollData() == 1.0f) {
+        if (component.getName().contains("s")) {
+            if (component.getPollData() == 1.0f) {
                 pressed.set(true);
             } else {
                 pressed.set(false);
@@ -112,11 +112,11 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
             Graphics2D g = (Graphics2D)frame.getImage().getGraphics();
             g.setStroke(STROKE);
             //Draw the oval
-            if(countSnapshot % ovalInformations.size() == index) {
+            if (countSnapshot % ovalInformations.size() == index) {
                 g.setColor(FOCUS_COLOR);
-                if(hasPressed) {
+                if (hasPressed) {
                     synchronized(pressedInformations) {
-                        if(pressedInformations.add(ovalInformation)) {
+                        if (pressedInformations.add(ovalInformation)) {
                             snapshotCount = 30;
                             curOvalInformation = ovalInformation;
                         }
@@ -126,7 +126,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 g.setColor(DEFAULT_COLOR);
             }
             //User capture the target, so we draw something on the frame
-            if(snapshotCount > 0 && curOvalInformation != null) {
+            if (snapshotCount > 0 && curOvalInformation != null) {
                 BufferedImage snapshotImage = curOvalInformation.getImage();
                 g.drawImage(
                     snapshotImage, 

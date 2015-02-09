@@ -41,7 +41,7 @@ public class DioAction  {
         do_1735U.Write(0, (byte)0x10);
         int count_time = 0;
         try {
-            while(count_time <= 45) {
+            while (count_time <= 45) {
                 TimeUnit.SECONDS.sleep(10);
                 count_time += 10;
             }

@@ -30,48 +30,45 @@ public class WheelTrigger implements ControlTrigger {
     private long preTime = 0;
     private boolean isTimeToSelect() {
         Frame frame = frameRef.get();
-        if(frame == null) {
+        if (frame == null) {
             return false;
         }
         MovieAttribute attribute = frame.getMovieAttribute();
         final long currentTime = frame.getTimestamp();
         final long duration = attribute.getDuration() * 1000;
         final long diffTime = duration - currentTime;
-        if(diffTime <= minSelectTime || diffTime >= maxSelectTime) {
-            return false;
-        }
-        return true;
+        return !(diffTime <= minSelectTime || diffTime >= maxSelectTime);
     }
     @Override
     public synchronized void triggerOff(Component component) {
         final long currentTime = System.currentTimeMillis() * 1000;
-        if(currentTime - preTime < period) {
+        if (currentTime - preTime < period) {
             return;
         }
         preTime = currentTime;
         System.out.println(component.getPollData());
         boolean direction = false;
-        if(component.getPollData() >= maxWheelValue) {
+        if (component.getPollData() >= maxWheelValue) {
             direction = true;
-        } else if(component.getPollData() <= minWheelValue) {
+        } else if (component.getPollData() <= minWheelValue) {
             direction = false;
         } else {
             return;
         }
-        if(isTimeToSelect()) {
+        if (isTimeToSelect()) {
             SerialStream client = null;
             try {
                 Frame frame = frameRef.get();
-                if(frame == null) {
+                if (frame == null) {
                     return;
                 }
                 MovieAttribute attribute = frame.getMovieAttribute();
                 int[] indexs = new int[2];
                 boolean[] values = new boolean[2];
-                if(attribute.getIndex() == 0) {
+                if (attribute.getIndex() == 0) {
                     indexs[0] = 1;
                     indexs[1] = 2;
-                } else if(attribute.getIndex() == 3) {
+                } else if (attribute.getIndex() == 3) {
                     indexs[0] = 4;
                     indexs[1] = 5;
                 } else {
@@ -83,7 +80,7 @@ public class WheelTrigger implements ControlTrigger {
                 client.write(new Request(Request.Type.SELECT, new SelectRequest(indexs, values)));
             } catch(IOException e) { 
             } finally {
-                if(client != null) {
+                if (client != null) {
                     client.close();
                 }
             }

@@ -24,6 +24,8 @@ import net.nmmst.request.Request;
 import net.nmmst.request.RequestServer;
 import net.nmmst.request.SelectRequest;
 import net.nmmst.tools.BasicPanel;
+import net.nmmst.tools.NMConstants;
+import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WOL;
@@ -33,12 +35,17 @@ import net.nmmst.tools.WOL;
  */
 public class MasterFrame extends JFrame {
     private static final long serialVersionUID = -4475933827111956737L;
-    private static final String rootPath = "D:\\海科圖片\\";
-    private final BufferedImage startImage = ImageIO.read(new File(rootPath + "m_start.jpg"));
-    private final BufferedImage stopImage = ImageIO.read(new File(rootPath + "m_stop.jpg"));
-    private final BufferedImage refreshImage = ImageIO.read(new File(rootPath + "m_refresh.jpg"));
-    private final BufferedImage backgroundImage = ImageIO.read(new File(rootPath + "m_background_all.jpg"));
-    private final BufferedImage testImage = ImageIO.read(new File(rootPath + "m_test.jpg"));
+    private static final String rootPath = NMConstants.MASTER_ROOT_PATH;
+    private final BufferedImage startImage = Painter.loadOrStringImage(new File(rootPath + "//m_start.jpg"), "start", 640, 480);
+//            ImageIO.read(new File(rootPath + "//m_start.jpg"));
+    private final BufferedImage stopImage = Painter.loadOrStringImage(new File(rootPath + "//m_stop.jpg"), "stop", 640, 480);
+//            ImageIO.read(new File(rootPath + "//m_stop.jpg"));
+    private final BufferedImage refreshImage = Painter.loadOrStringImage(new File(rootPath + "//m_refresh.jpg"), "refresh", 640, 480);
+//            ImageIO.read(new File(rootPath + "//m_refresh.jpg"));
+    private final BufferedImage backgroundImage = Painter.loadOrStringImage(new File(rootPath + "//m_background_all.jpg"), "background", 640, 480);
+//            ImageIO.read(new File(rootPath + "//m_background_all.jpg"));
+    private final BufferedImage testImage = Painter.loadOrStringImage(new File(rootPath + "//test.jpg"), "refresh", 640, 480);
+//            ImageIO.read(new File(rootPath + "//m_test.jpg"));
     private final BasicPanel startPanel = new BasicPanel(startImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
     private final BasicPanel refreshPanel = new BasicPanel(refreshImage, BasicPanel.Mode.FILL);
@@ -132,7 +139,7 @@ public class MasterFrame extends JFrame {
         public void run() {
             final AtomicBoolean start = new AtomicBoolean(false);
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            while(!close.get()) {
+            while (!close.get()) {
                 try  {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
@@ -156,18 +163,18 @@ public class MasterFrame extends JFrame {
                             }
                             break;
                         case STOP:
-                            if(start.get()) {
+                            if (start.get()) {
                                 executor.shutdownNow();
                                 dioAction.light_off();
                                 SerialStream.sendAll(playerInformations, new Request(Request.Type.STOP), Ports.REQUEST.get());
                             }
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest) {
+                            if (request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length) {
+                                if (indexs.length == values.length) {
                                     for (int index = 0; index != indexs.length; ++index) {
                                         Happen.setValues(indexs[index], values[index]);
                                     }
@@ -203,8 +210,6 @@ public class MasterFrame extends JFrame {
                             break;
                         case WOL:
                             for (PlayerInformation playerInformation : playerInformations) {
-//                                WOL.wakeup("192.168.100.255", playerInformation.getMac());
-//                                System.out.println("192.168.100.255 " + playerInformation.getMac());
                                 WOL.wakeup(PlayerInformation.getBroadCast(), playerInformation.getMac());
                                 System.out.println(PlayerInformation.getBroadCast() + " " + playerInformation.getMac());
                             }

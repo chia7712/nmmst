@@ -13,7 +13,7 @@ public class Sleeper {
         this.microTolerance = microTolerance;
     }
     public long sleepByTimeStamp(long streamCurrentTime) throws InterruptedException {
-        if(streamStartTime == 0) {
+        if (streamStartTime == 0) {
             clockStartTime = System.nanoTime();
             streamStartTime = streamCurrentTime;
             return 0;
@@ -21,7 +21,7 @@ public class Sleeper {
         final long clockTimeInterval 	= (System.nanoTime() - clockStartTime) / 1000;
         final long streamTimeInterval 	= (streamCurrentTime - streamStartTime);
         final long microsecondsToSleep	= (streamTimeInterval - (clockTimeInterval + microTolerance));
-        if(microsecondsToSleep > 0) {
+        if (microsecondsToSleep > 0) {
             TimeUnit.MICROSECONDS.sleep(microsecondsToSleep);
         }
         return microsecondsToSleep;

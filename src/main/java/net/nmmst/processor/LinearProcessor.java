@@ -24,10 +24,10 @@ public class LinearProcessor implements FrameProcessor {
     private final PlayerInformation.Location location;
     @Override
     public boolean equals(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
-        if(obj instanceof LinearProcessor) {
+        if (obj instanceof LinearProcessor) {
             if (((LinearProcessor) obj).location == location) {
                 return true;
             }
@@ -114,7 +114,7 @@ public class LinearProcessor implements FrameProcessor {
         //Vertical, use xEquation
         for (int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x) {
             final double weight = xEquation.getY((double)x / (double)width);
-            if(weight >= 1.0) {
+            if (weight >= 1.0) {
                 continue;
             }
             for (int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y) {
@@ -128,7 +128,7 @@ public class LinearProcessor implements FrameProcessor {
         //horizontal, use yEquation
         for (int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y) {
             final double weight = yEquation.getY((double)y / (double)height);
-            if(weight >= 1.0) {
+            if (weight >= 1.0) {
                 continue;
             }
             for (int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x) {
@@ -187,9 +187,9 @@ public class LinearProcessor implements FrameProcessor {
         private final double argA;
         private final double argB;
         public LinearEquationInTwo(double x1, double y1, double x2, double y2) {
-            if(x1 == x2 && y1 == y2) {
+            if (x1 == x2 && y1 == y2) {
                 throw new IllegalArgumentException();
-            } else if(x1 == x2) {
+            } else if (x1 == x2) {
                 argA = 0;
                 argB = 0;
             } else {

@@ -27,7 +27,7 @@ public class SerialStream {
                 handlers[index] = new SerialStream(new Socket(playerInformations[index].getIP(), port));
             } catch(IOException e) {
                 for (SerialStream handler : handlers) {
-                    if(handler != null) {
+                    if (handler != null) {
                         handler.close();
                     }
                 }
@@ -75,13 +75,13 @@ public class SerialStream {
         return client.getInetAddress().getHostAddress();
     }
     public Object read() throws ClassNotFoundException, IOException {
-        if(input == null) {
+        if (input == null) {
             input = new ObjectInputStream(client.getInputStream());
         }
         return input.readObject();
     }
     public void write(Serializable serial) throws IOException {
-        if(output == null) {
+        if (output == null) {
             output = new ObjectOutputStream(client.getOutputStream());
         }
         output.writeObject(serial);

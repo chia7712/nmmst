@@ -36,7 +36,7 @@ public class BufferFactory {
         private boolean waitForPause() throws InterruptedException {
             boolean bePaused = false;
             synchronized(pause) {
-                while(pause.get()) {
+                while (pause.get()) {
                     pause.wait();
                     bePaused = true; 
                 }
@@ -45,7 +45,7 @@ public class BufferFactory {
         }
         @Override
         public Frame readFrame() throws InterruptedException {
-            if(waitForPause()) {
+            if (waitForPause()) {
                 hadPause.set(true);
             }
             return frames.take(); 	

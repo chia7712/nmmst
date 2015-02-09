@@ -26,7 +26,7 @@ import net.nmmst.movie.Sample;
  */
 public class Benchmarker {
     public static void main(String[] args) throws IOException {
-        if(args.length != 2) {
+        if (args.length != 2) {
             throw new IOException("<movie path> <pic path>");
         }
         MovieStream stream = new MovieStream(args[0], 0);
@@ -72,13 +72,13 @@ public class Benchmarker {
                 
         }
         public void save(Frame frame) throws IOException {
-            if(frame != null && frame.getImage() != null && random(frame)) {
+            if (frame != null && frame.getImage() != null && random(frame)) {
                 ImageIO.write(frame.getImage(), "jpg", new File(rootDir, frame.getTimestamp() + ".jpg"));
             }
         }
         private boolean random(Frame frame) {
             ++count;
-            if(count == 1000) {
+            if (count == 1000) {
                 return true;
             }
             return false;

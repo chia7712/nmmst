@@ -24,10 +24,10 @@ public class BourkeProcessor implements FrameProcessor {
     private final PlayerInformation.Location location;
     @Override
     public boolean equals(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
-        if(obj instanceof BourkeProcessor) {
+        if (obj instanceof BourkeProcessor) {
             if (((BourkeProcessor) obj).location == location) {
                 return true;
             }
@@ -98,7 +98,7 @@ public class BourkeProcessor implements FrameProcessor {
 
         for (int x = (int) (width * xMinV); x != (int)(width * xMaxV); ++x) {
             double normalization = normalized((double)x / (double)width, xMaxV, xMinV);		
-            if(normalization > 1 || normalization < 0) {
+            if (normalization > 1 || normalization < 0) {
                 continue;
             }
             switch(location) {
@@ -116,12 +116,12 @@ public class BourkeProcessor implements FrameProcessor {
                     break;
             }
             double weight = 0;
-            if(normalization >= 0.5) {
+            if (normalization >= 0.5) {
                 weight = rightEquation(normalization);
             } else {
                 weight = leftEquation(normalization);
             }
-            if(weight >= 1 || weight < 0) {
+            if (weight >= 1 || weight < 0) {
                 continue;
             }
             for (int y = (int) (height * yMinV); y != (int)(height * yMaxV); ++y) {
@@ -135,16 +135,16 @@ public class BourkeProcessor implements FrameProcessor {
         for (int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y) {
             double normalization = normalized((double)y / (double)height, yMaxH, yMinH);
             double weight = 0;
-            if(normalization > 1) {
+            if (normalization > 1) {
                 continue;
-            } else if(normalization > 0.5) {
+            } else if (normalization > 0.5) {
                 weight = rightEquation(normalization);
-            } else if(normalization >= 0) {
+            } else if (normalization >= 0) {
                 weight = leftEquation(normalization);
             } else {
                 continue;
             }
-            if(weight >= 1) {
+            if (weight >= 1) {
                 continue;
             }
             for (int x = (int) (width * xMinH); x != (int)(width * xMaxH); ++x) {
@@ -157,14 +157,14 @@ public class BourkeProcessor implements FrameProcessor {
         }
     }
     private double leftEquation(double value) {
-        if(value < 0 || value >= 0.5) {
+        if (value < 0 || value >= 0.5) {
             System.out.println(value);
             throw new IllegalArgumentException();
         }
         return gamma * Math.pow(2 * value, curvature);
     }
     private double rightEquation(double value) {
-        if(value < 0.5 || value > 1) {
+        if (value < 0.5 || value > 1) {
             System.out.println(value);
             throw new IllegalArgumentException();
         }

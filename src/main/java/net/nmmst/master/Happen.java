@@ -31,7 +31,7 @@ public class Happen {
         true
     };
     public static void setValues(int index, boolean value) {
-        if(index >= values.length) {
+        if (index >= values.length) {
             return;
         }
         values[index] = value;
@@ -55,9 +55,9 @@ public class Happen {
     }
     private static void start2(RegisterClient server, DioAction dioAction) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        if(values[1]) {
+        if (values[1]) {
             dioAction.light_2();
-        } else if(values[2]) {
+        } else if (values[2]) {
             dioAction.light_3();
         } else {
             dioAction.light_2();
@@ -73,9 +73,9 @@ public class Happen {
     }
     private static void start4(RegisterClient server, DioAction dioAction) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        if(values[4]) {
+        if (values[4]) {
             dioAction.light_5();
-        } else if(values[5]) {
+        } else if (values[5]) {
             dioAction.light_6();
         } else {
             dioAction.light_5();

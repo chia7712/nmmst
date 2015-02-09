@@ -21,19 +21,19 @@ public class RequestServer implements Closure {
     }
     @Override
     public void run() {
-        while(!close.get() && !Thread.interrupted()) {
+        while (!close.get() && !Thread.interrupted()) {
             SerialStream stream = null;
             try {
                 stream = new SerialStream(server.accept());
                 Object obj = stream.read();
-                if(obj instanceof Request) {
+                if (obj instanceof Request) {
                     requestBuffer.put((Request)obj);
                 }
             } catch (IOException | ClassNotFoundException | InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             } finally {
-                if(stream != null)
+                if (stream != null)
                     stream.close();
             }
         }

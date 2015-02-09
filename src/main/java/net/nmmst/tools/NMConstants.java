@@ -11,8 +11,11 @@ package net.nmmst.tools;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class NMConstants {
+    //second
+    public static final int CHECK_PERIOD = 2; 
     public static final String MOVIE_ROOT_PATH = "D://海科影片";
-    public static final String CONTROLLER_ROOT_PATH = "D://海科圖片";
+    public static final String MASTER_ROOT_PATH = "D://海科圖片";
+    public static final String CONTROLLER_ROOT_PATH = MASTER_ROOT_PATH;
     public static final String CONTROLLER_DASHBOARD_JPG = CONTROLLER_ROOT_PATH + "//dashboard.jpg";
     public static final String CONTROLLER_STOP_JPG = CONTROLLER_ROOT_PATH + "//stop.jpg";
     public static final String CONTROLLER_OVAL_INFORMATION = "D:\\oval-information.con";

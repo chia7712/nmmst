@@ -38,7 +38,7 @@ public class MovieOrder {
         }
     }
     public synchronized void setEnable(int nextIndex, boolean value) {
-        if(nextIndex >= moviePaths.size()) {
+        if (nextIndex >= moviePaths.size()) {
             return;
         }
         Pair<Boolean, String> path = moviePaths.get(nextIndex);
@@ -60,7 +60,7 @@ public class MovieOrder {
         closeCurrentStream();
         while (nextIndex >= 0 && nextIndex < moviePaths.size()) {
             Pair<Boolean, MovieStream> stream = movieStreams.get(nextIndex);
-            if(stream.getFirst()) {
+            if (stream.getFirst()) {
                 preIndex = nextIndex;
                 ++nextIndex;
                 return stream.getSecond();
@@ -70,7 +70,7 @@ public class MovieOrder {
         return null;
     }
     private void closeCurrentStream() throws IOException {
-        if(preIndex >= moviePaths.size() || preIndex < 0) {
+        if (preIndex >= moviePaths.size() || preIndex < 0) {
             return;
         }
         Pair<Boolean, String> path = moviePaths.get(preIndex);

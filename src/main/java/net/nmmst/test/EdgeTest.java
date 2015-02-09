@@ -37,7 +37,7 @@ public class EdgeTest {
 		System.out.println("ok");
 	}
 	private static LinearProcessor.Format getFormat(String[] args) {
-            if(args.length != 6) {
+            if (args.length != 6) {
                 return null;
             }
             return new LinearProcessor.Format(
@@ -53,13 +53,13 @@ public class EdgeTest {
             return (value - min) / (max - min);
 	}
 	private static double rightEquation(double value, double curvature, double gamma) {
-            if(value <= 0.5 || value >= 1) {
+            if (value <= 0.5 || value >= 1) {
                   throw new IllegalArgumentException();
             }
             return 1 - (1 - gamma) * Math.pow((2 * (1 - value)), curvature);
 	}
 	private static double leftEquation(double value, double curvature, double gamma) {
-            if(value < 0 || value > 0.5) {
+            if (value < 0 || value > 0.5) {
                 throw new IllegalArgumentException();
             } 
             return gamma * Math.pow(2 * value, curvature);

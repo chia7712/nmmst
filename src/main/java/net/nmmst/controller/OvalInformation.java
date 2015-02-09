@@ -44,7 +44,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
             reader = new BufferedReader(new FileReader(configurationFile));
             Set<OvalInformation> ovalInformations = new HashSet();
             String line = null;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 String[] args = line.split(" ");
                 if (args.length != 7) {
                     continue;
@@ -68,7 +68,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
         } catch (IOException e) {
             return null;
         } finally {
-            if(reader != null) {
+            if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e) {
@@ -139,10 +139,10 @@ public class OvalInformation implements Comparable<OvalInformation> {
     }
     @Override
     public boolean equals(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
-        if(obj instanceof OvalInformation) {
+        if (obj instanceof OvalInformation) {
             OvalInformation dst = (OvalInformation)obj;
             return dst.toString().compareTo(toString()) == 0;
         }

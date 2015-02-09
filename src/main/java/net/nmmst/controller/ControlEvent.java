@@ -1,10 +1,8 @@
 package net.nmmst.controller;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
@@ -24,7 +22,7 @@ public class ControlEvent implements Closure {
         this.triggerList.addAll(triggerList);
         for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
             for (ControlTrigger trigger : this.triggerList) {
-                if(controller.getType() == trigger.getType()) {
+                if (controller.getType() == trigger.getType()) {
                     System.out.println("use device : " + controller);
                     controllers.add(controller);
                     break;
@@ -38,14 +36,14 @@ public class ControlEvent implements Closure {
     }
     @Override
     public void run() {
-        while(!close.get()) {
+        while (!close.get()) {
             for (Controller controller : controllers) {
                 controller.poll();
                 EventQueue queue = controller.getEventQueue();
                 Event event = new Event();
-                while(queue.getNextEvent(event)) {  
+                while (queue.getNextEvent(event)) {  
                     for (ControlTrigger trigger : triggerList) {
-                        if(controller.getType() == trigger.getType()) {
+                        if (controller.getType() == trigger.getType()) {
                             trigger.triggerOff(event.getComponent());
                         }
                     }

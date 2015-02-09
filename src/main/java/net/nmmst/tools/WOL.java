@@ -12,7 +12,7 @@ public class WOL {
     private static final int PORT = 80;
     private static byte[] genMagicPacket(String mac_str) {
         byte[] mac = getMacBytes(mac_str);
-        if(mac.length == 0) {
+        if (mac.length == 0) {
             return mac;
         }
         byte[] bytes = new byte[6 + 16 * mac.length];
@@ -26,7 +26,7 @@ public class WOL {
     }
     public static boolean wakeup(String broadcase, String mac_str) {
         byte[] bytes = genMagicPacket(mac_str);
-        if(bytes.length == 0) {
+        if (bytes.length == 0) {
             return false;
         }
         DatagramSocket socket = null;
@@ -40,7 +40,7 @@ public class WOL {
             // TODO Auto-generated catch block
             e.printStackTrace();
         } finally {
-            if(socket != null) {
+            if (socket != null) {
                 socket.close();
             }
         }

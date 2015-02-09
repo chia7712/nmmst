@@ -29,7 +29,7 @@ public class RegisterClient implements Closure {
     public boolean isBuffered() {
         synchronized(playerStates) {
             try {
-                if(playerStates.size() != playerInformations.length) {
+                if (playerStates.size() != playerInformations.length) {
                     System.out.println("current player number = " + playerStates.size());
                     return false;
                 }
@@ -38,7 +38,7 @@ public class RegisterClient implements Closure {
                     int frameBuffered = entry.getValue().getFrameBuffered();
                     double ratio = (double)frameBuffered / (double) bufferSize;
                     System.out.println(entry.getKey() + " " + entry.getValue());
-                    if(ratio <= 0.9) {
+                    if (ratio <= 0.9) {
                         return false;
                     }
                 }
@@ -57,7 +57,7 @@ public class RegisterClient implements Closure {
             try {
                 client = new SerialStream(new Socket(playerInformation.getIP(), bindPort));
                 Object obj = client.read();
-                if(obj instanceof PlayerState) {
+                if (obj instanceof PlayerState) {
                     PlayerState state = (PlayerState)obj;
                     synchronized(playerStates) {
                         System.out.println(playerInformation + " " + state);
@@ -66,7 +66,7 @@ public class RegisterClient implements Closure {
                 }
             } catch(IOException | ClassNotFoundException e) {
             } finally {
-                if(client != null) {
+                if (client != null) {
                     client.close();
                 }
             }
@@ -75,7 +75,7 @@ public class RegisterClient implements Closure {
     @Override
     public void run() {
         try {
-            while(!close.get() && !Thread.interrupted()) {
+            while (!close.get() && !Thread.interrupted()) {
                     checkPlayers();
                     TimeUnit.SECONDS.sleep(3);
             }

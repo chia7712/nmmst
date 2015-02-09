@@ -33,7 +33,7 @@ public class PlayerInformation {
     }
     private static String getModifiedIP(String ip) {
         String[] args = ip.split("\\.");
-        if(args.length != 4) {
+        if (args.length != 4) {
             return new String();
         }
         int[] argsInt = new int[4];
@@ -62,35 +62,35 @@ public class PlayerInformation {
             reader = new BufferedReader(new FileReader(configurationFile));
             Set<PlayerInformation> playerInformations = new HashSet();
             String line = null;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 String[] args = line.split(" ");
-                if(args.length != 3) {
+                if (args.length != 3) {
                         continue;
                 }
                 PlayerInformation.Location location = null;
                 for (PlayerInformation.Location loc : PlayerInformation.Location.values()) {
-                    if(loc.toString().compareTo(args[0]) == 0) {
+                    if (loc.toString().compareTo(args[0]) == 0) {
                         location = loc;
                         break;
                     }
                 }
-                if(location == null) {
+                if (location == null) {
                     continue;
                 }
                 String ip = getModifiedIP(args[1]);
-                if(ip.length() == 0) {
+                if (ip.length() == 0) {
                     continue;
                 }
                 playerInformations.add(new PlayerInformation(location, ip, args[2]));
             }
-            if(playerInformations.size() != 5) {
+            if (playerInformations.size() != 5) {
                 return null;
             }
             return playerInformations.toArray(new PlayerInformation[playerInformations.size()]);
         } catch (IOException e) {
             return null;
         } finally {
-            if(reader != null) {
+            if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e) {
@@ -116,12 +116,12 @@ public class PlayerInformation {
     }
     @Override
     public boolean equals(Object obj) {
-        if(obj == null) {
+        if (obj == null) {
             return false;
         }
-        if(obj instanceof PlayerInformation) {
+        if (obj instanceof PlayerInformation) {
             PlayerInformation playerInformation = (PlayerInformation)obj;
-            if(playerInformation.location == location || playerInformation.ip.compareTo(ip) == 0 || playerInformation.mac.compareTo(mac) == 0) {
+            if (playerInformation.location == location || playerInformation.ip.compareTo(ip) == 0 || playerInformation.mac.compareTo(mac) == 0) {
                 return true;
             }
         }

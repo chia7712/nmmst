@@ -37,7 +37,7 @@ public class PanelThread implements Closure {
                 if (frame.getImage() == null) {
                     break;
                 }
-                if(attribute == null || frame.getMovieAttribute().getIndex() != attribute.getIndex()) {
+                if (attribute == null || frame.getMovieAttribute().getIndex() != attribute.getIndex()) {
                     attribute = frame.getMovieAttribute();
                     sleeper.reset();
                 }
@@ -46,7 +46,7 @@ public class PanelThread implements Closure {
                 }
                 sleeper.sleepByTimeStamp(frame.getTimestamp());
                 frameRef.set(frame);
-                if(processor != null && processor.needProcess(frame)) {
+                if (processor != null && processor.needProcess(frame)) {
                     processor.process(frame);
                 }
                 panel.write(frame.getImage());

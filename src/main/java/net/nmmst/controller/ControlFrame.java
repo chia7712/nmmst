@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
@@ -47,36 +46,8 @@ import net.nmmst.tools.WindowsFunctions;
  */
 public class ControlFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
-    private static BufferedImage getDashboardImage() {
-        File file = new File(NMConstants.CONTROLLER_DASHBOARD_JPG);
-        BufferedImage image = null; 
-        if (file.exists()) {
-            try {
-                image = ImageIO.read(file);
-            } catch (IOException e) {
-            }
-        }
-        if (image == null) {
-            image = Painter.getStringImage("Dashboard", 640, 480);
-        }
-        return image;
-    }
-    private static BufferedImage getStopImage() {
-        File file = new File(NMConstants.CONTROLLER_STOP_JPG);
-        BufferedImage image = null; 
-        if (file.exists()) {
-            try {
-                image = ImageIO.read(file);
-            } catch (IOException e) {
-            }
-        }
-        if (image == null) {
-            image = Painter.getStringImage("Stop", 640, 480);
-        }
-        return image;
-    }
-    private final BufferedImage dashboardImage = getDashboardImage();
-    private final BufferedImage stopImage = getStopImage();
+    private final BufferedImage dashboardImage = Painter.loadOrStringImage(new File(NMConstants.CONTROLLER_DASHBOARD_JPG), "dashboard", 640, 480);
+    private final BufferedImage stopImage = Painter.loadOrStringImage(new File(NMConstants.CONTROLLER_STOP_JPG), "stop", 640, 480);
     private final BufferedImage	initImage = Painter.fillColor(1920, 1080, Color.BLACK);
     private final MovieOrder movieOrder = MovieOrder.get();
     private final BasicPanel moviePanel = new BasicPanel(initImage);
@@ -96,18 +67,18 @@ public class ControlFrame extends JFrame {
             public void run() {
                 while (true) {
                     try {
-                        TimeUnit.SECONDS.sleep(2);
+                        TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                     int count = 0;
                     for (Closure closure : closures) {
-                        if(closure.isClosed()) {
+                        if (closure.isClosed()) {
                             ++count;
                         }
                     }
-                    if(count == closures.size()) {
+                    if (count == closures.size()) {
                         try {
                             init();
                         } catch (IOException e) {
@@ -138,7 +109,7 @@ public class ControlFrame extends JFrame {
     private final BasicPanel dashboardPanel = new BasicPanel(dashboardImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
     private final SnapshotPanel snapshotPanel = new SnapshotPanel();
-    private final Component[] defaultComponents	= {
+    private final Component[] defaultComponents = {
         dashboardPanel, 
         moviePanel, 
         stopPanel,
@@ -192,7 +163,7 @@ public class ControlFrame extends JFrame {
                     System.out.println(request.getType());
                     switch (request.getType()) {
                         case START:
-                            if(buffer.isPause()) {
+                            if (buffer.isPause()) {
                                 buffer.setPause(false);
                             }
                             break;
@@ -206,11 +177,11 @@ public class ControlFrame extends JFrame {
                             buffer.setPause(true);
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest) {
+                            if (request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length) {
+                                if (indexs.length == values.length) {
                                     for (int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
                                     }
@@ -229,9 +200,7 @@ public class ControlFrame extends JFrame {
                 } 
                 catch (InterruptedException | IOException e) {}
             }
-
         }
-
     }
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException {
         final JFrame f = new ControlFrame();

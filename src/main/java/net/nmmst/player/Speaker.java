@@ -19,7 +19,7 @@ public class Speaker {
     }
     public void write(byte[] data) {
         int count = 0;
-        while((count += line.write(data, count, data.length - count)) != data.length) {
+        while ((count += line.write(data, count, data.length - count)) != data.length) {
             //DO NOTHING
         }
     }

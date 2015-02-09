@@ -30,9 +30,9 @@ public class SpeakerThread implements Closure {
     @Override
     public void run() {
         try {
-            while(!Thread.interrupted() && !close.get()) {
+            while (!Thread.interrupted() && !close.get()) {
                 Sample sampler = buffer.readSample();
-                if(sampler.getData() == null) {
+                if (sampler.getData() == null) {
                     break;
                 }
                 speaker.write(sampler.getData());

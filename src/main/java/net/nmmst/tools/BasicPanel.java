@@ -27,7 +27,7 @@ public class BasicPanel extends JPanel {
         this.mode = mode;
     }
     public void write(BufferedImage image) {
-        if(image != null) {
+        if (image != null) {
             this.image = image;
             repaint();
         }
@@ -39,10 +39,10 @@ public class BasicPanel extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if(image != null) {
+        if (image != null) {
             final int image_w = image.getWidth();
             final int image_h = image.getHeight();
-            if(image_w != -1 && image_h != -1) {
+            if (image_w != -1 && image_h != -1) {
                 final int panelW = getWidth();
                 final int panelH = getHeight();  
                 switch(mode) {

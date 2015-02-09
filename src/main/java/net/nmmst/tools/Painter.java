@@ -6,11 +6,27 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public abstract class Painter {
+    public static BufferedImage loadOrStringImage(File file, String string, int width, int height) {
+        BufferedImage image = null; 
+        if (file.exists()) {
+            try {
+                image = ImageIO.read(file);
+            } catch (IOException e) {
+            }
+        }
+        if (image == null) {
+            image = Painter.getStringImage(string, width, height);
+        }
+        return image;
+    }
     public abstract BufferedImage paint(BufferedImage oriImage);
     public static BufferedImage process(BufferedImage oriImage, Painter ... painters) {
         BufferedImage dst_image = newCopyPainter().paint(oriImage);
@@ -28,7 +44,7 @@ public abstract class Painter {
                 final int height = oriImage.getHeight();
                 BufferedImage dst_image = new BufferedImage(width, height, imageType);
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, width, height, null));
+                while (!g2d.drawImage(oriImage, 0, 0, width, height, null));
                 g2d.dispose();
                 return dst_image;
             }
@@ -43,7 +59,7 @@ public abstract class Painter {
                 final int height = (int)((double)oriImage.getHeight() * scale);
                 BufferedImage dst_image = new BufferedImage(width, height, oriImage.getType());
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, width, height, null));
+                while (!g2d.drawImage(oriImage, 0, 0, width, height, null));
                 g2d.dispose();
                 return dst_image;
             }
@@ -58,7 +74,7 @@ public abstract class Painter {
                 final int height = oriImage.getHeight();
                 BufferedImage dst_image = new BufferedImage(width, height, oriImage.getType());
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, width - 1, height - 1, width - 1, 0, 0, height - 1, null));
+                while (!g2d.drawImage(oriImage, 0, 0, width - 1, height - 1, width - 1, 0, 0, height - 1, null));
                 g2d.dispose();
                 return dst_image;
             }
@@ -75,7 +91,7 @@ public abstract class Painter {
                 final int height = (int)((double)oriImage.getHeight() * scale);
                 BufferedImage dst_image = new BufferedImage(width, height, oriImage.getType());
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, width, height, null));
+                while (!g2d.drawImage(oriImage, 0, 0, width, height, null));
                 g2d.dispose();
                 return dst_image;
             }
@@ -88,7 +104,7 @@ public abstract class Painter {
             public BufferedImage paint(BufferedImage oriImage)  {
                 BufferedImage dst_image = new BufferedImage(dst_width, dst_height, oriImage.getType());
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, dst_width, dst_height, null));
+                while (!g2d.drawImage(oriImage, 0, 0, dst_width, dst_height, null));
                 g2d.dispose();
                 return dst_image;
             }
@@ -103,7 +119,7 @@ public abstract class Painter {
                 final int height = oriImage.getHeight();
                 BufferedImage dst_image = new BufferedImage(width, height, oriImage.getType());
                 Graphics2D g2d = (Graphics2D)dst_image.createGraphics();
-                while(!g2d.drawImage(oriImage, 0, 0, width, height, null));
+                while (!g2d.drawImage(oriImage, 0, 0, width, height, null));
                 g2d.dispose();
                 return dst_image;
             }

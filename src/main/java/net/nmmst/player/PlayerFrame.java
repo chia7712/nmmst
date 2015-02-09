@@ -32,6 +32,7 @@ import net.nmmst.request.RequestServer;
 import net.nmmst.request.SelectRequest;
 import net.nmmst.tools.BasicPanel;
 import net.nmmst.tools.Closure;
+import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
@@ -52,7 +53,33 @@ public class PlayerFrame extends JFrame {
     private final RegisterServer registerServer = new RegisterServer(Ports.REGISTER.get());
     private final Runnable[] longTermThreads = {
         requestServer, 
-        new CheckThread(),
+        new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    int count = 0;
+                    for (Closure closure : closures) {
+                        if (closure.isClosed()) {
+                            ++count;
+                        }
+                    }
+                    if (count == closures.size()) {
+                        try {
+                            init();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        },
         new ExecuteRequest(),
         registerServer
     };
@@ -69,7 +96,6 @@ public class PlayerFrame extends JFrame {
         }
     }
     private void init() throws IOException {
-        System.out.println("init");
         buffer.clear();
         panel.write(initImage);
         buffer.setPause(true);
@@ -82,7 +108,6 @@ public class PlayerFrame extends JFrame {
         for (Closure closure : closures) {
             shortTermThreadsPool.execute(closure);
         }
-        System.out.println("init over");
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
         for (MovieAttribute attribute : attributes) {
@@ -93,13 +118,13 @@ public class PlayerFrame extends JFrame {
     private class ExecuteRequest implements Runnable {
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 try {
                     Request request = requestBuffer.take();
                     System.out.println(request.getType());
                     switch(request.getType()) {
                         case START:
-                            if(buffer.isPause()) {
+                            if (buffer.isPause()) {
                                 buffer.setPause(false);
                             }
                             break;
@@ -113,11 +138,11 @@ public class PlayerFrame extends JFrame {
                             buffer.setPause(true);
                             break;
                         case SELECT:
-                            if(request.getArgument() instanceof SelectRequest) {
+                            if (request.getArgument() instanceof SelectRequest) {
                                 SelectRequest selectRequest = (SelectRequest)request.getArgument();
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
-                                if(indexs.length == values.length) {
+                                if (indexs.length == values.length) {
                                     for (int index = 0; index != indexs.length; ++index) {
                                         movieOrder.setEnable(indexs[index], values[index]);
                                     }
@@ -132,7 +157,7 @@ public class PlayerFrame extends JFrame {
                             break;
                         case TEST_1: {
                             BufferedImage image = getTestImage(true);
-                            if(image == null) {
+                            if (image == null) {
                                 break;
                             }
                             Object obj = request.getArgument();
@@ -146,7 +171,7 @@ public class PlayerFrame extends JFrame {
                         }    
                         case TEST_2: {
                             BufferedImage image = getTestImage(false);
-                            if(image == null) {
+                            if (image == null) {
                                 break;
                             }
                             Object obj = request.getArgument();
@@ -176,36 +201,6 @@ public class PlayerFrame extends JFrame {
             return null;
         }
     }
-    private class CheckThread implements Runnable {
-        @Override
-        public void run() {
-            while(true) {
-                try {
-                    TimeUnit.SECONDS.sleep(2);
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                int count = 0;
-                for (Closure closure : closures) {
-                    if(closure.isClosed()) {
-                        ++count;
-                    }
-                }
-                if(count == closures.size()) {
-                    try {
-                        init();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-    }
-
-
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException  {
         final JFrame f = new PlayerFrame(getPlayerLocationa());
         f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
@@ -225,7 +220,7 @@ public class PlayerFrame extends JFrame {
     private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
         for (PlayerInformation playerInformation : PlayerInformation.get()) {
-            if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
+            if (playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
                 return playerInformation;
             }
         }

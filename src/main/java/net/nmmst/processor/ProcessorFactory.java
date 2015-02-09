@@ -87,7 +87,7 @@ public class ProcessorFactory {
 
         @Override
         public void process(Frame frame) {
-            if(frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime) {
+            if (frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime) {
                 firstProcessor.process(frame);
             } else {
                 secondProcessor.process(frame);
@@ -105,7 +105,7 @@ public class ProcessorFactory {
 //        @Override
 //        public boolean needProcess(Frame frame)
 //        {
-//            if(frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime)
+//            if (frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime)
 //                return true;
 //            return false;
 //        }
@@ -122,9 +122,9 @@ public class ProcessorFactory {
 //        public boolean needProcess(Frame frame)
 //        {
 //            MovieAttribute attribute = frame.getMovieAttribute();
-//            if(attribute.getIndex() > 0)
+//            if (attribute.getIndex() > 0)
 //                    return true;
-//            if(attribute.getIndex() == 0 && frame.getTimestamp() > firstMovieChangeTime)
+//            if (attribute.getIndex() == 0 && frame.getTimestamp() > firstMovieChangeTime)
 //                    return true;
 //            return false;
 //        }

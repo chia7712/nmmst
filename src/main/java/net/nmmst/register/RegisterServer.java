@@ -32,7 +32,7 @@ public class RegisterServer implements Closure {
     }
     @Override
     public void run() {
-        while(!close.get() && !Thread.interrupted()) {
+        while (!close.get() && !Thread.interrupted()) {
             SerialStream client = null;
             try {
                 client = new SerialStream(server.accept());
@@ -41,7 +41,7 @@ public class RegisterServer implements Closure {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             } finally {
-                if(client != null) {
+                if (client != null) {
                     client.close();
                 }
             }

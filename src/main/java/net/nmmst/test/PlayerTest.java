@@ -33,20 +33,20 @@ public class PlayerTest extends JFrame {
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                while(true) {
+                while (true) {
                     SerialStream stream = null;
                     try {
                         stream = new SerialStream(server.accept());
                         Object obj = stream.read();
-                        if(obj instanceof BourkeProcessor.Format) {
+                        if (obj instanceof BourkeProcessor.Format) {
                             BourkeProcessor processor = new BourkeProcessor(playerInformation.getLocation(), (BourkeProcessor.Format)obj);
                             BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
                             processor.process(testImage);
                             panel.write(testImage);
                         }
-                        if(obj instanceof Boolean) {
+                        if (obj instanceof Boolean) {
                             Boolean b = (Boolean)obj;
-                            if(b) {
+                            if (b) {
                                 WindowsFunctions.reboot();
                             } else {
                                 BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
@@ -57,7 +57,7 @@ public class PlayerTest extends JFrame {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     } finally {
-                        if(stream != null) {
+                        if (stream != null) {
                             stream.close();
                         }
                     }
@@ -84,7 +84,7 @@ public class PlayerTest extends JFrame {
     private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
         for (PlayerInformation playerInformation : PlayerInformation.get()) {
-            if(playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
+            if (playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
                 return playerInformation;
             }
         }
