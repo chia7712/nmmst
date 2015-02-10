@@ -15,18 +15,17 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieAttribute;
 import net.nmmst.processor.FrameProcessor;
+import net.nmmst.tools.NMConstants;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class OvalTrigger implements FrameProcessor, ControlTrigger {
-    private static final int OVAL_PERIOD = 30;
     private static final Stroke STROKE = new BasicStroke(10);
     private static final Color DEFAULT_COLOR = Color.WHITE;
     private static final Color FOCUS_COLOR = Color.RED;
@@ -34,12 +33,12 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private final AtomicInteger count = new AtomicInteger(10000000);
     private final AtomicBoolean pressed = new AtomicBoolean(false);
     private final Set<OvalInformation> pressedInformations = new HashSet();
-    private int snapshotCount = 0;
+    private int specificFrameTime = 0;
     private OvalInformation curOvalInformation = null;
     public OvalTrigger() {
         List<OvalInformation> ovalInformations = OvalInformation.get();
         for (OvalInformation ovalInformation : ovalInformations) {
-            System.out.println(ovalInformation);
+            System.out.println(" ovalInformation : " + ovalInformation);
             int index = ovalInformation.getIndex();
             if (ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);
@@ -65,15 +64,15 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     @Override
     public void triggerOff(Component component) {
         if (component.getName().contains("X")) {
-            if (component.getPollData() >= 1.0f) {
+            if (component.getPollData() >= NMConstants.WHEEL_MAX_LIMIT) {
                 count.incrementAndGet();
             }
-            if (component.getPollData() <= -1.0f) {
+            if (component.getPollData() <= NMConstants.WHEEL_MIN_LIMIT) {
                 count.decrementAndGet();
             }
         }
         if (component.getName().contains("s")) {
-            if (component.getPollData() == 1.0f) {
+            if (component.getPollData() == NMConstants.PRESS_LIMIT) {
                 pressed.set(true);
             } else {
                 pressed.set(false);
@@ -118,7 +117,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 if (hasPressed) {
                     synchronized(pressedInformations) {
                         if (pressedInformations.add(ovalInformation)) {
-                            snapshotCount = OVAL_PERIOD;
+                            specificFrameTime = NMConstants.SPECIFIC_FRAME_TIME;
                             curOvalInformation = ovalInformation;
                         }
                     }
@@ -127,7 +126,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 g.setColor(DEFAULT_COLOR);
             }
             //User capture the target, so we draw something on the frame
-            if (snapshotCount > 0 && curOvalInformation != null) {
+            if (specificFrameTime > 0 && curOvalInformation != null) {
                 BufferedImage snapshotImage = curOvalInformation.getImage();
                 g.drawImage(
                     snapshotImage, 
@@ -146,6 +145,6 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
             g.dispose();
         }
         pressed.set(false);
-        --snapshotCount;
+        --specificFrameTime;
     }
 }

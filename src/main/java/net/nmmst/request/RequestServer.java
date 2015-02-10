@@ -37,7 +37,6 @@ public class RequestServer implements Closure {
                     stream.close();
             }
         }
-
     }
     @Override
     public void close() {

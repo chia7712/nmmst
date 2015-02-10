@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.nmmst.tools.NMConstants;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -57,19 +58,17 @@ public class PlayerInformation {
     }
     //location ip mac
     private static List<PlayerInformation> getFromFile() {
-        File configurationFile = new File("D:\\player-information.conf");
+        File configurationFile = new File(NMConstants.PLAYER_INFORMATION);
         if (!configurationFile.exists()) {
             return new ArrayList();
         }
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(configurationFile));
+        try (BufferedReader reader = new BufferedReader(new FileReader(configurationFile))){
             Set<PlayerInformation> playerInformations = new HashSet();
             String line = null;
             while ((line = reader.readLine()) != null) {
                 String[] args = line.split(" ");
                 if (args.length != 3) {
-                        continue;
+                    continue;
                 }
                 PlayerInformation.Location location = null;
                 for (PlayerInformation.Location loc : PlayerInformation.Location.values()) {
@@ -93,15 +92,6 @@ public class PlayerInformation {
             return new ArrayList(playerInformations);
         } catch (IOException e) {
             return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
         }
     }
     public PlayerInformation(Location location, String ip, String mac) {

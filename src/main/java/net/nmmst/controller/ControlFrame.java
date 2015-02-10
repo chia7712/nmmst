@@ -6,7 +6,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +42,6 @@ import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -85,7 +83,6 @@ public class ControlFrame extends JFrame {
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Runnable[] longTermThreads = {
         requestServer, 
-//        new CheckThread(),
         new Runnable() {
             @Override
             public void run() {
@@ -231,7 +228,7 @@ public class ControlFrame extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                f.setSize(new Dimension(600, 600));
+                f.setSize(new Dimension(1000, 1000));
 //                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

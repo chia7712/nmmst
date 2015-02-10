@@ -1,8 +1,6 @@
 package net.nmmst.processor;
 
 import net.nmmst.movie.Frame;
-
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>

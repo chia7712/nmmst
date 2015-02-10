@@ -18,7 +18,6 @@ public class SpeakerThread implements Closure {
     public SpeakerThread(Speaker speaker) {
         this.speaker = speaker;
     }
-
     @Override
     public void close() {
         close.set(true);
@@ -44,7 +43,5 @@ public class SpeakerThread implements Closure {
             speaker.flush();
             isClosed.set(true);
         }
-
     }
-
 }

@@ -5,7 +5,6 @@
  */
 package net.nmmst.controller;
 
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
@@ -25,7 +24,6 @@ public class SnapshotPanel extends JPanel {
     private final List<BasicPanel> currentPanel = new LinkedList();
     public SnapshotPanel() {
         setLayout(new GridLayout(ROWS, COLUMNS));
-//        setLayout(new FlowLayout(10, 10, 10));
     }
     public void setOvalInformations(List<OvalInformation> ovalInfos) {
         synchronized(currentPanel) {

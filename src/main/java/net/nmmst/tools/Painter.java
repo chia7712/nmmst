@@ -14,6 +14,9 @@ import javax.imageio.ImageIO;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public abstract class Painter {
+    public static BufferedImage loadOrStringImage(File file, int width, int height) {
+        return loadOrStringImage(file, file.getAbsolutePath(), width, height);
+    }
     public static BufferedImage loadOrStringImage(File file, String string, int width, int height) {
         BufferedImage image = null; 
         if (file.exists()) {
@@ -78,7 +81,6 @@ public abstract class Painter {
                 g2d.dispose();
                 return dst_image;
             }
-
         };
     }
     public static Painter newScalePainter(final int maxLength) {

@@ -20,12 +20,11 @@ import net.nmmst.tools.SerialStream;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class WheelTrigger implements ControlTrigger {
-    private static final long period = 1 * 1000 * 1000;
-    private static final long minSelectTime = 3 * 1000 * 1000;
-    private static final long maxSelectTime = 10 * 1000 * 1000;
-    private static final float maxWheelValue = 0.9f;
-    private static final float minWheelValue = -0.9f;
-    //private static final String masterIP = "192.168.100.31";
+    private static final long VALID_PERIOD = 1 * 1000 * 1000;
+    private static final long MIN_SELECT_TIME = 3 * 1000 * 1000;
+    private static final long MAX_SELECT_TIME = 10 * 1000 * 1000;
+    private static final float MAX_WHEEL_VALUE = 0.9f;
+    private static final float MIN_WHEEL_VALUE = -0.9f;
     private final AtomicReference<Frame> frameRef = BufferFactory.getFrameRef();
     private long preTime = 0;
     private boolean isTimeToSelect() {
@@ -37,20 +36,20 @@ public class WheelTrigger implements ControlTrigger {
         final long currentTime = frame.getTimestamp();
         final long duration = attribute.getDuration() * 1000;
         final long diffTime = duration - currentTime;
-        return !(diffTime <= minSelectTime || diffTime >= maxSelectTime);
+        return !(diffTime <= MIN_SELECT_TIME || diffTime >= MAX_SELECT_TIME);
     }
     @Override
     public synchronized void triggerOff(Component component) {
         final long currentTime = System.currentTimeMillis() * 1000;
-        if (currentTime - preTime < period) {
+        if (currentTime - preTime < VALID_PERIOD) {
             return;
         }
         preTime = currentTime;
-        System.out.println(component.getPollData());
+        
         boolean direction = false;
-        if (component.getPollData() >= maxWheelValue) {
+        if (component.getPollData() >= MAX_WHEEL_VALUE) {
             direction = true;
-        } else if (component.getPollData() <= minWheelValue) {
+        } else if (component.getPollData() <= MIN_WHEEL_VALUE) {
             direction = false;
         } else {
             return;
@@ -85,7 +84,6 @@ public class WheelTrigger implements ControlTrigger {
                 }
             }
         }
-
     }
     @Override
     public Type getType() {

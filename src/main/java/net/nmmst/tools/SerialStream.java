@@ -7,12 +7,12 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import net.nmmst.player.PlayerInformation;
 /**
  *
@@ -22,6 +22,9 @@ public class SerialStream {
     private final Socket client;
     private ObjectInputStream input = null;
     private ObjectOutputStream output = null;
+    public static boolean send(PlayerInformation playerInformation, Serializable serial, int port) throws InterruptedException, IOException {
+        return sendAll(Arrays.asList(playerInformation), serial, port);
+    }
     public static boolean sendAll(List<PlayerInformation> playerInformations, final Serializable serial, int port) throws InterruptedException, IOException {
         List<SerialStream> handlers = new ArrayList(playerInformations.size());
 //        final SerialStream[] handlers = new SerialStream[playerInformations.length];

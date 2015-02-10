@@ -6,7 +6,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import net.nmmst.request.Request;
 /**
  *
@@ -23,7 +22,6 @@ public class BufferFactory {
     public static BlockingQueue<Request> getRequestBuffer() {
         return requestBuffer;
     }
-
     public static AtomicReference<Frame> getFrameRef() {
         return frameRef; 
     }
@@ -50,23 +48,19 @@ public class BufferFactory {
             }
             return frames.take(); 	
         }
-
         @Override
         public Sample readSample() throws InterruptedException {
             waitForPause();
             return samples.take();
         }
-
         @Override
         public void writeFrame(Frame frame) throws InterruptedException {
             frames.put(frame);
         }
-
         @Override
         public void writeSample(Sample sample) throws InterruptedException {
             samples.put(sample);	
         }
-
         @Override
         public void setPause(boolean value) {
             pause.set(value);
@@ -85,7 +79,6 @@ public class BufferFactory {
         public int getFrameSize() {
             return frames.size();
         }
-
         @Override
         public int getSampleSize() {
             return samples.size();
@@ -106,6 +99,5 @@ public class BufferFactory {
         public int getMaxSampleSize() {
             return Integer.MAX_VALUE;
         }
-
     }
 }

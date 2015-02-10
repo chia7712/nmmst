@@ -29,6 +29,5 @@ public class Sleeper {
     public void reset() {
         clockStartTime = 0;
         streamStartTime = 0;
-
     }
 }

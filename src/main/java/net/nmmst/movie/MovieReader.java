@@ -3,11 +3,8 @@ package net.nmmst.movie;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-
 import net.nmmst.processor.FrameProcessor;
 import net.nmmst.tools.Closure;
-
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -65,7 +62,6 @@ public class MovieReader implements Closure {
                         break;
                     default:
                         break;
-
                 }
             }
             if (movieStreamRef.get() == null) {
@@ -76,6 +72,5 @@ public class MovieReader implements Closure {
         } finally {
             isClosed.set(true);
         }
-
     }
 }

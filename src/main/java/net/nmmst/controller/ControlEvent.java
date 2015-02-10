@@ -8,7 +8,6 @@ import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
 import net.java.games.input.ControllerEnvironment;
 import net.nmmst.tools.Closure;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -23,7 +22,7 @@ public class ControlEvent implements Closure {
         for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
             for (ControlTrigger trigger : this.triggerList) {
                 if (controller.getType() == trigger.getType()) {
-                    System.out.println("use device : " + controller);
+                    System.out.println("use device : " + controller + ", trigger : " + trigger.getType());
                     controllers.add(controller);
                     break;
                 }

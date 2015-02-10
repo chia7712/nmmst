@@ -3,7 +3,6 @@ package net.nmmst.master;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import net.nmmst.player.PlayerInformation;
 import net.nmmst.register.RegisterClient;
 import net.nmmst.request.Request;

@@ -3,7 +3,6 @@ package net.nmmst.processor;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.Serializable;
-
 import net.nmmst.movie.Frame;
 import net.nmmst.player.PlayerInformation;
 /**

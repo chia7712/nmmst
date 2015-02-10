@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.List;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Pair;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>

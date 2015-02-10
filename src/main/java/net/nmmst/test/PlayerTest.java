@@ -8,11 +8,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
-
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-
 import net.nmmst.player.PlayerInformation;
 import net.nmmst.processor.BourkeProcessor;
 import net.nmmst.tools.BasicPanel;

@@ -36,7 +36,6 @@ import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -215,7 +214,6 @@ public class PlayerFrame extends JFrame {
                 f.setVisible(true);
             }
         });
-
     }
     private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();

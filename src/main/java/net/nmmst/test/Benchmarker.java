@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package net.nmmst.test;
 
 import java.io.File;
@@ -19,7 +13,6 @@ import javax.imageio.ImageIO;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieStream;
 import net.nmmst.movie.Sample;
-
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -78,11 +71,7 @@ public class Benchmarker {
         }
         private boolean random(Frame frame) {
             ++count;
-            if (count == 1000) {
-                return true;
-            }
-            return false;
-            //return Math.random() > 0.9;
+            return count == 1000;
         }
     }
     private static class Reporter implements Runnable {
@@ -106,7 +95,6 @@ public class Benchmarker {
                 }
             }
         }
-        
     }
     private static class Counter {
         private long count;

@@ -1,4 +1,5 @@
 package net.nmmst.tools;
+
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>

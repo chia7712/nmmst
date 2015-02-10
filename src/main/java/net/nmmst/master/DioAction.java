@@ -35,7 +35,6 @@ public class DioAction  {
         do_1735U.Write(0, (byte)0x20);
 
     }
-
     public void grayUpToEnd() throws InterruptedException {
         grayPowerOn();
         do_1735U.Write(0, (byte)0x10);

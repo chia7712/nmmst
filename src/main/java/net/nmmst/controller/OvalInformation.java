@@ -10,10 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import javax.imageio.ImageIO;
 import net.nmmst.tools.NMConstants;
-
 import net.nmmst.tools.Painter;
 /**
  *
@@ -39,9 +36,7 @@ public class OvalInformation implements Comparable<OvalInformation> {
         if (!configurationFile.exists()) {
             return null;
         }
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(configurationFile));
+        try (BufferedReader reader = new BufferedReader(new FileReader(configurationFile))) {
             Set<OvalInformation> ovalInformations = new HashSet();
             String line = null;
             while ((line = reader.readLine()) != null) {
@@ -49,33 +44,18 @@ public class OvalInformation implements Comparable<OvalInformation> {
                 if (args.length != 7) {
                     continue;
                 }
-                try {
-                    ovalInformations.add(new OvalInformation(
-                        Integer.valueOf(args[0]),
-                        Long.valueOf(args[1]),
-                        Long.valueOf(args[2]),
-                        Integer.valueOf(args[3]),
-                        Integer.valueOf(args[4]),
-                        Integer.valueOf(args[5]),
-                        ImageIO.read(new File(args[6]))));
-                }
-                catch(NumberFormatException e) {
-                    //TODO
-                    e.printStackTrace();
-                }
+                ovalInformations.add(new OvalInformation(
+                    Integer.valueOf(args[0]),
+                    Long.valueOf(args[1]),
+                    Long.valueOf(args[2]),
+                    Integer.valueOf(args[3]),
+                    Integer.valueOf(args[4]),
+                    Integer.valueOf(args[5]),
+                    Painter.loadOrStringImage(new File(args[6]), NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT)));
             }
             return new ArrayList(ovalInformations);
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
         }
     }
     private static List<OvalInformation> getDefault() {

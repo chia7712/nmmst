@@ -26,44 +26,18 @@ public class ProcessorFactory {
         0.9
     );
     private ProcessorFactory(){}
-//    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location, Format format)
-//    {
-//        return new SingleProcessor(location, format);
-//    }
-//    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location)
-//    {
-//        return newSingleProcessor(location, grayDefaultFormat);    
-//    }
     public static FrameProcessor newTwoTierProcessor(PlayerInformation.Location location, Format firstFormat, Format secondFormat) {
         return new TwoTierProcessor(location, firstFormat, secondFormat);
     }
     public static FrameProcessor newTwoTierProcessor(PlayerInformation.Location location) {
-        return newTwoTierProcessor(location, grayDefaultFormat, scrimDefaultFormat); 
+        return new TwoTierProcessor(location, grayDefaultFormat, scrimDefaultFormat); 
     }
-//    public static FrameProcessor newBasedProcessor(PlayerInformation.Location location)
-//    {
-//        return new BasedProcessor(location, grayDefaultFormat);
-//    }
-//    public static FrameProcessor newBasedProcessor(PlayerInformation.Location location, Format format)
-//    {
-//        return new BasedProcessor(location, format);
-//    }
-//    public static FrameProcessor newGrayProcessor(PlayerInformation.Location location, Format format)
-//    {
-//        return new GrayProcessor(location, format);
-//    }
-//    public static FrameProcessor newGrayProcessor(PlayerInformation.Location location)
-//    {
-//        return new GrayProcessor(location, grayDefaultFormat);
-//    }
-//    public static FrameProcessor newScrimProcessor(PlayerInformation.Location location)
-//    {
-//        return new ScrimProcessor(location, scrimDefaultFormat);
-//    }
-//    public static FrameProcessor newScrimProcessor(PlayerInformation.Location location, Format format)
-//    {
-//        return new ScrimProcessor(location, format);
-//    }
+    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location, Format format) {
+        return new SingleProcessor(location, format);
+    }
+    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location) {
+        return new SingleProcessor(location, grayDefaultFormat);
+    }
     private static class SingleProcessor extends LinearProcessor {
         public SingleProcessor(PlayerInformation.Location location, Format format) {
             super(location, format);
@@ -93,40 +67,5 @@ public class ProcessorFactory {
                 secondProcessor.process(frame);
             }
         }
-        
     }
-//    private static class GrayProcessor extends LinearProcessor
-//    {
-//
-//        public GrayProcessor(PlayerInformation.Location location, Format format) 
-//        {
-//            super(location, format);
-//        }
-//        @Override
-//        public boolean needProcess(Frame frame)
-//        {
-//            if (frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime)
-//                return true;
-//            return false;
-//        }
-//
-//    }
-//    private static class ScrimProcessor extends LinearProcessor 
-//    {
-//
-//        public ScrimProcessor(PlayerInformation.Location location, Format format) 
-//        {
-//            super(location, format);
-//        }
-//        @Override
-//        public boolean needProcess(Frame frame)
-//        {
-//            MovieAttribute attribute = frame.getMovieAttribute();
-//            if (attribute.getIndex() > 0)
-//                    return true;
-//            if (attribute.getIndex() == 0 && frame.getTimestamp() > firstMovieChangeTime)
-//                    return true;
-//            return false;
-//        }
-//    }
 }
