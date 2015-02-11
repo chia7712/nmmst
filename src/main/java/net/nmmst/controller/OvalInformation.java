@@ -12,11 +12,14 @@ import java.util.List;
 import java.util.Set;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class OvalInformation implements Comparable<OvalInformation> {
+    private static final Logger LOG = LoggerFactory.getLogger(OvalInformation.class);  
     private final int movieIndex;
     private final long minMicroTime;
     private final long maxMicroTime;
@@ -51,10 +54,11 @@ public class OvalInformation implements Comparable<OvalInformation> {
                     Integer.valueOf(args[3]),
                     Integer.valueOf(args[4]),
                     Integer.valueOf(args[5]),
-                    Painter.loadOrStringImage(new File(args[6]), NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT)));
+                    Painter.loadOrStringImage(new File(args[6]), NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE)));
             }
             return new ArrayList(ovalInformations);
         } catch (IOException | NumberFormatException e) {
+            LOG.error(e.getMessage());
             return null;
         }
     }
@@ -124,7 +128,12 @@ public class OvalInformation implements Comparable<OvalInformation> {
         }
         if (obj instanceof OvalInformation) {
             OvalInformation dst = (OvalInformation)obj;
-            return dst.toString().compareTo(toString()) == 0;
+            return (movieIndex == dst.getIndex())
+                    && (minMicroTime == dst.getMinMicroTime())
+                    && (maxMicroTime == dst.getMaxMicroTime())
+                    && (diameter == dst.getDiameter())
+                    && (x == dst.getX())
+                    && (y == dst.getY());
         }
         return false;
     }

@@ -6,13 +6,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.MovieBuffer;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.SerialStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class RegisterServer implements Closure {
+public class RegisterServer implements BackedRunner {
+    private static Logger LOG = LoggerFactory.getLogger(RegisterServer.class);
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);	
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
@@ -26,8 +29,7 @@ public class RegisterServer implements Closure {
         try {
             server.close();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         }
     }
     @Override
@@ -38,8 +40,7 @@ public class RegisterServer implements Closure {
                 client = new SerialStream(server.accept());
                 client.write(new PlayerState(buffer.getFrameSize(), buffer.getSampleSize(), buffer.getMaxFrameSize(), buffer.getMaxSampleSize()));
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error(e.getMessage());
             } finally {
                 if (client != null) {
                     client.close();

@@ -3,9 +3,8 @@ package net.nmmst.player;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.Closeable;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.ImageIcon;
@@ -31,18 +30,21 @@ import net.nmmst.request.Request;
 import net.nmmst.request.RequestServer;
 import net.nmmst.request.SelectRequest;
 import net.nmmst.tools.BasicPanel;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class PlayerFrame extends JFrame {
+public class PlayerFrame extends JFrame implements Closeable {
     private static final long serialVersionUID = -3141878788425623471L;
-    private final BufferedImage initImage = Painter.fillColor(1920, 1080, Color.BLACK);
+    private static final Logger LOG = LoggerFactory.getLogger(PlayerFrame.class);  
+    private final BufferedImage initImage = Painter.getFillColor(NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, Color.BLACK);
     private final MovieOrder movieOrder = MovieOrder.get();
     private final BasicPanel panel = new BasicPanel(initImage);
     private final Speaker speaker = new Speaker(getAudioFormat(movieOrder.getMovieAttribute()));
@@ -50,31 +52,34 @@ public class PlayerFrame extends JFrame {
     private final BlockingQueue<Request> requestBuffer = BufferFactory.getRequestBuffer();
     private final RequestServer requestServer = new RequestServer(Ports.REQUEST.get());
     private final RegisterServer registerServer = new RegisterServer(Ports.REGISTER.get());
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Runnable[] longTermThreads = {
         requestServer, 
         new Runnable() {
             @Override
             public void run() {
-                while (true) {
-                    try {
+                try {
+                    while (!closed.get() && !Thread.interrupted()) {
                         TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    int count = 0;
-                    for (Closure closure : closures) {
-                        if (closure.isClosed()) {
-                            ++count;
+                        int count = 0;
+                        for (BackedRunner backedRunner : backRunners) {
+                            if (backedRunner.isClosed()) {
+                                ++count;
+                            }
                         }
-                    }
-                    if (count == closures.size()) {
-                        try {
+                        if (count == backRunners.size()) {
                             init();
-                        } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
                         }
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("frame size = " + buffer.getFrameSize() + ", sample size = " + buffer.getSampleSize());
+                        }
+                    }
+                } catch (IOException | InterruptedException e) {
+                    LOG.error(e.getMessage());
+                    throw new RuntimeException(e);
+                } finally {
+                    for (BackedRunner backedRunner : backRunners) {
+                        backedRunner.close();
                     }
                 }
             }
@@ -82,11 +87,16 @@ public class PlayerFrame extends JFrame {
         new ExecuteRequest(),
         registerServer
     };
+    private final Closeable[] closeables = {
+        requestServer,
+        registerServer,
+        speaker
+    };
     private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
-    private final List<Closure> closures = new LinkedList();
-    private final PlayerInformation playerInfomation;
+    private final List<BackedRunner> backRunners = new LinkedList();
+    private final NodeInformation playerInfomation;
     private ExecutorService shortTermThreadsPool;
-    public PlayerFrame(PlayerInformation playerInfomation) throws IOException, LineUnavailableException {
+    public PlayerFrame(NodeInformation playerInfomation) throws IOException, LineUnavailableException {
         this.playerInfomation = playerInfomation;
         add(panel);
         init();
@@ -100,12 +110,12 @@ public class PlayerFrame extends JFrame {
         buffer.setPause(true);
         movieOrder.reset();
         shortTermThreadsPool = Executors.newFixedThreadPool(3);
-        closures.clear();
-        closures.add(new SpeakerThread(speaker));
-        closures.add(new PanelThread(panel));
-        closures.add(new MovieReader(movieOrder, ProcessorFactory.newTwoTierProcessor(playerInfomation.getLocation())));
-        for (Closure closure : closures) {
-            shortTermThreadsPool.execute(closure);
+        backRunners.clear();
+        backRunners.add(new SpeakerThread(speaker));
+        backRunners.add(new PanelThread(panel));
+        backRunners.add(new MovieReader(movieOrder, ProcessorFactory.getSingleProcessor(playerInfomation.getLocation())));
+        for (BackedRunner backRunner : backRunners) {
+            shortTermThreadsPool.execute(backRunner);
         }
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
@@ -114,13 +124,27 @@ public class PlayerFrame extends JFrame {
         }
         return null;
     }
+
+    @Override
+    public void close() throws IOException {
+        closed.set(true);
+        for (Closeable closeable : closeables) {
+            try {
+                closeable.close();
+            } catch(IOException e) {
+                LOG.error(e.getMessage());
+            }
+        }
+    }
     private class ExecuteRequest implements Runnable {
         @Override
         public void run() {
             while (true) {
                 try {
                     Request request = requestBuffer.take();
-                    System.out.println(request.getType());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request : " + request.getType().name());
+                    }
                     switch(request.getType()) {
                         case START:
                             if (buffer.isPause()) {
@@ -128,8 +152,8 @@ public class PlayerFrame extends JFrame {
                             }
                             break;
                         case STOP:
-                            for (Closure closure : closures) {
-                                closure.close();
+                            for (BackedRunner backRunner : backRunners) {
+                                backRunner.close();
                             }
                             shortTermThreadsPool.shutdownNow();
                             break;
@@ -154,11 +178,8 @@ public class PlayerFrame extends JFrame {
                         case SHUTDOWN:
                             WindowsFunctions.shutdown();
                             break;
-                        case TEST_1: {
-                            BufferedImage image = getTestImage(true);
-                            if (image == null) {
-                                break;
-                            }
+                        case TEST: {
+                            BufferedImage image = getTestImage();
                             Object obj = request.getArgument();
                             if (!(obj instanceof LinearProcessor.Format)) {
                                 break;
@@ -167,47 +188,30 @@ public class PlayerFrame extends JFrame {
                             processor.process(image);
                             panel.write(image);
                             break;
-                        }    
-                        case TEST_2: {
-                            BufferedImage image = getTestImage(false);
-                            if (image == null) {
-                                break;
-                            }
-                            Object obj = request.getArgument();
-                            if (!(obj instanceof LinearProcessor.Format)) {
-                                break;
-                            }
-                            LinearProcessor processor = new LinearProcessor(playerInfomation.getLocation(), (LinearProcessor.Format)obj);
-                            processor.process(image);
-                            panel.write(image);
-                            break;
-                        }    
+                        }
                         default:
                             break;
                     }
                 } catch (InterruptedException | IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error(e.getMessage());
                 }
             }
         }
     }
-    private static BufferedImage getTestImage(boolean mode) {
-        try {
-            File file = new File(mode ? "D:\\海科影片\\test.jpg" : "D:\\海科影片\\test2.jpg");
-            return ImageIO.read(file);
-        } catch (IOException ex) {
-            return null;
-        }
+    private static BufferedImage getTestImage() {
+        return Painter.getFillColor(NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, Color.WHITE);
     }
     public static void main(String[] args) throws UnknownHostException, IOException, LineUnavailableException, InterruptedException  {
-        final JFrame f = new PlayerFrame(getPlayerLocationa());
+        final JFrame f = new PlayerFrame(getNodeLocationa());
         f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                //f.setSize(new Dimension(600, 600));
-                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                if (NMConstants.TESTS) {
+                    f.setSize(NMConstants.FRAME_Dimension);
+                } else {
+                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                }
                 f.requestFocusInWindow();
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -215,13 +219,20 @@ public class PlayerFrame extends JFrame {
             }
         });
     }
-    private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
-        String localIP = InetAddress.getLocalHost().getHostAddress();
-        for (PlayerInformation playerInformation : PlayerInformation.get()) {
-            if (playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
-                return playerInformation;
+    private static NodeInformation getNodeLocationa() throws UnknownHostException {
+        String localIP = getLocalAddress();
+        for (NodeInformation nodeInformation : NodeInformation.getPrimaryVideoNodes()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("nodeInformation : " + nodeInformation.toString());
+            }
+            if (nodeInformation.getIP().compareToIgnoreCase(localIP) == 0) {
+                return nodeInformation;
             }
         }
         throw new IllegalArgumentException();
+    }
+    private static String getLocalAddress() throws UnknownHostException {
+//        return InetAddress.getLocalHost().getHostAddress();
+        return "192.168.11.15";
     }
 }

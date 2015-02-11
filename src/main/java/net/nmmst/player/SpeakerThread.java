@@ -5,12 +5,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.MovieBuffer;
 import net.nmmst.movie.Sample;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class SpeakerThread implements Closure {
+public class SpeakerThread implements BackedRunner {
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);

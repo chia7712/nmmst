@@ -21,6 +21,8 @@ import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieAttribute;
 import net.nmmst.processor.FrameProcessor;
 import net.nmmst.tools.NMConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
@@ -29,6 +31,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private static final Stroke STROKE = new BasicStroke(10);
     private static final Color DEFAULT_COLOR = Color.WHITE;
     private static final Color FOCUS_COLOR = Color.RED;
+    private static final Logger LOG = LoggerFactory.getLogger(OvalTrigger.class);  
     private final Map<Integer, Set<OvalInformation>> ovalWrapper = new HashMap();
     private final AtomicInteger count = new AtomicInteger(10000000);
     private final AtomicBoolean pressed = new AtomicBoolean(false);
@@ -38,7 +41,7 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     public OvalTrigger() {
         List<OvalInformation> ovalInformations = OvalInformation.get();
         for (OvalInformation ovalInformation : ovalInformations) {
-            System.out.println(" ovalInformation : " + ovalInformation);
+            LOG.info("ovalInformation : " + ovalInformation);
             int index = ovalInformation.getIndex();
             if (ovalWrapper.containsKey(index)) {
                 ovalWrapper.get(index).add(ovalInformation);

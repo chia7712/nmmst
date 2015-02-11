@@ -5,13 +5,16 @@ import java.net.ServerSocket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.nmmst.movie.BufferFactory;
-import net.nmmst.tools.Closure;
+import net.nmmst.test.Benchmarker;
+import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.SerialStream;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class RequestServer implements Closure {
+public class RequestServer implements BackedRunner {
+    private static org.slf4j.Logger LOG = LoggerFactory.getLogger(RequestServer.class);
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean	 isClosed = new AtomicBoolean(false);
     private final BlockingQueue<Request> requestBuffer = BufferFactory.getRequestBuffer();
@@ -30,8 +33,7 @@ public class RequestServer implements Closure {
                     requestBuffer.put((Request)obj);
                 }
             } catch (IOException | ClassNotFoundException | InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error(e.getMessage());
             } finally {
                 if (stream != null)
                     stream.close();

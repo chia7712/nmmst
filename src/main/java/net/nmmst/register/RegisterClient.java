@@ -7,16 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import net.nmmst.player.PlayerInformation;
-import net.nmmst.tools.Closure;
+import net.nmmst.player.NodeInformation;
+import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.SerialStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class RegisterClient implements Closure {
-    private final List<PlayerInformation> playerInformations = PlayerInformation.get();
-    private final Map<PlayerInformation, PlayerState> playerStates = new HashMap();
+public class RegisterClient implements BackedRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(RegisterClient.class);
+    private final List<NodeInformation> nodeInformations = NodeInformation.getVideoNodes();
+    private final Map<NodeInformation, PlayerState> playerStates = new HashMap();
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
     private final int bindPort;
@@ -30,15 +33,16 @@ public class RegisterClient implements Closure {
     public boolean isBuffered() {
         synchronized(playerStates) {
             try {
-                if (playerStates.size() != playerInformations.size()) {
-                    System.out.println("current player number = " + playerStates.size());
+                if (playerStates.size() != nodeInformations.size()) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("current player number = " + playerStates.size());
+                    }
                     return false;
                 }
-                for (Map.Entry<PlayerInformation, PlayerState> entry : playerStates.entrySet()) {
+                for (Map.Entry<NodeInformation, PlayerState> entry : playerStates.entrySet()) {
                     int bufferSize = entry.getValue().getFrameBufferSize();
                     int frameBuffered = entry.getValue().getFrameBuffered();
                     double ratio = (double)frameBuffered / (double) bufferSize;
-                    System.out.println(entry.getKey() + " " + entry.getValue());
                     if (ratio <= 0.9) {
                         return false;
                     }
@@ -53,19 +57,19 @@ public class RegisterClient implements Closure {
         synchronized(playerStates) {
             playerStates.clear();
         }
-        for (PlayerInformation playerInformation : playerInformations) {
+        for (NodeInformation nodeInformation : nodeInformations) {
             SerialStream client = null;
             try {
-                client = new SerialStream(new Socket(playerInformation.getIP(), bindPort));
+                client = new SerialStream(new Socket(nodeInformation.getIP(), bindPort));
                 Object obj = client.read();
                 if (obj instanceof PlayerState) {
                     PlayerState state = (PlayerState)obj;
                     synchronized(playerStates) {
-                        System.out.println(playerInformation + " " + state);
-                        playerStates.put(playerInformation, state);
+                        playerStates.put(nodeInformation, state);
                     }
                 }
             } catch(IOException | ClassNotFoundException e) {
+                LOG.error(e.getMessage());
             } finally {
                 if (client != null) {
                     client.close();
@@ -81,8 +85,7 @@ public class RegisterClient implements Closure {
                     TimeUnit.SECONDS.sleep(3);
             }
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         }
     }
     @Override

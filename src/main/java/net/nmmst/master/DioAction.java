@@ -5,11 +5,14 @@ import java.util.concurrent.TimeUnit;
 import Automation.BDaq.DeviceInformation;
 import Automation.BDaq.InstantDoCtrl;
 import net.nmmst.tools.NMConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class DioAction  {
+    private static final Logger LOG = LoggerFactory.getLogger(DioAction.class);  
     private final InstantDoCtrl do_1735U = new InstantDoCtrl();
     private final InstantDoCtrl do_1739U = new InstantDoCtrl();
     public DioAction() throws Exception {
@@ -17,6 +20,7 @@ public class DioAction  {
             do_1735U.setSelectedDevice(new DeviceInformation(NMConstants.PCI_1735U));
             do_1739U.setSelectedDevice(new DeviceInformation(NMConstants.PCI_1739U));           
         } catch(Exception e) {
+            LOG.error(e.getMessage());
             do_1735U.Cleanup();
             do_1739U.Cleanup();
             throw e;

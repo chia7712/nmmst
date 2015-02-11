@@ -11,22 +11,25 @@ import java.util.concurrent.Executors;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 import net.nmmst.processor.BourkeProcessor;
 import net.nmmst.tools.BasicPanel;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WindowsFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class PlayerTest extends JFrame {
     private static final long serialVersionUID = -2016746022673317548L;
-    private final BasicPanel panel = new BasicPanel(Painter.fillColor(1920, 1080, Color.WHITE));
+    private static Logger LOG = LoggerFactory.getLogger(PlayerTest.class);
+    private final BasicPanel panel = new BasicPanel(Painter.getFillColor(1920, 1080, Color.WHITE));
     private final ServerSocket server = new ServerSocket(Ports.TEST.get());
-    public PlayerTest(final PlayerInformation playerInformation) throws IOException {
+    public PlayerTest(final NodeInformation nodeInformation) throws IOException {
         this.add(panel);
         Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
@@ -37,8 +40,8 @@ public class PlayerTest extends JFrame {
                         stream = new SerialStream(server.accept());
                         Object obj = stream.read();
                         if (obj instanceof BourkeProcessor.Format) {
-                            BourkeProcessor processor = new BourkeProcessor(playerInformation.getLocation(), (BourkeProcessor.Format)obj);
-                            BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
+                            BourkeProcessor processor = new BourkeProcessor(nodeInformation.getLocation(), (BourkeProcessor.Format)obj);
+                            BufferedImage testImage = Painter.getFillColor(1920, 1080, Color.WHITE);
                             processor.process(testImage);
                             panel.write(testImage);
                         }
@@ -47,13 +50,12 @@ public class PlayerTest extends JFrame {
                             if (b) {
                                 WindowsFunctions.reboot();
                             } else {
-                                BufferedImage testImage = Painter.fillColor(1920, 1080, Color.WHITE);
+                                BufferedImage testImage = Painter.getFillColor(1920, 1080, Color.WHITE);
                                 panel.write(testImage);
                             }
                         }
                     } catch (IOException | ClassNotFoundException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        LOG.error(e.getMessage());
                     } finally {
                         if (stream != null) {
                             stream.close();
@@ -79,11 +81,11 @@ public class PlayerTest extends JFrame {
             }
         });
     }
-    private static PlayerInformation getPlayerLocationa() throws UnknownHostException {
+    private static NodeInformation getPlayerLocationa() throws UnknownHostException {
         String localIP = InetAddress.getLocalHost().getHostAddress();
-        for (PlayerInformation playerInformation : PlayerInformation.get()) {
-            if (playerInformation.getLocation() != PlayerInformation.Location.CENTER && playerInformation.getIP().compareTo(localIP) == 0) {
-                return playerInformation;
+        for (NodeInformation nodeInformation : NodeInformation.getPrimaryVideoNodes()) {
+            if (nodeInformation.getLocation() != NodeInformation.Location.CENTER && nodeInformation.getIP().compareToIgnoreCase(localIP) == 0) {
+                return nodeInformation;
             }
         }
         throw new IllegalArgumentException();

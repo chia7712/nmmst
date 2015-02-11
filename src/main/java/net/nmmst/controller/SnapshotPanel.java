@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
 import net.nmmst.tools.BasicPanel;
+import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 
 /**
@@ -20,7 +21,7 @@ import net.nmmst.tools.Painter;
 public class SnapshotPanel extends JPanel {
     private static final int ROWS = 0;
     private static final int COLUMNS = 1;
-    private final BufferedImage defaultImage = Painter.getStringImage("No Snaphosts", 640, 480);
+    private final BufferedImage defaultImage = Painter.getStringImage("No Snaphosts", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
     private final List<BasicPanel> currentPanel = new LinkedList();
     public SnapshotPanel() {
         setLayout(new GridLayout(ROWS, COLUMNS));

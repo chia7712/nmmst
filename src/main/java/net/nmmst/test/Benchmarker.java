@@ -13,11 +13,13 @@ import javax.imageio.ImageIO;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieStream;
 import net.nmmst.movie.Sample;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class Benchmarker {
+    private static org.slf4j.Logger LOG = LoggerFactory.getLogger(Benchmarker.class);
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             throw new IOException("<movie path> <pic path>");
@@ -90,8 +92,8 @@ public class Benchmarker {
                         str.append(counter.toString()).append("\t");
                     }
                     System.out.print("\r" + str.toString());
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Benchmarker.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InterruptedException e) {
+                    LOG.error(e.getMessage());
                 }
             }
         }

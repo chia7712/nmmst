@@ -1,5 +1,6 @@
 package net.nmmst.player;
 
+import java.io.Closeable;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
@@ -9,7 +10,7 @@ import javax.sound.sampled.SourceDataLine;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class Speaker {
+public class Speaker implements Closeable {
     private final SourceDataLine line;
     public Speaker(AudioFormat audioFormat) throws LineUnavailableException {
         DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
@@ -32,6 +33,7 @@ public class Speaker {
     public void flush() {
         line.flush();
     }
+    @Override
     public void close() {
         line.drain();
         line.close();

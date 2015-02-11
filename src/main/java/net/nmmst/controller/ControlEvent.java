@@ -7,12 +7,15 @@ import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
 import net.java.games.input.ControllerEnvironment;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class ControlEvent implements Closure {
+public class ControlEvent implements BackedRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(ControlEvent.class);  
     private final List<Controller> controllers = new LinkedList();
     private final List<ControlTrigger> triggerList = new LinkedList();
     private final AtomicBoolean close = new AtomicBoolean(false);
@@ -22,7 +25,7 @@ public class ControlEvent implements Closure {
         for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
             for (ControlTrigger trigger : this.triggerList) {
                 if (controller.getType() == trigger.getType()) {
-                    System.out.println("use device : " + controller + ", trigger : " + trigger.getType());
+                    LOG.info("use device : " + controller + ", trigger : " + trigger.getType());
                     controllers.add(controller);
                     break;
                 }

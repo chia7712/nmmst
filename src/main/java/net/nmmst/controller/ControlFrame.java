@@ -3,7 +3,6 @@ package net.nmmst.controller;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -19,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.util.Pair;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.JFrame;
@@ -37,20 +37,36 @@ import net.nmmst.request.Request;
 import net.nmmst.request.RequestServer;
 import net.nmmst.request.SelectRequest;
 import net.nmmst.tools.BasicPanel;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.WindowsFunctions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class ControlFrame extends JFrame {
     private static final long serialVersionUID = -3141878788425623471L;
-    private final BufferedImage dashboardImage = Painter.loadOrStringImage(new File(NMConstants.CONTROLLER_DASHBOARD_JPG), "dashboard", 640, 480);
-    private final BufferedImage stopImage = Painter.loadOrStringImage(new File(NMConstants.CONTROLLER_STOP_JPG), "stop", 640, 480);
-    private final BufferedImage	initImage = Painter.fillColor(1920, 1080, Color.BLACK);
+    private static final Logger LOG = LoggerFactory.getLogger(ControlFrame.class);  
+    private final BufferedImage dashboardImage = Painter.loadOrStringImage(
+            new File(NMConstants.CONTROLLER_DASHBOARD_JPG), 
+            "Dashboard", 
+            NMConstants.IMAGE_WIDTH, 
+            NMConstants.IMAGE_HEIGHT, 
+            NMConstants.FONT_SIZE);
+    private final BufferedImage stopImage = Painter.loadOrStringImage(
+            new File(NMConstants.CONTROLLER_STOP_JPG), 
+            "Stop", 
+            NMConstants.IMAGE_WIDTH, 
+            NMConstants.IMAGE_HEIGHT,
+            NMConstants.FONT_SIZE);
+    private final BufferedImage	initImage = Painter.getFillColor(
+            NMConstants.IMAGE_WIDTH, 
+            NMConstants.IMAGE_HEIGHT, 
+            Color.BLACK);
     private final MovieOrder movieOrder = MovieOrder.get();
     private final BasicPanel moviePanel = new BasicPanel(initImage);
     private final Speaker speaker = new Speaker(getAudioFormat(movieOrder.getMovieAttribute()));
@@ -61,24 +77,18 @@ public class ControlFrame extends JFrame {
     private final WheelTrigger wheelTrigger = new WheelTrigger();
     private final RegisterServer registerServer = new RegisterServer(Ports.REGISTER.get());
     private final CardLayout cardLayout = new CardLayout();
-    private final List<Closure> closures = new LinkedList();
+    private final List<BackedRunner> backedRunners = new LinkedList();
     private final BlockingQueue<KeyDescriptor> keyQueue = new LinkedBlockingQueue();
     private final JPanel mainPanel = new JPanel();
     private final BasicPanel dashboardPanel = new BasicPanel(dashboardImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
     private final SnapshotPanel snapshotPanel = new SnapshotPanel();
-    private final Component[] defaultComponents = {
-        dashboardPanel, 
-        moviePanel, 
-        stopPanel,
-        snapshotPanel
-    };
-    private final String[] defaultStrings = {
-        KeyDescriptor.DASHBOARD.toString(),
-        KeyDescriptor.MOVIE.toString(),
-        KeyDescriptor.STOP.toString(),
-        KeyDescriptor.SNAPSHOTS.toString()
-    };
+    private final List<Pair<Component, String>> compAndName = Arrays.asList(
+        new Pair<Component, String>(dashboardPanel, KeyDescriptor.DASHBOARD.toString()),
+        new Pair<Component, String>(moviePanel, KeyDescriptor.MOVIE.toString()),
+        new Pair<Component, String>(stopPanel, KeyDescriptor.STOP.toString()),
+        new Pair<Component, String>(snapshotPanel, KeyDescriptor.SNAPSHOTS.toString())
+    );
     private ExecutorService worker;
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final Runnable[] longTermThreads = {
@@ -90,22 +100,24 @@ public class ControlFrame extends JFrame {
                     while (!closed.get()) {
                         TimeUnit.SECONDS.sleep(NMConstants.CHECK_PERIOD);
                         int count = 0;
-                        for (Closure closure : closures) {
-                            if (closure.isClosed()) {
+                        for (BackedRunner backedRunner : backedRunners) {
+                            if (backedRunner.isClosed()) {
                                 ++count;
                             }
                         }
-                        if (count == closures.size()) {
+                        if (count == backedRunners.size()) {
                             try {
                                 init();
                             } catch (IOException e) {
+                                LOG.error(e.getMessage());
                             }
                         }
-                        System.out.println("frame size = " + buffer.getFrameSize() + ", sample size = " + buffer.getSampleSize());
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("frame size = " + buffer.getFrameSize() + ", sample size = " + buffer.getSampleSize());
+                        }
                     }
                 } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error(e.getMessage());
                 }
             }
         },
@@ -126,7 +138,9 @@ public class ControlFrame extends JFrame {
                         }
                         cardLayout.show(mainPanel, key.toString());
                     }
-                } catch(InterruptedException e){}
+                } catch(InterruptedException e){
+                    LOG.error(e.getMessage());
+                }
             }
         },
         new ControlEvent(Arrays.asList(ovalTrigger, wheelTrigger))
@@ -136,8 +150,8 @@ public class ControlFrame extends JFrame {
         this.addKeyListener(new ButtonListener(keyQueue));
         this.add(mainPanel);
         mainPanel.setLayout(cardLayout);
-        for (int index = 0; index != defaultComponents.length; ++index) {
-            mainPanel.add(defaultComponents[index], defaultStrings[index]);
+        for (Pair<Component, String> pair : compAndName) {
+            mainPanel.add(pair.getKey(), pair.getValue());
         }
         init();
         for (Runnable runnable : longTermThreads) {
@@ -149,13 +163,13 @@ public class ControlFrame extends JFrame {
         moviePanel.write(initImage);
         buffer.setPause(true);
         movieOrder.reset();
-        closures.clear();
-        closures.add(new SpeakerThread(speaker));
-        closures.add(new PanelThread(moviePanel, ovalTrigger));
-        closures.add(new MovieReader(movieOrder));
-        worker = Executors.newFixedThreadPool(closures.size());
-        for (Closure closure : closures) {
-            worker.execute(closure);
+        backedRunners.clear();
+        backedRunners.add(new SpeakerThread(speaker));
+        backedRunners.add(new PanelThread(moviePanel, ovalTrigger));
+        backedRunners.add(new MovieReader(movieOrder));
+        worker = Executors.newFixedThreadPool(backedRunners.size());
+        for (BackedRunner backedRunner : backedRunners) {
+            worker.execute(backedRunner);
         }
     }
     private static AudioFormat getAudioFormat(MovieAttribute[] attributes) {
@@ -170,7 +184,9 @@ public class ControlFrame extends JFrame {
             while (true) {
                 try {
                     Request request = requestBuffer.take();
-                    System.out.println(request.getType());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request : " + request.getType().name());
+                    }
                     switch (request.getType()) {
                         case START:
                             if (buffer.isPause()) {
@@ -178,8 +194,8 @@ public class ControlFrame extends JFrame {
                             }
                             break;
                         case STOP:
-                            for (Closure closure : closures) {
-                                closure.close();
+                            for (BackedRunner backedRunner : backedRunners) {
+                                backedRunner.close();
                             }
                             worker.shutdownNow();
                             break;
@@ -207,8 +223,9 @@ public class ControlFrame extends JFrame {
                         default:
                             break;
                     }
-                } 
-                catch (InterruptedException | IOException e) {}
+                } catch (InterruptedException | IOException e) {
+                    LOG.error(e.getMessage());
+                }
             }
         }
     }
@@ -223,13 +240,15 @@ public class ControlFrame extends JFrame {
             public void windowClosing(WindowEvent e) {
                 f.setClosed(true);
             }
-            
         });
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                f.setSize(new Dimension(1000, 1000));
-//                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                if (NMConstants.TESTS) {
+                    f.setSize(NMConstants.FRAME_Dimension);
+                } else {
+                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                }
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setVisible(true);

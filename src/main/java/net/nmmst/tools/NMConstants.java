@@ -1,15 +1,20 @@
 package net.nmmst.tools;
 
+import java.awt.Dimension;
+
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class NMConstants {
+    public static final boolean TESTS = true;
+    public static final Dimension FRAME_Dimension = new Dimension(1000, 1000);
+    public static final int FONT_SIZE = 200;
     public static final double WHEEL_MAX_LIMIT = 0.99f;
     public static final double WHEEL_MIN_LIMIT = -0.99f;
     public static final double PRESS_LIMIT = 1.0f;
-    public static final int IMAGE_WIDTH = 640;
-    public static final int IMAGE_HEIGHT = 480;
+    public static final int IMAGE_WIDTH = 1920;
+    public static final int IMAGE_HEIGHT = 1080;
     public static final int CHECK_PERIOD = 2; 
     public static final String MOVIE_ROOT_PATH = "D://海科影片";
     public static final String MASTER_ROOT_PATH = "D://海科圖片";
@@ -21,6 +26,5 @@ public class NMConstants {
     public static final int SPECIFIC_FRAME_TIME = 60;
     public static final String PCI_1735U = "PCI-1735U,BID#0";
     public static final String PCI_1739U = "PCI-1739U,BID#15";
-    public static final String MASTER_IP = "192.168.100.31";
     private NMConstants(){}
 }

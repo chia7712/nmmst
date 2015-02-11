@@ -3,7 +3,7 @@ package net.nmmst.test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 import net.nmmst.processor.LinearProcessor;
 import net.nmmst.request.Request;
 import net.nmmst.tools.Ports;
@@ -21,22 +21,20 @@ public class EdgeTest {
             0.6,
             0.9
 	);
-	private	static final List<PlayerInformation> playerInformations = Arrays.asList(
-            new PlayerInformation(PlayerInformation.Location.LU, "192.168.100.1",  "00-0B-AB-6D-7D-25"),
-            new PlayerInformation(PlayerInformation.Location.RU, "192.168.100.2",  "00-0B-AB-67-4E-83"),
-            new PlayerInformation(PlayerInformation.Location.LD, "192.168.100.3",  "00-0B-AB-67-4E-70"),
-            new PlayerInformation(PlayerInformation.Location.RD, "192.168.100.4",  "00-0B-AB-67-4E-75")
+	private	static final List<NodeInformation> nodeInformations = Arrays.asList(new NodeInformation(NodeInformation.Location.LU, "192.168.100.1",  "00-0B-AB-6D-7D-25"),
+            new NodeInformation(NodeInformation.Location.RU, "192.168.100.2",  "00-0B-AB-67-4E-83"),
+            new NodeInformation(NodeInformation.Location.LD, "192.168.100.3",  "00-0B-AB-67-4E-70"),
+            new NodeInformation(NodeInformation.Location.RD, "192.168.100.4",  "00-0B-AB-67-4E-75")
         );
 	public static void main(String[] args) throws InterruptedException, IOException {
-            SerialStream.sendAll(playerInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
-//		SerialStream.sendAll(playerInformations, new Boolean(true), Ports.TEST.get());
-		///SerialStream.sendAll(playerInformations, new Request(Request.Type.TEST_2, getFormat(args)), Ports.REQUEST.get());
-		//SerialStream.sendAll(playerInformations, defaultFormat, Ports.TEST.get());
+            SerialStream.sendAll(nodeInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
+//		SerialStream.sendAll(nodeInformations, new Boolean(true), Ports.TEST.get());
+		///SerialStream.sendAll(nodeInformations, new Request(Request.Type.TEST_2, getFormat(args)), Ports.REQUEST.get());
+		//SerialStream.sendAll(nodeInformations, defaultFormat, Ports.TEST.get());
 //		BufferedImage testImage 	= Painter.fillColor(1920, 1080, Color.WHITE);
-//		PlayerInformation player = new PlayerInformation(PlayerInformation.Location.LU, 	 "192.168.100.1",  "00-0B-AB-6D-7D-25");
+//		NodeInformation player = new NodeInformation(NodeInformation.Location.LU, 	 "192.168.100.1",  "00-0B-AB-6D-7D-25");
 //		BourkeProcessor processor = new BourkeProcessor(player.getLocation(), defaultFormat);
 //		processor.process(testImage);
-		System.out.println("ok");
 	}
 	private static LinearProcessor.Format getFormat(String[] args) {
             if (args.length != 6) {

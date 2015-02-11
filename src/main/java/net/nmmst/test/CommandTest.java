@@ -20,7 +20,6 @@ public class CommandTest {
         try (Socket socket = new Socket(args[0], Ports.REQUEST.get())) {
             ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
             output.writeObject(toRequest(args[1]));
-            System.out.println("ok");
         }
     }
     public static Request toRequest(String arg) {

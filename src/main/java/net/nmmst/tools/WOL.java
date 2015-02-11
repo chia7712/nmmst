@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class WOL {
+    private static Logger LOG = LoggerFactory.getLogger(WOL.class);
     private static final int PORT = 80;
     private static byte[] genMagicPacket(String mac_str) {
         byte[] mac = getMacBytes(mac_str);
@@ -37,8 +40,7 @@ public class WOL {
             socket.send(packet);
             return true;
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         } finally {
             if (socket != null) {
                 socket.close();
@@ -57,6 +59,7 @@ public class WOL {
                 bytes[i] = (byte) Integer.parseInt(hex[i], 16);
             }
         } catch (NumberFormatException e) {
+            LOG.error(e.getMessage());
             return new byte[0];
         }
         return bytes;

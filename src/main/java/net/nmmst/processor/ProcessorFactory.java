@@ -1,7 +1,9 @@
 package net.nmmst.processor;
 
+import java.util.LinkedList;
+import java.util.List;
 import net.nmmst.movie.Frame;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 import net.nmmst.processor.LinearProcessor.Format;
 /**
  *
@@ -9,7 +11,9 @@ import net.nmmst.processor.LinearProcessor.Format;
  */
 public class ProcessorFactory {
     private static final long firstMovieChangeTime = (2 * 60 + 30) * 1000 * 1000;
-    private static final LinearProcessor.Format grayDefaultFormat = new LinearProcessor.Format(
+    private static final TimeLocation GRAY_TIME_LOCATION = new TimeLocation(0, 0, firstMovieChangeTime);
+    private static final TimeLocation SCRIM_TIME_LOCATION = TimeLocation.reverse(GRAY_TIME_LOCATION);
+    private static final LinearProcessor.Format GRAY_FORMTA = new LinearProcessor.Format(
         0.051,
         0.1253,
         0.6,
@@ -17,7 +21,7 @@ public class ProcessorFactory {
         0.6,
         0.9
     );
-    private static final LinearProcessor.Format	scrimDefaultFormat = new LinearProcessor.Format(
+    private static final LinearProcessor.Format	SCRIM_FORMTA = new LinearProcessor.Format(
         0.0985,
         0.168,
         0.6,
@@ -26,33 +30,22 @@ public class ProcessorFactory {
         0.9
     );
     private ProcessorFactory(){}
-    public static FrameProcessor newTwoTierProcessor(PlayerInformation.Location location, Format firstFormat, Format secondFormat) {
-        return new TwoTierProcessor(location, firstFormat, secondFormat);
+    public static FrameProcessor getSequenceProcessor(NodeInformation.Location location) {
+        SequenceProcessor processor = new SequenceProcessor();
+        processor.add(new LinearProcessor(location, GRAY_FORMTA, GRAY_TIME_LOCATION));
+        processor.add(new LinearProcessor(location, SCRIM_FORMTA, SCRIM_TIME_LOCATION));
+        return processor;
     }
-    public static FrameProcessor newTwoTierProcessor(PlayerInformation.Location location) {
-        return new TwoTierProcessor(location, grayDefaultFormat, scrimDefaultFormat); 
+    public static FrameProcessor getSingleProcessor(NodeInformation.Location location, Format format) {
+        return new LinearProcessor(location, format);
     }
-    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location, Format format) {
-        return new SingleProcessor(location, format);
+    public static FrameProcessor getSingleProcessor(NodeInformation.Location location) {
+        return new LinearProcessor(location, GRAY_FORMTA);
     }
-    public static FrameProcessor newSingleProcessor(PlayerInformation.Location location) {
-        return new SingleProcessor(location, grayDefaultFormat);
-    }
-    private static class SingleProcessor extends LinearProcessor {
-        public SingleProcessor(PlayerInformation.Location location, Format format) {
-            super(location, format);
-        }
-        @Override
-        public boolean needProcess(Frame frame) {
-            return true;
-        }           
-    }
-    private static class TwoTierProcessor implements FrameProcessor {
-        private final FrameProcessor firstProcessor;
-        private final FrameProcessor secondProcessor;
-        public TwoTierProcessor(PlayerInformation.Location location, Format firstFormat, Format secondFormat) {
-            firstProcessor = new LinearProcessor(location, firstFormat);
-            secondProcessor = new LinearProcessor(location, secondFormat);
+    private static class SequenceProcessor implements FrameProcessor {
+        private final List<FrameProcessor> processors = new LinkedList();
+        public void add(FrameProcessor processor) {
+            processors.add(processor);
         }
         @Override
         public boolean needProcess(Frame frame) {
@@ -61,10 +54,10 @@ public class ProcessorFactory {
 
         @Override
         public void process(Frame frame) {
-            if (frame.getMovieAttribute().getIndex() == 0 && frame.getTimestamp() <= firstMovieChangeTime) {
-                firstProcessor.process(frame);
-            } else {
-                secondProcessor.process(frame);
+            for (FrameProcessor processor : processors) {
+                if (processor.needProcess(frame)) {
+                    processor.process(frame);
+                }
             }
         }
     }

@@ -3,13 +3,16 @@ package net.nmmst.processor;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import net.nmmst.movie.Frame;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class LinearProcessor implements FrameProcessor {
+public class LinearProcessor implements TimeFrameProcessor {
     private final double xInitV;
     private final double xFinalV;
     private final double yInitV;
@@ -20,29 +23,11 @@ public class LinearProcessor implements FrameProcessor {
     private final double yFinalH;
     private final LinearEquationInTwo xEquation;
     private final LinearEquationInTwo  yEquation;
-    private final PlayerInformation.Location location;
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof LinearProcessor) {
-            if (((LinearProcessor) obj).location == location) {
-                return true;
-            }
-        }
-        return false;
-    }
-    @Override
-    public String toString() {
-        return location.toString() + " LinearIFrameProcessor";
-    }
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-    public LinearProcessor(PlayerInformation.Location location, Format format) {
+    private final NodeInformation.Location location;
+    private final List<TimeLocation> timeRange = new LinkedList();
+    public LinearProcessor(NodeInformation.Location location, Format format, TimeLocation ... timeLocations) {
         this.location = location; 
+        timeRange.addAll(Arrays.asList(timeLocations));
         switch(location) {
             case LU:
                 xEquation = new LinearEquationInTwo(1.0 - format.getXOverlay(), format.getXScaleMax(), 1.0, format.getXScaleMin());
@@ -93,17 +78,7 @@ public class LinearProcessor implements FrameProcessor {
                 yFinalH	= format.getYOverlay();
                 break;
             default:
-                xEquation = null;
-                yEquation = null;
-                xInitV	= 0;
-                xFinalV	= 0;
-                yInitV	= 0;
-                yFinalV	= 0;
-                xInitH	= 0;
-                xFinalH	= 0;
-                yInitH	= 0;
-                yFinalH	= 0;
-                break;
+                throw new IllegalArgumentException("A error location of LinearProcessor");
         }
     }
     public void process(BufferedImage image) {
@@ -140,12 +115,49 @@ public class LinearProcessor implements FrameProcessor {
         }
     }
     @Override
-    public synchronized void process(Frame frame) {
+    public void setTimeLocation(List<TimeLocation> timeLocations){
+        synchronized(timeRange) {
+            timeRange.clear();
+            timeRange.addAll(timeLocations);
+        }
+    }
+    @Override
+    public void process(Frame frame) {
         process(frame.getImage());
     }
     @Override
     public boolean needProcess(Frame frame) {
-        return true;
+        synchronized(timeRange) {
+            if (timeRange.isEmpty()) {
+                return true;
+            }
+            for (TimeLocation timeLocation : timeRange) {
+                if (timeLocation.include(frame)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof LinearProcessor) {
+            if (((LinearProcessor) obj).location == location) {
+                return true;
+            }
+        }
+        return false;
+    }
+    @Override
+    public String toString() {
+        return location.toString() + " LinearIFrameProcessor";
+    }
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
     public static class Format implements Serializable {
         private static final long serialVersionUID = -2453141672510568349L;

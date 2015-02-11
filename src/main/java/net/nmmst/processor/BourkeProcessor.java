@@ -3,14 +3,16 @@ package net.nmmst.processor;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.nmmst.movie.Frame;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class BourkeProcessor implements FrameProcessor {
+public class BourkeProcessor implements TimeFrameProcessor {
     private final double xMinV;
     private final double xMaxV;
     private final double yMinV;
@@ -21,28 +23,10 @@ public class BourkeProcessor implements FrameProcessor {
     private final double yMaxH;
     private final double curvature;
     private final double gamma;
-    private final PlayerInformation.Location location;
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj instanceof BourkeProcessor) {
-            if (((BourkeProcessor) obj).location == location) {
-                return true;
-            }
-        }
-        return false;
-    }
-    @Override
-    public String toString() {
-        return location.toString() + " LinearIFrameProcessor";
-    }
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
-    public BourkeProcessor(PlayerInformation.Location location, Format format) {
+    private final NodeInformation.Location location;
+    private final List<TimeLocation> timeRange = new LinkedList();
+
+    public BourkeProcessor(NodeInformation.Location location, Format format) {
         this.location = location; 
         this.curvature = format.getCurvature();
         this.gamma = format.getGamme();
@@ -88,7 +72,7 @@ public class BourkeProcessor implements FrameProcessor {
                 yMaxH = format.getYOverlay();
                 break;
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("A error location of LinearProcessor");
         }
     }
     public void process(BufferedImage image) {
@@ -158,14 +142,12 @@ public class BourkeProcessor implements FrameProcessor {
     }
     private double leftEquation(double value) {
         if (value < 0 || value >= 0.5) {
-            System.out.println(value);
             throw new IllegalArgumentException();
         }
         return gamma * Math.pow(2 * value, curvature);
     }
     private double rightEquation(double value) {
         if (value < 0.5 || value > 1) {
-            System.out.println(value);
             throw new IllegalArgumentException();
         }
         return 1 - (1 - gamma) * Math.pow((2 * (1 - value)), curvature);
@@ -175,12 +157,49 @@ public class BourkeProcessor implements FrameProcessor {
         return (value - min) / (max - min);
     }
     @Override
-    public synchronized void process(Frame frame) {
+    public void process(Frame frame) {
         process(frame.getImage());
     }
     @Override
     public boolean needProcess(Frame frame) {
-        return true;
+        synchronized(timeRange) {
+            if (timeRange.isEmpty()) {
+                return true;
+            }
+            for (TimeLocation timeLocation : timeRange) {
+                if (timeLocation.include(frame)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    @Override
+    public void setTimeLocation(List<TimeLocation> timeLocations){
+        synchronized(timeRange) {
+            timeRange.clear();
+            timeRange.addAll(timeLocations);
+        }
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj instanceof BourkeProcessor) {
+            if (((BourkeProcessor) obj).location == location) {
+                return true;
+            }
+        }
+        return false;
+    }
+    @Override
+    public String toString() {
+        return location.toString() + " LinearIFrameProcessor";
+    }
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
     public static class Format implements Serializable {
         private static final long serialVersionUID = -2453141672510568349L;

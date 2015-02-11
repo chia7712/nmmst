@@ -6,20 +6,24 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.imageio.ImageIO;
+import javafx.util.Pair;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import net.nmmst.movie.BufferFactory;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 import net.nmmst.register.RegisterClient;
 import net.nmmst.request.Request;
 import net.nmmst.request.RequestServer;
@@ -30,22 +34,25 @@ import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WOL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class MasterFrame extends JFrame {
+public class MasterFrame extends JFrame implements Closeable {
     private static final long serialVersionUID = -4475933827111956737L;
+    private static final Logger LOG = LoggerFactory.getLogger(MasterFrame.class);  
     private static final String rootPath = NMConstants.MASTER_ROOT_PATH;
-    private final BufferedImage startImage = Painter.loadOrStringImage(new File(rootPath + "//m_start.jpg"), "start", 640, 480);
+    private final BufferedImage startImage = Painter.loadOrStringImage(new File(rootPath + "//m_start.jpg"), "start", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_start.jpg"));
-    private final BufferedImage stopImage = Painter.loadOrStringImage(new File(rootPath + "//m_stop.jpg"), "stop", 640, 480);
+    private final BufferedImage stopImage = Painter.loadOrStringImage(new File(rootPath + "//m_stop.jpg"), "stop", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_stop.jpg"));
-    private final BufferedImage refreshImage = Painter.loadOrStringImage(new File(rootPath + "//m_refresh.jpg"), "refresh", 640, 480);
+    private final BufferedImage refreshImage = Painter.loadOrStringImage(new File(rootPath + "//m_refresh.jpg"), "refresh", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_refresh.jpg"));
-    private final BufferedImage backgroundImage = Painter.loadOrStringImage(new File(rootPath + "//m_background_all.jpg"), "background", 640, 480);
+    private final BufferedImage backgroundImage = Painter.loadOrStringImage(new File(rootPath + "//m_background_all.jpg"), "background", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_background_all.jpg"));
-    private final BufferedImage testImage = Painter.loadOrStringImage(new File(rootPath + "//test.jpg"), "refresh", 640, 480);
+    private final BufferedImage testImage = Painter.loadOrStringImage(new File(rootPath + "//test.jpg"), "refresh", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_test.jpg"));
     private final BasicPanel startPanel = new BasicPanel(startImage, BasicPanel.Mode.FILL);
     private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
@@ -58,38 +65,48 @@ public class MasterFrame extends JFrame {
     private final JButton party1Btn = new JButton("宴會一");
     private final JButton party2Btn = new JButton("宴會二");
     private final JButton lightOffBtn = new JButton("關閉燈光");
-    private final JButton[] pairBtns = {
-        deviceInitBtn,
-        shurdownBtn,
-        wakeupBtn,
-        party1Btn,
-        party2Btn,
-        lightOffBtn
-    };
-    private final Request[] pairRequests = {
-        new Request(Request.Type.INIT),
-        new Request(Request.Type.SHUTDOWN),
-        new Request(Request.Type.WOL),
-        new Request(Request.Type.PARTY1),
-        new Request(Request.Type.PARTY2),
-        new Request(Request.Type.LIGHT_OFF)
-    };
+    private final List<Pair<JButton, Request>> btnAndReq = Arrays.asList(
+            new Pair<>(deviceInitBtn, new Request(Request.Type.INIT)),
+            new Pair<>(shurdownBtn, new Request(Request.Type.SHUTDOWN)),
+            new Pair<>(wakeupBtn, new Request(Request.Type.WOL)),
+            new Pair<>(party1Btn, new Request(Request.Type.PARTY1)),
+            new Pair<>(party2Btn, new Request(Request.Type.PARTY2)),
+            new Pair<>(lightOffBtn, new Request(Request.Type.LIGHT_OFF))
+    );
+//    private final JButton[] pairBtns = {
+//        deviceInitBtn,
+//        shurdownBtn,
+//        wakeupBtn,
+//        party1Btn,
+//        party2Btn,
+//        lightOffBtn
+//    };
+//    private final Request[] pairRequests = {
+//        new Request(Request.Type.INIT),
+//        new Request(Request.Type.SHUTDOWN),
+//        new Request(Request.Type.WOL),
+//        new Request(Request.Type.PARTY1),
+//        new Request(Request.Type.PARTY2),
+//        new Request(Request.Type.LIGHT_OFF)
+//    };
     private final BlockingQueue<Request>  requestBuffer = BufferFactory.getRequestBuffer();
     private final RequestServer requestServer = new RequestServer(Ports.REQUEST.get());
     private final RegisterClient registerClient = new RegisterClient(Ports.REGISTER.get());
-    private final AtomicBoolean close = new AtomicBoolean(false);
-    private final DioAction dioAction = new DioAction();
-    private final List<PlayerInformation> playerInformations = PlayerInformation.get();
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+    private final DioInterface dio = DioFactory.getTest();
+    private final List<NodeInformation> nodeInformations = NodeInformation.getVideoNodes();
     private final Runnable[] longTermThreads = {
         requestServer,
         new ExecutorRequest(),
         registerClient
     };
+    private final Closeable[] closeables = {
+        dio,
+        registerClient,
+        requestServer
+    };
     private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
     public MasterFrame() throws Exception {
-        for (Runnable runnable : longTermThreads) {
-            longTermThreadsPool.execute(runnable);
-        }
         add(backgroundPanel);
         backgroundPanel.setLayout(new FlowLayout());
         startPanel.setPreferredSize(new Dimension(400, 400));
@@ -124,15 +141,40 @@ public class MasterFrame extends JFrame {
         backgroundPanel.add(stopPanel);
         backgroundPanel.add(refreshPanel);
         backgroundPanel.add(testPanel);
-        for (int index = 0; index != pairBtns.length; ++index) {
-            final int index_ = index;
-            pairBtns[index].addActionListener(new ActionListener() {
+        for (Pair<JButton, Request> pair : btnAndReq) {
+            final JButton btn = pair.getKey();
+            final Request req = pair.getValue();
+            btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
-                    requestBuffer.offer(pairRequests[index_]);
+                    requestBuffer.offer(req);
                 }
             });
-            backgroundPanel.add(pairBtns[index]);
+            backgroundPanel.add(btn);
+        }
+//        for (int index = 0; index != pairBtns.length; ++index) {
+//            final int indexTmp = index;
+//            pairBtns[index].addActionListener(new ActionListener() {
+//                @Override
+//                public void actionPerformed(ActionEvent arg0) {
+//                    requestBuffer.offer(pairRequests[indexTmp]);
+//                }
+//            });
+//            backgroundPanel.add(pairBtns[index]);
+//        }
+        for (Runnable runnable : longTermThreads) {
+            longTermThreadsPool.execute(runnable);
+        }
+    }
+    @Override
+    public void close() throws IOException {
+        closed.set(true);
+        for (Closeable closeable : closeables) {
+            try {
+                closeable.close();
+            } catch(IOException e) {
+                LOG.error(e.getMessage());
+            }
         }
     }
     private class ExecutorRequest implements Runnable {
@@ -140,10 +182,13 @@ public class MasterFrame extends JFrame {
         public void run() {
             final AtomicBoolean start = new AtomicBoolean(false);
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            while (!close.get()) {
+            while (!closed.get()) {
                 try  {
                     Request request = requestBuffer.take();
-                    System.out.println(request.getType());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request : " + request.getType().name());
+                    }
+                    
                     switch(request.getType()) {
                         case START:
                             if (!start.get()) {
@@ -153,9 +198,9 @@ public class MasterFrame extends JFrame {
                                     @Override
                                     public void run() {
                                         try {
-                                            Happen.start(playerInformations, registerClient, dioAction);
+                                            Happen.start(nodeInformations, registerClient, dio);
                                         } catch (IOException | InterruptedException e) {
-                                            e.printStackTrace();
+                                            LOG.error(e.getMessage());
                                         } finally {
                                             start.set(false);
                                         }
@@ -166,8 +211,8 @@ public class MasterFrame extends JFrame {
                         case STOP:
                             if (start.get()) {
                                 executor.shutdownNow();
-                                dioAction.light_off();
-                                SerialStream.sendAll(playerInformations, new Request(Request.Type.STOP), Ports.REQUEST.get());
+                                dio.lightOff();
+                                SerialStream.sendAll(nodeInformations, new Request(Request.Type.STOP), Ports.REQUEST.get());
                             }
                             break;
                         case SELECT:
@@ -179,49 +224,49 @@ public class MasterFrame extends JFrame {
                                     for (int index = 0; index != indexs.length; ++index) {
                                         Happen.setValues(indexs[index], values[index]);
                                     }
-                                    SerialStream.sendAll(playerInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
+                                    SerialStream.sendAll(nodeInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
                                 }
                             }
                             break;
                         case REBOOT:
-                            SerialStream.sendAll(playerInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
+                            SerialStream.sendAll(nodeInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
                             break;
                         case INIT:
-                            dioAction.stoneToLeft();
-                            dioAction.light_work();
-                            dioAction.initializeSubmarineAndGray();
+                            dio.stoneGotoLeft();
+                            dio.lightWork();
+                            dio.initializeSubmarineAndGray();
                             break;
                         case LIGHT_OFF:
-                            dioAction.light_off();
+                            dio.lightOff();
                             break;
                         case PARTY1:
                             //don't touch gray??
-                            dioAction.grayUpToEnd();
-                            dioAction.stoneToRight();
-                            dioAction.light_party1();
+                            dio.grayUptoEnd();
+                            dio.stoneGotoRight();
+                            dio.lightParty(1);
                             break;
                         case PARTY2:
                             //don't touch gray??
-                            dioAction.grayUpToEnd();
-                            dioAction.stoneToRight();
-                            dioAction.light_party2();
+                            dio.grayUptoEnd();
+                            dio.stoneGotoRight();
+                            dio.lightParty(2);
                             break;
                         case SHUTDOWN:
-                            SerialStream.sendAll(playerInformations, new Request(Request.Type.SHUTDOWN), Ports.REQUEST.get());
+                            SerialStream.sendAll(nodeInformations, new Request(Request.Type.SHUTDOWN), Ports.REQUEST.get());
                             break;
                         case WOL:
-                            for (PlayerInformation playerInformation : playerInformations) {
-                                WOL.wakeup(PlayerInformation.getBroadCast(), playerInformation.getMac());
-                                System.out.println(PlayerInformation.getBroadCast() + " " + playerInformation.getMac());
+                            for (NodeInformation nodeInformation : nodeInformations) {
+                                WOL.wakeup(NodeInformation.getBroadCast(), nodeInformation.getMac());
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug(NodeInformation.getBroadCast() + " " + nodeInformation.getMac());
+                                }
                             }
                             break;
                         default:
                             break;
                     }
-                    System.out.println(request.getType() + " over");
                 } catch (InterruptedException | IOException e)  {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                    LOG.error(e.getMessage());
                 } finally {
                     requestBuffer.clear();
                 }
@@ -229,12 +274,25 @@ public class MasterFrame extends JFrame {
         }
     }
     public static void main(String[] args) throws Exception {
-        final JFrame f = new MasterFrame();
+        final MasterFrame f = new MasterFrame();
+        f.addWindowListener(new WindowAdapter(){
+            @Override
+            public void windowClosing(WindowEvent ex) {
+                try {
+                    f.close();
+                } catch (IOException e) {
+                    LOG.error(e.getMessage());
+                }
+            }
+        });
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                //f.setSize(new Dimension(600, 600));
-                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                if (NMConstants.TESTS) {
+                    f.setSize(NMConstants.FRAME_Dimension);
+                } else {
+                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                }
                 f.setUndecorated(true);
                 f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 f.setVisible(true);

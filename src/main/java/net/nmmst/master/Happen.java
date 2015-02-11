@@ -3,17 +3,20 @@ package net.nmmst.master;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import net.nmmst.player.PlayerInformation;
+import net.nmmst.player.NodeInformation;
 import net.nmmst.register.RegisterClient;
 import net.nmmst.request.Request;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class Happen {
     private Happen(){}
+    private static final Logger LOG = LoggerFactory.getLogger(Happen.class);  
     private static final long GRAY_SCREEN_MICRTIME = (2 * 60 + 37) * 1000 * 1000;//micrs
     private static final long MOVIE_TIME_1 = (5 * 60 + 19) * 1000 * 1000;
     private static final long MOVIE_TIME_2 = (0 * 60 + 58) * 1000 * 1000;
@@ -45,67 +48,69 @@ public class Happen {
         values[5] = false;
         values[6] = true;
     }
-    private static void start1(RegisterClient server, DioAction dioAction) throws InterruptedException {
+    private static void start1(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dioAction.light_1();
+        dio.light(1);
         TimeUnit.MICROSECONDS.sleep(GRAY_SCREEN_MICRTIME);
-        dioAction.grayUpToEnd();
+        dio.grayUptoEnd();
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_1 - (spendTime * 1000));
     }
-    private static void start2(RegisterClient server, DioAction dioAction) throws InterruptedException {
+    private static void start2(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         if (values[1]) {
-            dioAction.light_2();
+            dio.light(2);
         } else if (values[2]) {
-            dioAction.light_3();
+            dio.light(3);
         } else {
-            dioAction.light_2();
+            dio.light(2);
         }
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_2 - (spendTime * 1000));
     }
-    private static void start3(RegisterClient server, DioAction dioAction) throws InterruptedException {
+    private static void start3(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dioAction.light_4();
+        dio.light(4);
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_3 - (spendTime * 1000));
     }
-    private static void start4(RegisterClient server, DioAction dioAction) throws InterruptedException {
+    private static void start4(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         if (values[4]) {
-            dioAction.light_5();
+            dio.light(5);
         } else if (values[5]) {
-            dioAction.light_6();
+            dio.light(6);
         } else {
-            dioAction.light_5();
+            dio.light(5);
         }
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_4 - (spendTime * 1000));
     }
-    private static void start5(RegisterClient server, DioAction dioAction) throws InterruptedException {
+    private static void start5(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dioAction.light_7();
+        dio.light(7);
         TimeUnit.MICROSECONDS.sleep(SUBMINE_GONE);
-        dioAction.submarineFinal();
+        dio.submarineGotoEnd();
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_5 - (spendTime * 1000));
-        dioAction.light_off();
+        dio.lightOff();
     }
-    public static boolean start(List<PlayerInformation> playerInformations, RegisterClient server, DioAction dioAction) throws IOException, InterruptedException {
+    public static boolean start(List<NodeInformation> nodeInformations, RegisterClient server, DioInterface dio) throws IOException, InterruptedException {
         try {
             if (!server.isBuffered()) {
-                System.out.println("no buffer");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("no buffer");
+                }
                 return false;
             }
-            if (!SerialStream.sendAll(playerInformations, new Request(Request.Type.START), Ports.REQUEST.get())) {
+            if (!SerialStream.sendAll(nodeInformations, new Request(Request.Type.START), Ports.REQUEST.get())) {
                 return false;
             }
-            start1(server, dioAction);
-            start2(server, dioAction);
-            start3(server, dioAction);
-            start4(server, dioAction);
-            start5(server, dioAction);
+            start1(server, dio);
+            start2(server, dio);
+            start3(server, dio);
+            start4(server, dio);
+            start5(server, dio);
             return true;
         } finally {
             initValues();

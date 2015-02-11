@@ -4,12 +4,15 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import net.nmmst.processor.FrameProcessor;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class MovieReader implements Closure {
+public class MovieReader implements BackedRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(MovieReader.class);
     private final MovieOrder movieOrder;
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
     private final AtomicBoolean close = new AtomicBoolean(false);
@@ -68,7 +71,10 @@ public class MovieReader implements Closure {
                 buffer.writeFrame(Frame.newNullFrame());
                 buffer.writeSample(Sample.newNullSample());
             }
-        } catch(InterruptedException | IOException e) {
+        } catch(IOException e) {
+            LOG.error(e.getMessage());
+        } catch(InterruptedException e) {
+            LOG.error("MovieReader is interrupted");
         } finally {
             isClosed.set(true);
         }

@@ -9,36 +9,40 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public abstract class Painter {
-    public static BufferedImage loadOrStringImage(File file, int width, int height) {
-        return loadOrStringImage(file, file.getAbsolutePath(), width, height);
+    private static Logger LOG = LoggerFactory.getLogger(Painter.class);
+    public static BufferedImage loadOrStringImage(File file, int width, int height, int fontSize) {
+        return loadOrStringImage(file, file.getAbsolutePath(), width, height, fontSize);
     }
-    public static BufferedImage loadOrStringImage(File file, String string, int width, int height) {
+    public static BufferedImage loadOrStringImage(File file, String string, int width, int height, int fontSize) {
         BufferedImage image = null; 
         if (file.exists()) {
             try {
                 image = ImageIO.read(file);
             } catch (IOException e) {
+                LOG.error(e.getMessage());
             }
         }
         if (image == null) {
-            image = Painter.getStringImage(string, width, height);
+            image = Painter.getStringImage(string, width, height, fontSize);
         }
         return image;
     }
     public abstract BufferedImage paint(BufferedImage oriImage);
     public static BufferedImage process(BufferedImage oriImage, Painter ... painters) {
-        BufferedImage dst_image = newCopyPainter().paint(oriImage);
+        BufferedImage dst_image = getCopyPainter().paint(oriImage);
         for (Painter filter : painters) {
             dst_image = filter.paint(dst_image);
         }
         return dst_image;
     }
-    public static Painter newTypePainter(final int imageType) {
+    public static Painter getTypePainter(final int imageType) {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -53,7 +57,7 @@ public abstract class Painter {
             }
         };
     }
-    public static Painter newScalePainter(final double scale) {
+    public static Painter getScalePainter(final double scale) {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -68,7 +72,7 @@ public abstract class Painter {
             }
         };
     }
-    public static Painter newMirrorPainter() {
+    public static Painter getMirrorPainter() {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -83,7 +87,7 @@ public abstract class Painter {
             }
         };
     }
-    public static Painter newScalePainter(final int maxLength) {
+    public static Painter getScalePainter(final int maxLength) {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -99,7 +103,7 @@ public abstract class Painter {
             }
         };
     }
-    public static Painter newScalePainter(final int dst_width, final int dst_height) {
+    public static Painter getScalePainter(final int dst_width, final int dst_height) {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -112,7 +116,7 @@ public abstract class Painter {
             }
         };
     }
-    private static Painter newCopyPainter() {
+    private static Painter getCopyPainter() {
         return new Painter() {
             @Override
             @SuppressWarnings("empty-statement")
@@ -129,6 +133,9 @@ public abstract class Painter {
     }
     public static BufferedImage getStringImage(String str, int width, int height, int fontSize) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        return getStringImage(image, str, fontSize);
+    }
+    public static BufferedImage getStringImage(BufferedImage image, String str, int fontSize) {
         Graphics2D g2d = (Graphics2D)image.createGraphics();
         g2d.setFont(new Font("Serif", Font.BOLD, fontSize));
         FontMetrics fm = g2d.getFontMetrics();
@@ -136,25 +143,7 @@ public abstract class Painter {
         g2d.dispose();
         return image;
     }
-    public static BufferedImage getStringImage(String str, int width, int height) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D g2d = (Graphics2D)image.createGraphics();
-        g2d.setFont(new Font("Serif", Font.BOLD, 20));
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(str, (image.getWidth() - fm.stringWidth(str)) / 2, image.getHeight() / 2);
-        g2d.dispose();
-        return image;
-    }
-    public static BufferedImage getStringImage(BufferedImage image, String str, int size) {
-        image = Painter.process(image);
-        Graphics2D g2d = (Graphics2D)image.createGraphics();
-        g2d.setFont(new Font("Serif", Font.BOLD, size));
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(str, (image.getWidth() - fm.stringWidth(str)) / 2, image.getHeight() / 2);
-        g2d.dispose();
-        return image;
-    }
-    public static BufferedImage fillColor(int width, int height, Color color) {
+    public static BufferedImage getFillColor(int width, int height, Color color) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         Graphics2D g = (Graphics2D)image.getGraphics();
         g.setColor(color);

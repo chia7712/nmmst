@@ -8,12 +8,12 @@ import net.nmmst.movie.MovieAttribute;
 import net.nmmst.movie.MovieBuffer;
 import net.nmmst.processor.FrameProcessor;
 import net.nmmst.tools.BasicPanel;
-import net.nmmst.tools.Closure;
+import net.nmmst.tools.BackedRunner;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class PanelThread implements Closure {
+public class PanelThread implements BackedRunner {
     private final BasicPanel panel;
     private final Sleeper sleeper = new Sleeper(0);
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();
