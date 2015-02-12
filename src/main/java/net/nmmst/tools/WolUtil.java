@@ -10,11 +10,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class WOL {
-    private static Logger LOG = LoggerFactory.getLogger(WOL.class);
+public class WolUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(WolUtil.class);
     private static final int PORT = 80;
-    private static byte[] genMagicPacket(String mac_str) {
-        byte[] mac = getMacBytes(mac_str);
+    private static byte[] genMagicPacket(String macStr) {
+        byte[] mac = getMacBytes(macStr);
         if (mac.length == 0) {
             return mac;
         }
@@ -27,26 +27,20 @@ public class WOL {
         }
         return bytes;
     }
-    public static boolean wakeup(String broadcase, String mac_str) {
-        byte[] bytes = genMagicPacket(mac_str);
+    public static boolean wakeup(String broadcase, String macStr) {
+        byte[] bytes = genMagicPacket(macStr);
         if (bytes.length == 0) {
             return false;
         }
-        DatagramSocket socket = null;
-        try {
+        try (DatagramSocket socket = new DatagramSocket()) {
             InetAddress address = InetAddress.getByName(broadcase);
-            DatagramPacket packet = new DatagramPacket(bytes, bytes.length, address, PORT);
-            socket = new DatagramSocket();
-            socket.send(packet);
+            socket.send(new DatagramPacket(bytes, bytes.length, address, PORT));
             return true;
         } catch (IOException e) {
             LOG.error(e.getMessage());
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
+            return false;
         }
-        return false;
+        
     }
     private static byte[] getMacBytes(String macStr) throws IllegalArgumentException {
         byte[] bytes = new byte[6];
@@ -64,5 +58,5 @@ public class WOL {
         }
         return bytes;
     }
-    private WOL(){}
+    private WolUtil(){}
 }

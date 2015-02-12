@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public abstract class Painter {
-    private static Logger LOG = LoggerFactory.getLogger(Painter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Painter.class);
     public static BufferedImage loadOrStringImage(File file, int width, int height, int fontSize) {
         return loadOrStringImage(file, file.getAbsolutePath(), width, height, fontSize);
     }

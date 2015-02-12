@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class RegisterServer implements BackedRunner {
-    private static Logger LOG = LoggerFactory.getLogger(RegisterServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RegisterServer.class);
     private final AtomicBoolean close = new AtomicBoolean(false);
     private final AtomicBoolean isClosed = new AtomicBoolean(false);	
     private final MovieBuffer buffer = BufferFactory.getMovieBuffer();

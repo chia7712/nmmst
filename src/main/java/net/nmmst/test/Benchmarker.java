@@ -7,19 +7,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieStream;
 import net.nmmst.movie.Sample;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class Benchmarker {
-    private static org.slf4j.Logger LOG = LoggerFactory.getLogger(Benchmarker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Benchmarker.class);
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             throw new IOException("<movie path> <pic path>");

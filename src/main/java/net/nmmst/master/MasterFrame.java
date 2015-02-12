@@ -33,7 +33,7 @@ import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
-import net.nmmst.tools.WOL;
+import net.nmmst.tools.WolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -256,7 +256,7 @@ public class MasterFrame extends JFrame implements Closeable {
                             break;
                         case WOL:
                             for (NodeInformation nodeInformation : nodeInformations) {
-                                WOL.wakeup(NodeInformation.getBroadCast(), nodeInformation.getMac());
+                                WolUtil.wakeup(NodeInformation.getBroadCast(), nodeInformation.getMac());
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug(NodeInformation.getBroadCast() + " " + nodeInformation.getMac());
                                 }

@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class SerialStream {
-    private static Logger LOG = LoggerFactory.getLogger(SerialStream.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SerialStream.class);
     private final Socket client;
     private ObjectInputStream input = null;
     private ObjectOutputStream output = null;

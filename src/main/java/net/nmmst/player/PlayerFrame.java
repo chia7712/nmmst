@@ -34,7 +34,7 @@ import net.nmmst.tools.BackedRunner;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
-import net.nmmst.tools.WindowsFunctions;
+import net.nmmst.tools.WindowsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -173,10 +173,10 @@ public class PlayerFrame extends JFrame implements Closeable {
                             }
                             break;
                         case REBOOT:
-                            WindowsFunctions.reboot();
+                            WindowsUtil.reboot();
                             break;
                         case SHUTDOWN:
-                            WindowsFunctions.shutdown();
+                            WindowsUtil.shutdown();
                             break;
                         case TEST: {
                             BufferedImage image = getTestImage();

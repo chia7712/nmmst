@@ -17,7 +17,7 @@ import net.nmmst.tools.BasicPanel;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
-import net.nmmst.tools.WindowsFunctions;
+import net.nmmst.tools.WindowsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public class PlayerTest extends JFrame {
     private static final long serialVersionUID = -2016746022673317548L;
-    private static Logger LOG = LoggerFactory.getLogger(PlayerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PlayerTest.class);
     private final BasicPanel panel = new BasicPanel(Painter.getFillColor(1920, 1080, Color.WHITE));
     private final ServerSocket server = new ServerSocket(Ports.TEST.get());
     public PlayerTest(final NodeInformation nodeInformation) throws IOException {
@@ -48,7 +48,7 @@ public class PlayerTest extends JFrame {
                         if (obj instanceof Boolean) {
                             Boolean b = (Boolean)obj;
                             if (b) {
-                                WindowsFunctions.reboot();
+                                WindowsUtil.reboot();
                             } else {
                                 BufferedImage testImage = Painter.getFillColor(1920, 1080, Color.WHITE);
                                 panel.write(testImage);

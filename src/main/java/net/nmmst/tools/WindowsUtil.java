@@ -5,8 +5,8 @@ import java.io.IOException;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class WindowsFunctions {
-    private WindowsFunctions(){}
+public class WindowsUtil {
+    private WindowsUtil(){}
     public static void shutdown() throws IOException {
         Runtime.getRuntime().exec("shutdown -s -t 0");
     }

@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class NodeInformation implements Comparable<NodeInformation> {
-    private static Logger LOG = LoggerFactory.getLogger(NodeInformation.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NodeInformation.class);
     public enum Location{LU, RU, LD, RD, CENTER, MASTER};
     private final Location location;
     private final String ip;
