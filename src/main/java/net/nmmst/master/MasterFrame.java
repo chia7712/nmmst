@@ -3,7 +3,6 @@ package net.nmmst.master;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.util.Pair;
 import javax.swing.JButton;
@@ -28,10 +28,14 @@ import net.nmmst.register.RegisterClient;
 import net.nmmst.request.Request;
 import net.nmmst.request.RequestServer;
 import net.nmmst.request.SelectRequest;
-import net.nmmst.tools.BasicPanel;
+import net.nmmst.tools.AtomicCloser;
+import net.nmmst.tools.BasePanel;
+import net.nmmst.tools.BaseTimer;
+import net.nmmst.tools.Closer;
 import net.nmmst.tools.NMConstants;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
+import net.nmmst.tools.ProjectorUtil;
 import net.nmmst.tools.SerialStream;
 import net.nmmst.tools.WolUtil;
 import org.slf4j.Logger;
@@ -52,13 +56,14 @@ public class MasterFrame extends JFrame implements Closeable {
 //            ImageIO.read(new File(rootPath + "//m_refresh.jpg"));
     private final BufferedImage backgroundImage = Painter.loadOrStringImage(new File(rootPath + "//m_background_all.jpg"), "background", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_background_all.jpg"));
-    private final BufferedImage testImage = Painter.loadOrStringImage(new File(rootPath + "//test.jpg"), "refresh", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
+    private final BufferedImage testImage = Painter.loadOrStringImage(new File(rootPath + "//m_test.jpg"), "test", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
 //            ImageIO.read(new File(rootPath + "//m_test.jpg"));
-    private final BasicPanel startPanel = new BasicPanel(startImage, BasicPanel.Mode.FILL);
-    private final BasicPanel stopPanel = new BasicPanel(stopImage, BasicPanel.Mode.FILL);
-    private final BasicPanel refreshPanel = new BasicPanel(refreshImage, BasicPanel.Mode.FILL);
-    private final BasicPanel backgroundPanel = new BasicPanel(backgroundImage, BasicPanel.Mode.FILL);
-    private final BasicPanel testPanel = new BasicPanel(testImage, BasicPanel.Mode.FILL);
+    private final BufferedImage retestImage = Painter.getStringImage("還原測試", 400, 200, 100);
+    private final BasePanel startPanel = new BasePanel(startImage, BasePanel.Mode.FILL);
+    private final BasePanel stopPanel = new BasePanel(stopImage, BasePanel.Mode.FILL);
+    private final BasePanel refreshPanel = new BasePanel(refreshImage, BasePanel.Mode.FILL);
+    private final BasePanel backgroundPanel = new BasePanel(backgroundImage, BasePanel.Mode.FILL);
+    private final BasePanel testPanel = new BasePanel(testImage, BasePanel.Mode.FILL);
     private final JButton deviceInitBtn = new JButton("展演準備");
     private final JButton shurdownBtn = new JButton("睡覺");
     private final JButton wakeupBtn = new JButton("起床");
@@ -73,39 +78,13 @@ public class MasterFrame extends JFrame implements Closeable {
             new Pair<>(party2Btn, new Request(Request.Type.PARTY2)),
             new Pair<>(lightOffBtn, new Request(Request.Type.LIGHT_OFF))
     );
-//    private final JButton[] pairBtns = {
-//        deviceInitBtn,
-//        shurdownBtn,
-//        wakeupBtn,
-//        party1Btn,
-//        party2Btn,
-//        lightOffBtn
-//    };
-//    private final Request[] pairRequests = {
-//        new Request(Request.Type.INIT),
-//        new Request(Request.Type.SHUTDOWN),
-//        new Request(Request.Type.WOL),
-//        new Request(Request.Type.PARTY1),
-//        new Request(Request.Type.PARTY2),
-//        new Request(Request.Type.LIGHT_OFF)
-//    };
+    private final Closer closer = new AtomicCloser();
     private final BlockingQueue<Request>  requestBuffer = BufferFactory.getRequestBuffer();
-    private final RequestServer requestServer = new RequestServer(Ports.REQUEST.get());
-    private final RegisterClient registerClient = new RegisterClient(Ports.REGISTER.get());
-    private final AtomicBoolean closed = new AtomicBoolean(false);
-    private final DioInterface dio = DioFactory.getTest();
-    private final List<NodeInformation> nodeInformations = NodeInformation.getVideoNodes();
-    private final Runnable[] longTermThreads = {
-        requestServer,
-        new ExecutorRequest(),
-        registerClient
-    };
-    private final Closeable[] closeables = {
-        dio,
-        registerClient,
-        requestServer
-    };
-    private final ExecutorService longTermThreadsPool = Executors.newFixedThreadPool(longTermThreads.length);
+    private final RequestServer requestServer = new RequestServer(closer, Ports.REQUEST_MASTER.get());
+    private final RegisterClient registerClient = new RegisterClient(closer, new BaseTimer(TimeUnit.SECONDS, 1), Ports.REGISTER.get());
+    private final DioInterface dio = DioFactory.getDefault();
+    private final List<NodeInformation> videoNodes = NodeInformation.getVideoNodes();
+    private final ExecutorService longTermThreadsPool = Executors.newCachedThreadPool();
     public MasterFrame() throws Exception {
         add(backgroundPanel);
         backgroundPanel.setLayout(new FlowLayout());
@@ -132,9 +111,22 @@ public class MasterFrame extends JFrame implements Closeable {
         });
         testPanel.setPreferredSize(new Dimension(100, 100));
         testPanel.addMouseListener(new MouseAdapter() {
+            private boolean move = false;
             @Override
             public void mouseReleased(MouseEvent arg0)  {
-                //requestBuffer.offer(new Request(Request.Type.TEST_1));
+                try {
+                    if (move) {
+                        dio.initializeSubmarineAndGray();
+                        move = false;
+                        testPanel.write(testImage);
+                    } else {
+                        dio.submarineGotoEnd();
+                        move = true;
+                        testPanel.write(retestImage);
+                    }
+                } catch(InterruptedException e) {
+                    LOG.error(e.getMessage());
+                }
             }
         });
         backgroundPanel.add(startPanel);
@@ -144,92 +136,78 @@ public class MasterFrame extends JFrame implements Closeable {
         for (Pair<JButton, Request> pair : btnAndReq) {
             final JButton btn = pair.getKey();
             final Request req = pair.getValue();
-            btn.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent arg0) {
-                    requestBuffer.offer(req);
-                }
+            btn.addActionListener((ActionEvent arg0) -> {
+                requestBuffer.offer(req);
             });
             backgroundPanel.add(btn);
         }
-//        for (int index = 0; index != pairBtns.length; ++index) {
-//            final int indexTmp = index;
-//            pairBtns[index].addActionListener(new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent arg0) {
-//                    requestBuffer.offer(pairRequests[indexTmp]);
-//                }
-//            });
-//            backgroundPanel.add(pairBtns[index]);
-//        }
-        for (Runnable runnable : longTermThreads) {
-            longTermThreadsPool.execute(runnable);
-        }
-    }
-    @Override
-    public void close() throws IOException {
-        closed.set(true);
-        for (Closeable closeable : closeables) {
-            try {
-                closeable.close();
-            } catch(IOException e) {
-                LOG.error(e.getMessage());
-            }
-        }
-    }
-    private class ExecutorRequest implements Runnable {
-        @Override
-        public void run() {
-            final AtomicBoolean start = new AtomicBoolean(false);
+        longTermThreadsPool.execute(requestServer);
+        longTermThreadsPool.execute(registerClient);
+        longTermThreadsPool.execute(() -> {
+            AtomicBoolean start = new AtomicBoolean(false);
             ExecutorService executor = Executors.newSingleThreadExecutor();
-            while (!closed.get()) {
+            while (!closer.isClosed()) {
                 try  {
                     Request request = requestBuffer.take();
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Request : " + request.getType().name());
                     }
-                    
                     switch(request.getType()) {
+                        case ADD_SNAPSHOTS: {
+                            Object obj = request.getArgument();
+                            if (obj != null && obj instanceof Integer[]) {
+                                SerialStream.sendAll(videoNodes, new Request(Request.Type.ADD_SNAPSHOTS, (Integer[])obj), Ports.REQUEST_OTHERS.get());
+                            }
+                            break;
+                        }
                         case START:
-                            if (!start.get()) {
-                                start.set(true);
+                            if (start.compareAndSet(false, true)) {
                                 executor = Executors.newSingleThreadExecutor();
-                                executor.execute(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            Happen.start(nodeInformations, registerClient, dio);
-                                        } catch (IOException | InterruptedException e) {
-                                            LOG.error(e.getMessage());
-                                        } finally {
-                                            start.set(false);
-                                        }
+                                executor.execute(() -> {
+                                    try {
+                                        Happen.start(videoNodes, registerClient, dio);
+                                    } catch (IOException | InterruptedException e) {
+                                        LOG.error(e.getMessage());
+                                    } finally {
+                                        start.set(false);
                                     }
                                 });
+                            } else {
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("already starting");
+                                }
                             }
                             break;
-                        case STOP:
+                        case STOP: {
                             if (start.get()) {
                                 executor.shutdownNow();
-                                dio.lightOff();
-                                SerialStream.sendAll(nodeInformations, new Request(Request.Type.STOP), Ports.REQUEST.get());
+                                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+                            } else {
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("already stoping");
+                                }
                             }
+                            dio.lightOff();
+                            SerialStream.sendAll(videoNodes, new Request(Request.Type.STOP), Ports.REQUEST_OTHERS.get());
                             break;
-                        case SELECT:
-                            if (request.getArgument() instanceof SelectRequest) {
-                                SelectRequest selectRequest = (SelectRequest)request.getArgument();
+                        }
+                        case SELECT: {
+                            Object obj = request.getArgument();
+                            if (obj != null && obj instanceof SelectRequest) {
+                                SelectRequest selectRequest = (SelectRequest)obj;
                                 int[] indexs = selectRequest.getIndexs();
                                 boolean[] values = selectRequest.getValues();
                                 if (indexs.length == values.length) {
                                     for (int index = 0; index != indexs.length; ++index) {
                                         Happen.setValues(indexs[index], values[index]);
                                     }
-                                    SerialStream.sendAll(nodeInformations, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST.get());
+                                    SerialStream.sendAll(videoNodes, new Request(Request.Type.SELECT, selectRequest), Ports.REQUEST_OTHERS.get());
                                 }
                             }
                             break;
+                        }
                         case REBOOT:
-                            SerialStream.sendAll(nodeInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
+                            SerialStream.asynSendAll(videoNodes, new Request(Request.Type.REBOOT), Ports.REQUEST_OTHERS.get());
                             break;
                         case INIT:
                             dio.stoneGotoLeft();
@@ -252,18 +230,23 @@ public class MasterFrame extends JFrame implements Closeable {
                             dio.lightParty(2);
                             break;
                         case SHUTDOWN:
-                            SerialStream.sendAll(nodeInformations, new Request(Request.Type.SHUTDOWN), Ports.REQUEST.get());
+                            SerialStream.asynSendAll(videoNodes, new Request(Request.Type.SHUTDOWN), Ports.REQUEST_OTHERS.get());
+                            ProjectorUtil.switchAllMachine(false);
                             break;
                         case WOL:
-                            for (NodeInformation nodeInformation : nodeInformations) {
+                            for (NodeInformation nodeInformation : videoNodes) {
                                 WolUtil.wakeup(NodeInformation.getBroadCast(), nodeInformation.getMac());
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug(NodeInformation.getBroadCast() + " " + nodeInformation.getMac());
                                 }
                             }
+                            ProjectorUtil.switchAllMachine(true);
                             break;
                         default:
                             break;
+                    }
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Request : " + request.getType().name() + " is done");
                     }
                 } catch (InterruptedException | IOException e)  {
                     LOG.error(e.getMessage());
@@ -271,7 +254,13 @@ public class MasterFrame extends JFrame implements Closeable {
                     requestBuffer.clear();
                 }
             }
-        }
+        });
+    }
+    @Override
+    public void close() throws IOException {
+        closer.close();
+        dio.close();
+        longTermThreadsPool.shutdownNow();
     }
     public static void main(String[] args) throws Exception {
         final MasterFrame f = new MasterFrame();
@@ -285,18 +274,17 @@ public class MasterFrame extends JFrame implements Closeable {
                 }
             }
         });
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (NMConstants.TESTS) {
-                    f.setSize(NMConstants.FRAME_Dimension);
-                } else {
-                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                }
-                f.setUndecorated(true);
-                f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                f.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            if (NMConstants.TESTS) {
+                f.setSize(NMConstants.FRAME_Dimension);
+            } else {
+                f.setExtendedState(JFrame.MAXIMIZED_BOTH);
             }
+            if (!NMConstants.TESTS) {
+                f.setUndecorated(true);
+            }
+            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            f.setVisible(true);
         });
     }
 }

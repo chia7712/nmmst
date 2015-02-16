@@ -2,25 +2,24 @@ package net.nmmst.controller;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
 import net.java.games.input.ControllerEnvironment;
 import net.nmmst.tools.BackedRunner;
+import net.nmmst.tools.Closer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class ControlEvent implements BackedRunner {
+public class ControlEvent extends BackedRunner {
     private static final Logger LOG = LoggerFactory.getLogger(ControlEvent.class);  
     private final List<Controller> controllers = new LinkedList();
     private final List<ControlTrigger> triggerList = new LinkedList();
-    private final AtomicBoolean close = new AtomicBoolean(false);
-    private final AtomicBoolean isClosed = new AtomicBoolean(false);
-    public ControlEvent(List<ControlTrigger> triggerList) {
+    public ControlEvent(Closer closer, List<ControlTrigger> triggerList) {
+        super(closer);
         this.triggerList.addAll(triggerList);
         for (Controller controller : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
             for (ControlTrigger trigger : this.triggerList) {
@@ -33,28 +32,26 @@ public class ControlEvent implements BackedRunner {
         }
     }
     @Override
-    public void close() {
-        close.set(true);
-    }
-    @Override
-    public void run() {
-        while (!close.get()) {
-            for (Controller controller : controllers) {
-                controller.poll();
-                EventQueue queue = controller.getEventQueue();
-                Event event = new Event();
-                while (queue.getNextEvent(event)) {  
-                    for (ControlTrigger trigger : triggerList) {
-                        if (controller.getType() == trigger.getType()) {
-                            trigger.triggerOff(event.getComponent());
-                        }
-                    }
-                }
+    protected void work() {
+        controllers.stream().map((controller) -> {
+            controller.poll();
+            return controller;
+        }).forEach((controller) -> {
+            EventQueue queue = controller.getEventQueue();
+            Event event = new Event();
+            while (queue.getNextEvent(event)) {  
+                triggerList.stream()
+                        .filter((trigger) -> (controller.getType() == trigger.getType()))
+                        .forEach((trigger) -> {
+                    trigger.triggerOff(event.getComponent());
+                });
             }
-        }
+        });
     }
     @Override
-    public boolean isClosed() {
-        return isClosed.get();
+    protected void init() {
+    }
+    @Override
+    protected void clear() {
     }
 }

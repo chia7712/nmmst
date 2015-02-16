@@ -13,23 +13,29 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.List;
+import net.nmmst.player.NodeInformation;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class ProjectorUtil {
-    private static final int TCP_PORT = 43680;
-    private static final int UDP_PORT = 40961;
-    private static final String BROADCAST = "255.255.255.255";
+    private static final int TCP_PORT = 0xAAA0;
+    private static final int UDP_PORT = 0xA001;
+//    private static final String BROADCAST = "192.168.100.255";
     private static final byte[] PACKET_DATA = {0x3F};
-    private static final String[] MACHINE_ADDRESSES = {
-        
-    };
+//    private static final String[] MACHINE_ADDRESSES = {
+//        "192.168.100.11"
+//        , "192.168.100.12"
+//        , "192.168.100.13"
+//        , "192.168.100.14"
+//    };
     public static boolean[] switchAllMachine(boolean enable) throws IOException {
-        boolean[] rval = new boolean[MACHINE_ADDRESSES.length];
+        List<NodeInformation> nodeInformations = NodeInformation.getProjectors();
+        boolean[] rval = new boolean[nodeInformations.size()];
         int index = 0;
-        for (String address : MACHINE_ADDRESSES) {
-            rval[index++] = switchMachine(address, enable);
+        for (NodeInformation projector : nodeInformations) {
+            rval[index++] = switchMachine(projector.getIP(), enable);
         }
         return rval;
     } 
@@ -50,7 +56,7 @@ public class ProjectorUtil {
     }
     public static String discoverDevices() throws IOException {
         try (DatagramSocket socket = new DatagramSocket()) {
-            InetAddress address = InetAddress.getByName(BROADCAST);
+            InetAddress address = InetAddress.getByName(NodeInformation.getBroadCast());
             socket.send(new DatagramPacket(PACKET_DATA, PACKET_DATA.length, address, UDP_PORT));
             DatagramPacket recvPacket = new DatagramPacket(new byte[1024], 1024, address, UDP_PORT);
             socket.receive(recvPacket);
@@ -95,7 +101,9 @@ public class ProjectorUtil {
         private final OutputStream out;
         private final InputStream in;
         public ProjectorConnection(String address) throws IOException {
+            System.out.println("connect..." + address + ":" + TCP_PORT);
             connection = new Socket(address, TCP_PORT);
+            System.out.println("connect...over");
             try {
                 out = connection.getOutputStream();
                 in = connection.getInputStream();

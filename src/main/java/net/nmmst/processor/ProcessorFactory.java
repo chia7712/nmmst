@@ -54,11 +54,9 @@ public class ProcessorFactory {
 
         @Override
         public void process(Frame frame) {
-            for (FrameProcessor processor : processors) {
-                if (processor.needProcess(frame)) {
-                    processor.process(frame);
-                }
-            }
+            processors.stream().filter((processor) -> (processor.needProcess(frame))).forEach((processor) -> {
+                processor.process(frame);
+            });
         }
     }
 }

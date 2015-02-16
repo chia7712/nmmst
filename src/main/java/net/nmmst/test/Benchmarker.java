@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Benchmarker {
     private static final Logger LOG = LoggerFactory.getLogger(Benchmarker.class);
+    private static final int count = 1000;
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
             throw new IOException("<movie path> <pic path>");
@@ -28,6 +29,7 @@ public class Benchmarker {
         Counter audioCount = new Counter("AUDIO");
         Reporter reporter = new Reporter(Arrays.asList(videoCount, audioCount));
         Saver saver = new Saver(args[1]);
+        int curCount = 0;
         Executors.newSingleThreadExecutor().execute(reporter);
         while (true) {
             switch(stream.readNextType()) {
@@ -36,7 +38,10 @@ public class Benchmarker {
                     Frame frame = stream.getFrame();
                     final long endTime = System.nanoTime();
                     videoCount.add((endTime - startTime) / 1000000);
-                    saver.save(frame);
+                    if (curCount == count) {
+                        System.out.println("save : " + saver.save(frame));
+                    }
+                    ++curCount;
                     break;
                 }
                 case AUDIO: {
@@ -59,16 +64,14 @@ public class Benchmarker {
             File dir = new File(rootDir);
             if (!dir.exists()) {
                 dir.mkdir();
-                this.rootDir = rootDir;
-                return;
             }
-            throw new IOException(rootDir + " cann't be existed");
-                
+            this.rootDir = rootDir;
         }
-        public void save(Frame frame) throws IOException {
-            if (frame != null && frame.getImage() != null && random(frame)) {
-                ImageIO.write(frame.getImage(), "jpg", new File(rootDir, frame.getTimestamp() + ".jpg"));
+        public boolean save(Frame frame) throws IOException {
+            if (frame != null && frame.getImage() != null) {
+                return ImageIO.write(frame.getImage(), "jpg", new File(rootDir, frame.getTimestamp() + ".jpg"));
             }
+            return false;
         }
         private boolean random(Frame frame) {
             ++count;
@@ -87,9 +90,9 @@ public class Benchmarker {
                 try {
                     TimeUnit.MILLISECONDS.sleep(period);
                     StringBuilder str = new StringBuilder();
-                    for (Counter counter : counters) {
+                    counters.stream().forEach((counter) -> {
                         str.append(counter.toString()).append("\t");
-                    }
+                    });
                     System.out.print("\r" + str.toString());
                 } catch (InterruptedException e) {
                     LOG.error(e.getMessage());

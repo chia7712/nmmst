@@ -4,9 +4,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -19,10 +20,33 @@ import org.slf4j.LoggerFactory;
  */
 public class NodeInformation implements Comparable<NodeInformation> {
     private static final Logger LOG = LoggerFactory.getLogger(NodeInformation.class);
-    public enum Location{LU, RU, LD, RD, CENTER, MASTER};
+    public enum Location{
+        LU,
+        RU,
+        LD,
+        RD,
+        LU_P,
+        RU_P,
+        LD_P,
+        RD_P,
+        CENTER, 
+        MASTER};
     private final Location location;
     private final String ip;
     private final String mac;
+    public static NodeInformation getByAddress() {
+        try {
+            String localIP = NMConstants.TESTS ? "192.168.43.212" : InetAddress.getLocalHost().getHostAddress();
+            for (NodeInformation nodeInformation : NodeInformation.getPrimaryVideoNodes()) {
+                if (nodeInformation.getIP().compareToIgnoreCase(localIP) == 0) {
+                    return nodeInformation;
+                }
+            }
+            throw new RuntimeException("No suitable node inforamtion");
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private static List<NodeInformation> get() {
         List<NodeInformation> nodeInformations = getFromFile();
             return nodeInformations == null || nodeInformations.isEmpty() ? 
@@ -49,13 +73,19 @@ public class NodeInformation implements Comparable<NodeInformation> {
         locations.add(Location.CENTER);
         return get(locations);
     }
+    public static List<NodeInformation> getProjectors() {
+        Set<Location> locations = new TreeSet();
+        locations.add(Location.LU_P);
+        locations.add(Location.RU_P);
+        locations.add(Location.LD_P);
+        locations.add(Location.RD_P);
+        return get(locations);
+    }
     private static List<NodeInformation> get(Set<Location> locations) {
         List<NodeInformation> nodeInformations = new ArrayList(locations.size());
-        for (NodeInformation nodeInformation : get()) {
-            if (locations.contains(nodeInformation.getLocation())) {
-                nodeInformations.add(nodeInformation);
-            }
-        }
+        get().stream().filter((nodeInformation) -> (locations.contains(nodeInformation.getLocation()))).forEach((nodeInformation) -> {
+            nodeInformations.add(nodeInformation);
+        });
         return nodeInformations;
     }
     private static NodeInformation get(Location location) {
@@ -76,7 +106,11 @@ public class NodeInformation implements Comparable<NodeInformation> {
             new NodeInformation(NodeInformation.Location.LD, "192.168.100.3",  "00-0B-AB-67-4E-70"),
             new NodeInformation(NodeInformation.Location.RD, "192.168.100.4",  "00-0B-AB-67-4E-75"),
             new NodeInformation(NodeInformation.Location.CENTER, "192.168.100.38", "00-0B-AB-67-4E-7F"),
-            new NodeInformation(NodeInformation.Location.MASTER, "192.168.100.31", "00-0B-AB-67-4E-7F"));
+            new NodeInformation(NodeInformation.Location.MASTER, "192.168.100.31", "00-0B-AB-67-4E-7F"),
+            new NodeInformation(NodeInformation.Location.LU_P, "192.168.100.11", "00-0B-AB-67-4E-7F"),
+            new NodeInformation(NodeInformation.Location.RU_P, "192.168.100.12", "00-0B-AB-67-4E-7F"),
+            new NodeInformation(NodeInformation.Location.LD_P, "192.168.100.13", "00-0B-AB-67-4E-7F"),
+            new NodeInformation(NodeInformation.Location.RD_P, "192.168.100.14", "00-0B-AB-67-4E-7F"));
     }
     private static String getModifiedIP(String ip) {
         String[] args = ip.split("\\.");
@@ -129,7 +163,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
                 }
                 nodeInformations.add(new NodeInformation(location, ip, args[2]));
             }
-            if (nodeInformations.size() != Location.values().length) {
+            if (!NMConstants.TESTS && nodeInformations.size() != Location.values().length) {
                 return null;
             }
             return new ArrayList(nodeInformations);

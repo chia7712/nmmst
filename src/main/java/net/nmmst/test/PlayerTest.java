@@ -13,7 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import net.nmmst.player.NodeInformation;
 import net.nmmst.processor.BourkeProcessor;
-import net.nmmst.tools.BasicPanel;
+import net.nmmst.tools.BasePanel;
 import net.nmmst.tools.Painter;
 import net.nmmst.tools.Ports;
 import net.nmmst.tools.SerialStream;
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class PlayerTest extends JFrame {
     private static final long serialVersionUID = -2016746022673317548L;
     private static final Logger LOG = LoggerFactory.getLogger(PlayerTest.class);
-    private final BasicPanel panel = new BasicPanel(Painter.getFillColor(1920, 1080, Color.WHITE));
+    private final BasePanel panel = new BasePanel(Painter.getFillColor(1920, 1080, Color.WHITE));
     private final ServerSocket server = new ServerSocket(Ports.TEST.get());
     public PlayerTest(final NodeInformation nodeInformation) throws IOException {
         this.add(panel);
@@ -70,15 +70,12 @@ public class PlayerTest extends JFrame {
     public static void main(String[] args) throws IOException {
         final JFrame f = new PlayerTest(getPlayerLocationa());
         f.setCursor(f.getToolkit().createCustomCursor(new ImageIcon("").getImage(),new Point(16, 16),""));
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                    f.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                    f.requestFocusInWindow();
-                    f.setUndecorated(true);
-                    f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                    f.setVisible(true);
-            }
+        SwingUtilities.invokeLater(() -> {
+            f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            f.requestFocusInWindow();
+            f.setUndecorated(true);
+            f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            f.setVisible(true);
         });
     }
     private static NodeInformation getPlayerLocationa() throws UnknownHostException {

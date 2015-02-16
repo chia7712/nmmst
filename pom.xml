@@ -7,8 +7,8 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <xuggler.version>5.4</xuggler.version>
         <jinput.version>2.0.6</jinput.version>
         <build.mode>deploy</build.mode>
@@ -119,6 +119,44 @@
                              </manifestEntries>
                             </archive>  
                             <finalName>CommandTest</finalName>
+                        </configuration>                     
+                    </execution>
+                    <execution>
+                        <id>ProjectorTest</id>
+                        <goals><goal>jar</goal></goals>
+                        <phase>package</phase>
+                        <configuration>  
+                            <archive>  
+                              <!--<index>true</index>  -->
+                              <manifest>  
+                                <addClasspath>true</addClasspath>  
+                                <classpathPrefix>lib/</classpathPrefix>
+                                <mainClass>net.nmmst.test.ProjectorTest</mainClass>  
+                              </manifest> 
+                             <manifestEntries>
+                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
+                             </manifestEntries>
+                            </archive>  
+                            <finalName>ProjectorTest</finalName>
+                        </configuration>                     
+                    </execution>
+                    <execution>
+                        <id>Benchmarker</id>
+                        <goals><goal>jar</goal></goals>
+                        <phase>package</phase>
+                        <configuration>  
+                            <archive>  
+                              <!--<index>true</index>  -->
+                              <manifest>  
+                                <addClasspath>true</addClasspath>  
+                                <classpathPrefix>lib/</classpathPrefix>
+                                <mainClass>net.nmmst.test.Benchmarker</mainClass>  
+                              </manifest> 
+                             <manifestEntries>
+                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
+                             </manifestEntries>
+                            </archive>  
+                            <finalName>Benchmarker</finalName>
                         </configuration>                     
                     </execution>
                 </executions>

@@ -7,16 +7,16 @@ import javax.swing.JPanel;
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
-public class BasicPanel extends JPanel {
+public class BasePanel extends JPanel {
     public enum Mode{FULL_SCREEN, FILL, EXTENSION};
     private static final long serialVersionUID 	= -4475038995493795754L;
     private BufferedImage image = null;
     private Mode mode = Mode.FULL_SCREEN;
-    public BasicPanel() {}
-    public BasicPanel(BufferedImage image) {
+    public BasePanel() {}
+    public BasePanel(BufferedImage image) {
         this.image = image;
     }
-    public BasicPanel(BufferedImage image, Mode mode) {
+    public BasePanel(BufferedImage image, Mode mode) {
         this.image = image;
         this.mode = mode;
     }

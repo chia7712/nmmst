@@ -38,57 +38,61 @@ public class Happen {
             return;
         }
         values[index] = value;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(index + ", " + value);
+        }
     }
     private static void initValues() {
-        values[0] = true;
-        values[1] = true;
-        values[2] = false;
-        values[3] = true;
-        values[4] = true;
-        values[5] = false;
-        values[6] = true;
+//        values[0] = true;
+//        values[1] = true;
+//        values[2] = false;
+//        values[3] = true;
+//        values[4] = true;
+//        values[5] = false;
+//        values[6] = true;
     }
-    private static void start1(RegisterClient server, DioInterface dio) throws InterruptedException {
+    private static void start0(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dio.light(1);
+        dio.light(0);
+//        DONT TOUCH GRAY
         TimeUnit.MICROSECONDS.sleep(GRAY_SCREEN_MICRTIME);
         dio.grayUptoEnd();
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_1 - (spendTime * 1000));
     }
-    private static void start2(RegisterClient server, DioInterface dio) throws InterruptedException {
+    private static void start1(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         if (values[1]) {
-            dio.light(2);
+            dio.light(1);
         } else if (values[2]) {
-            dio.light(3);
-        } else {
             dio.light(2);
+        } else {
+            dio.light(1);
         }
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_2 - (spendTime * 1000));
     }
-    private static void start3(RegisterClient server, DioInterface dio) throws InterruptedException {
+    private static void start2(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dio.light(4);
+        dio.light(3);
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_3 - (spendTime * 1000));
     }
-    private static void start4(RegisterClient server, DioInterface dio) throws InterruptedException {
+    private static void start3(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
         if (values[4]) {
-            dio.light(5);
+            dio.light(4);
         } else if (values[5]) {
-            dio.light(6);
-        } else {
             dio.light(5);
+        } else {
+            dio.light(4);
         }
         final long spendTime = System.currentTimeMillis() - startTime;
         TimeUnit.MICROSECONDS.sleep(MOVIE_TIME_4 - (spendTime * 1000));
     }
-    private static void start5(RegisterClient server, DioInterface dio) throws InterruptedException {
+    private static void start4(RegisterClient server, DioInterface dio) throws InterruptedException {
         final long startTime = System.currentTimeMillis();
-        dio.light(7);
+        dio.light(6);
         TimeUnit.MICROSECONDS.sleep(SUBMINE_GONE);
         dio.submarineGotoEnd();
         final long spendTime = System.currentTimeMillis() - startTime;
@@ -98,19 +102,26 @@ public class Happen {
     public static boolean start(List<NodeInformation> nodeInformations, RegisterClient server, DioInterface dio) throws IOException, InterruptedException {
         try {
             if (!server.isBuffered()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("no buffer");
-                }
                 return false;
             }
-            if (!SerialStream.sendAll(nodeInformations, new Request(Request.Type.START), Ports.REQUEST.get())) {
+            if (!SerialStream.sendAll(nodeInformations, new Request(Request.Type.START), Ports.REQUEST_OTHERS.get())) {
                 return false;
             }
-            start1(server, dio);
-            start2(server, dio);
-            start3(server, dio);
-            start4(server, dio);
-            start5(server, dio);
+            if (values[0]) {
+                start0(server, dio);
+            }
+            if (values[1] || values[2]) {
+                start1(server, dio);
+            }
+            if (values[3]) {
+                start2(server, dio);
+            }
+            if (values[4] || values[5]) {
+                start3(server, dio);
+            }
+            if (values[6]) {
+                start4(server, dio);
+            }
             return true;
         } finally {
             initValues();

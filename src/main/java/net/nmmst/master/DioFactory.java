@@ -6,6 +6,7 @@
 package net.nmmst.master;
 
 import java.io.IOException;
+import net.nmmst.tools.NMConstants;
 
 /**
  *
@@ -13,9 +14,9 @@ import java.io.IOException;
  */
 public class DioFactory {
     public static DioInterface getDefault() throws Exception {
-        return new DioBdaq();
+        return NMConstants.TESTS ? getTest() : new DioBdaq();
     }
-    public static DioInterface getTest() {
+    private static DioInterface getTest() {
         return new DioInterface() {
             @Override
             public void grayUptoEnd() throws InterruptedException {

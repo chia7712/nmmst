@@ -10,9 +10,7 @@ import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.JPanel;
-import net.nmmst.tools.BasicPanel;
-import net.nmmst.tools.NMConstants;
-import net.nmmst.tools.Painter;
+import net.nmmst.tools.BasePanel;
 
 /**
  *
@@ -20,29 +18,41 @@ import net.nmmst.tools.Painter;
  */
 public class SnapshotPanel extends JPanel {
     private static final int ROWS = 0;
-    private static final int COLUMNS = 1;
-    private final BufferedImage defaultImage = Painter.getStringImage("No Snaphosts", NMConstants.IMAGE_WIDTH, NMConstants.IMAGE_HEIGHT, NMConstants.FONT_SIZE);
-    private final List<BasicPanel> currentPanel = new LinkedList();
+    private static final int COLUMNS = 2;
+    private final List<BasePanel> currentPanel = new LinkedList();
     public SnapshotPanel() {
         setLayout(new GridLayout(ROWS, COLUMNS));
     }
-    public void setOvalInformations(List<OvalInformation> ovalInfos) {
+    public void addImages(List<BufferedImage> images) {
         synchronized(currentPanel) {
-            for (BasicPanel panel : currentPanel) {
+            currentPanel.stream().forEach((panel) -> {
                 remove(panel);
-            }
-            currentPanel.clear();
-            for (OvalInformation oval : ovalInfos) {
-                currentPanel.add(new BasicPanel(oval.getImage()));
-            }
-            if (currentPanel.isEmpty()) {
-                currentPanel.add(new BasicPanel(defaultImage));
-            }
-            for (BasicPanel panel : currentPanel) {
+            });
+            images.stream().forEach((image) -> {
+                currentPanel.add(new BasePanel(image, BasePanel.Mode.FILL));
+            });
+            currentPanel.stream().forEach((panel) -> {
                 add(panel);
-            }
+            });
             revalidate();
             repaint();
+        }
+    }
+    public void addOvalInformations(List<OvalInformation> ovalInfos) {
+        List<BufferedImage> images = new LinkedList();
+        ovalInfos.stream().forEach((oval) -> {
+            images.add(oval.getImage());
+        });
+        addImages(images);
+    }
+    public void cleanSnapshots() {
+        synchronized(currentPanel) {
+            currentPanel.stream().forEach((panel) -> {
+                remove(panel);
+            });
+            currentPanel.clear();
+            revalidate();
+            repaint();           
         }
     }
 }

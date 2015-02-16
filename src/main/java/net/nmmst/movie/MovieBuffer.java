@@ -15,6 +15,6 @@ public interface MovieBuffer {
     public void clear();
     public int getFrameSize();
     public int getSampleSize();
-    public int getMaxFrameSize();
-    public int getMaxSampleSize();
+    public int getFrameQueueSize();
+    public int getSampleQueueSize();
 }

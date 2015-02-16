@@ -5,22 +5,25 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
+import net.nmmst.movie.BufferFactory;
 import net.nmmst.movie.Frame;
 import net.nmmst.movie.MovieAttribute;
+import net.nmmst.player.NodeInformation;
+import net.nmmst.tools.SerialStream;
 import net.nmmst.processor.FrameProcessor;
+import net.nmmst.request.Request;
 import net.nmmst.tools.NMConstants;
+import net.nmmst.tools.Ports;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -32,37 +35,25 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
     private static final Color DEFAULT_COLOR = Color.WHITE;
     private static final Color FOCUS_COLOR = Color.RED;
     private static final Logger LOG = LoggerFactory.getLogger(OvalTrigger.class);  
-    private final Map<Integer, Set<OvalInformation>> ovalWrapper = new HashMap();
+    private final Map<Integer, List<OvalInformation>> ovalWrapper = new TreeMap();
     private final AtomicInteger count = new AtomicInteger(10000000);
     private final AtomicBoolean pressed = new AtomicBoolean(false);
-    private final Set<OvalInformation> pressedInformations = new HashSet();
+    private final List<OvalInformation> snapshots = BufferFactory.getSnapshots();
+    private final NodeInformation masterInformation = NodeInformation.getMasterNode();
     private int specificFrameTime = 0;
     private OvalInformation curOvalInformation = null;
     public OvalTrigger() {
         List<OvalInformation> ovalInformations = OvalInformation.get();
-        for (OvalInformation ovalInformation : ovalInformations) {
-            LOG.info("ovalInformation : " + ovalInformation);
-            int index = ovalInformation.getIndex();
-            if (ovalWrapper.containsKey(index)) {
-                ovalWrapper.get(index).add(ovalInformation);
+        ovalInformations.stream().forEach((ovalInformation) -> {
+            int movieIndex = ovalInformation.getMovieIndex();
+            if (ovalWrapper.containsKey(movieIndex)) {
+                ovalWrapper.get(movieIndex).add(ovalInformation);
             } else {
-                Set<OvalInformation> sets = new TreeSet();
-                sets.add(ovalInformation);
-                ovalWrapper.put(index, sets);
+                List<OvalInformation> ovals = new LinkedList();
+                ovals.add(ovalInformation);
+                ovalWrapper.put(movieIndex, ovals);
             }
-        }
-    }
-    public void reset() {
-        synchronized(pressedInformations) {
-            pressedInformations.clear();
-        }
-        count.set(0);
-        pressed.set(false);
-    }
-    public List<OvalInformation> getSnapshots() {
-        synchronized(pressedInformations) {
-            return new ArrayList(pressedInformations);
-        }
+        });
     }
     @Override
     public void triggerOff(Component component) {
@@ -89,21 +80,28 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
 
     @Override
     public boolean needProcess(Frame frame) {
-        return ovalWrapper.containsKey(frame.getMovieAttribute().getIndex());
+        return snapshots.size() < NMConstants.MAX_SNAPSHOTS && ovalWrapper.containsKey(frame.getMovieAttribute().getIndex());
     }
-    private static List<OvalInformation> getValidOvalInformations(Frame frame, Map<Integer, Set<OvalInformation>> ovalWrapper) {
+    private static List<OvalInformation> getValidOvalInformations(Frame frame, Map<Integer, List<OvalInformation>> ovalWrapper) {
         List<OvalInformation> ovalInformations = new LinkedList();
         MovieAttribute attribute = frame.getMovieAttribute();
         if (!ovalWrapper.containsKey(attribute.getIndex())) {
             return ovalInformations;
         }
-        for (OvalInformation ovalInformation : ovalWrapper.get(attribute.getIndex())) {
-            if (ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp()) {
-                continue;
-            }
+        ovalWrapper.get(attribute.getIndex())
+                .stream()
+                .filter((ovalInformation) -> !(ovalInformation.getMinMicroTime() > frame.getTimestamp() || ovalInformation.getMaxMicroTime() < frame.getTimestamp()))
+                .forEach((ovalInformation) -> {
             ovalInformations.add(ovalInformation);
-        }
+        });
         return ovalInformations;
+    }
+    private void syncImage(OvalInformation ovalInformation) {
+        try (SerialStream client = new SerialStream(new Socket(masterInformation.getIP(), Ports.REQUEST_MASTER.get()))) {
+            client.write(new Request(Request.Type.ADD_SNAPSHOTS, new Integer[]{ovalInformation.getNumber()}));
+        } catch(IOException e) { 
+            LOG.error(e.getMessage());
+        }
     }
     @Override
     public void process(Frame frame) {
@@ -118,11 +116,10 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
             if (countSnapshot % ovalInformations.size() == index) {
                 g.setColor(FOCUS_COLOR);
                 if (hasPressed) {
-                    synchronized(pressedInformations) {
-                        if (pressedInformations.add(ovalInformation)) {
-                            specificFrameTime = NMConstants.SPECIFIC_FRAME_TIME;
-                            curOvalInformation = ovalInformation;
-                        }
+                    if (snapshots.add(ovalInformation)) {
+                        syncImage(ovalInformation);
+                        specificFrameTime = NMConstants.SPECIFIC_FRAME_TIME;
+                        curOvalInformation = ovalInformation;
                     }
                 }
             } else {
@@ -142,12 +139,11 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                     snapshotImage.getWidth(), 
                     snapshotImage.getHeight(), 
                     null);
-
+                --specificFrameTime;
             }
             g.drawOval(ovalInformation.getX(), ovalInformation.getY(), ovalInformation.getDiameter(), ovalInformation.getDiameter());
             g.dispose();
         }
         pressed.set(false);
-        --specificFrameTime;
     }
 }

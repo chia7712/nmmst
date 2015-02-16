@@ -99,7 +99,7 @@ public class BourkeProcessor implements TimeFrameProcessor {
                 default:
                     break;
             }
-            double weight = 0;
+            double weight;
             if (normalization >= 0.5) {
                 weight = rightEquation(normalization);
             } else {
@@ -118,7 +118,7 @@ public class BourkeProcessor implements TimeFrameProcessor {
         }
         for (int y = (int) (height * yMinH); y != (int)(height * yMaxH); ++y) {
             double normalization = normalized((double)y / (double)height, yMaxH, yMinH);
-            double weight = 0;
+            double weight;
             if (normalization > 1) {
                 continue;
             } else if (normalization > 0.5) {

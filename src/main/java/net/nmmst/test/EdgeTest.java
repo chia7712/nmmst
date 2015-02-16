@@ -27,7 +27,7 @@ public class EdgeTest {
             new NodeInformation(NodeInformation.Location.RD, "192.168.100.4",  "00-0B-AB-67-4E-75")
         );
 	public static void main(String[] args) throws InterruptedException, IOException {
-            SerialStream.sendAll(nodeInformations, new Request(Request.Type.REBOOT), Ports.REQUEST.get());
+            SerialStream.sendAll(nodeInformations, new Request(Request.Type.REBOOT), Ports.REQUEST_OTHERS.get());
 //		SerialStream.sendAll(nodeInformations, new Boolean(true), Ports.TEST.get());
 		///SerialStream.sendAll(nodeInformations, new Request(Request.Type.TEST_2, getFormat(args)), Ports.REQUEST.get());
 		//SerialStream.sendAll(nodeInformations, defaultFormat, Ports.TEST.get());

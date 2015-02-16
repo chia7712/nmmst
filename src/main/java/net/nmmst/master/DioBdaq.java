@@ -70,7 +70,6 @@ public class DioBdaq implements DioInterface {
             TimeUnit.SECONDS.sleep(60);
         } finally {
             submarineStop();
-            //don't touch gray
             grayStop();
             TimeUnit.MILLISECONDS.sleep(600);
             do_1739U.Write(0, (byte)0xbf);
@@ -115,12 +114,12 @@ public class DioBdaq implements DioInterface {
         switch(mode) {
             case 1://PCI-1739U	CN1	21 light-party-1
                 do_1739U.Write(2, (byte)0xDF);
-                TimeUnit.MILLISECONDS.sleep(500);
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(2, (byte)0xFF);
                 break;
             case 2://PCI-1739U	CN1	21 light-party-2
                 do_1739U.Write(2, (byte)0xBF);
-                TimeUnit.MILLISECONDS.sleep(500);
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(2, (byte)0xFF);
                 break;
             default:
@@ -131,37 +130,37 @@ public class DioBdaq implements DioInterface {
     public void light(int mode)throws InterruptedException {
         final int sleepTime = 500;
         switch(mode) {
-            case 1://PCI-1739U	CN1	12 one-movie
+            case 0://PCI-1739U	CN1	12 one-movie
                 do_1739U.Write(1, (byte)0xEF);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(1, (byte)0xFF);
                 break;
-            case 2://PCI-1739U	CN1	13 two-movie
+            case 1://PCI-1739U	CN1	13 two-movie
                 do_1739U.Write(1, (byte)0xDF);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(1, (byte)0xFF);
                 break;
-            case 3://PCI-1739U	CN1	14 three-movie
+            case 2://PCI-1739U	CN1	14 three-movie
                 do_1739U.Write(1, (byte)0xBF);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(1, (byte)0xFF);
                 break;
-            case 4://PCI-1739U	CN1	15 four-movie
+            case 3://PCI-1739U	CN1	15 four-movie
                 do_1739U.Write(1, (byte)0x7F);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(1, (byte)0xFF);
                 break;
-            case 5://PCI-1739U	CN1	16 five-movie
+            case 4://PCI-1739U	CN1	16 five-movie
                 do_1739U.Write(2, (byte)0xFE);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(2, (byte)0xFF);
                 break;
-            case 6://PCI-1739U	CN1	17 six-movie
+            case 5://PCI-1739U	CN1	17 six-movie
                 do_1739U.Write(2, (byte)0xFD);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(2, (byte)0xFF);
                 break;
-            case 7://PCI-1739U	CN1	18 sevent-movie
+            case 6://PCI-1739U	CN1	18 sevent-movie
                 do_1739U.Write(2, (byte)0xFB);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 do_1739U.Write(2, (byte)0xFF);

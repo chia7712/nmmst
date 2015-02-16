@@ -4,12 +4,16 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import javafx.util.Pair;
+import net.nmmst.request.SelectRequest;
 import net.nmmst.tools.NMConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  *
  * @author Tsai ChiaPing <chia7712@gmail.com>
  */
 public class MovieOrder {
+    private static final Logger LOG = LoggerFactory.getLogger(MovieOrder.class);
     private final List<Pair<Boolean, String>> moviePaths = new LinkedList();
     private final List<Pair<Boolean, MovieStream>> movieStreams = new LinkedList();
     private int nextIndex = 0;
@@ -44,12 +48,15 @@ public class MovieOrder {
         moviePaths.set(nextIndex, new Pair(value, path.getValue()));
         Pair<Boolean, MovieStream> stream = movieStreams.get(nextIndex);
         movieStreams.set(nextIndex, new Pair(value, stream.getValue()));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(nextIndex + ", " + value);
+        }
     }
     public synchronized MovieAttribute[] getMovieAttribute() {
         List<MovieAttribute> attributes = new LinkedList();
-        for (Pair<Boolean, MovieStream> stream : movieStreams) {
-            attributes.add(stream.getValue());	
-        }
+        movieStreams.stream().forEach((stream) -> {
+            attributes.add(stream.getValue());
+        });
         return attributes.toArray(new MovieAttribute[attributes.size()]);
     }
     public synchronized void setnextIndex(int nextIndex) {
@@ -79,11 +86,29 @@ public class MovieOrder {
     }
     public synchronized void reset() throws IOException {
         closeCurrentStream();
-        List<Pair<Boolean, String>> initPaths = getDefault();
-        for (int index = 0; index != initPaths.size(); ++index) {
-            setEnable(index, initPaths.get(index).getKey());
-        }
+//        List<Pair<Boolean, String>> initPaths = getDefault();
+//        for (int index = 0; index != initPaths.size(); ++index) {
+//            setEnable(index, initPaths.get(index).getKey());
+//        }
         nextIndex = 0;
         preIndex = -1;
     }
+//    public synchronized void reset(SelectRequest request) throws IOException {
+//        if (request == null) {
+//            reset();
+//            return;
+//        }
+//        int[] indexes = request.getIndexs();
+//        boolean[] values = request.getValues();
+//        if (indexes == null || indexes.length != 7 || values == null || values.length != 7) {
+//            reset();
+//            return;
+//        }
+//        closeCurrentStream();
+//        for (int i = 0; i != 7; ++i) {
+//            setEnable(indexes[i], values[i]);
+//        }
+//        nextIndex = 0;
+//        preIndex = -1;
+//    }
 }

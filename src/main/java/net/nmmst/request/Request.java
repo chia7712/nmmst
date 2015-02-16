@@ -19,7 +19,8 @@ public class Request implements Serializable {
         LIGHT_OFF,
         REBOOT,
         SHUTDOWN,
-        WOL
+        WOL,
+        ADD_SNAPSHOTS
     }
     private final Type type;
     private final Object arg;
