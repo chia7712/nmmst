@@ -108,9 +108,9 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
         int countSnapshot = count.get();
         boolean hasPressed = pressed.get();
         List<OvalInformation> ovalInformations = getValidOvalInformations(frame, ovalWrapper);
+        Graphics2D g = (Graphics2D)frame.getImage().getGraphics();
         for (int index = 0; index != ovalInformations.size(); ++index) {
             OvalInformation ovalInformation = ovalInformations.get(index);
-            Graphics2D g = (Graphics2D)frame.getImage().getGraphics();
             g.setStroke(STROKE);
             //Draw the oval
             if (countSnapshot % ovalInformations.size() == index) {
@@ -142,8 +142,8 @@ public class OvalTrigger implements FrameProcessor, ControlTrigger {
                 --specificFrameTime;
             }
             g.drawOval(ovalInformation.getX(), ovalInformation.getY(), ovalInformation.getDiameter(), ovalInformation.getDiameter());
-            g.dispose();
         }
+        g.dispose();
         pressed.set(false);
     }
 }

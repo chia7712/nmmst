@@ -17,6 +17,9 @@ public class Sample {
     public byte[] getData() {
         return data;
     }
+    public long getHeapSize() {
+        return data == null ? 0 : data.length;
+    }
     public static Sample newNullSample() {
         return new Sample(null, null);
     }

@@ -24,7 +24,7 @@ public class RegisterServer extends BackedRunner {
     @Override
     protected void work() {
         try (SerialStream client = new SerialStream(server.accept())) {
-            client.write(new PlayerState(buffer.getFrameSize(), buffer.getSampleSize(), buffer.getFrameQueueSize(), buffer.getSampleQueueSize()));
+            client.write(new PlayerState(buffer.getFrameNumber(), buffer.getSampleNumber(), buffer.getFrameQueueMaxLength(), buffer.getSampleQueueMaxLength()));
         } catch (IOException e) {
             LOG.error(e.getMessage());
         }

@@ -74,7 +74,6 @@ public class MovieStream implements MovieAttribute {
         } else {
             videoStreamIndex = 1;
             audioStreamIndex = 0;
-
         }
         duration = (long)( (openedCoders.get(videoStreamIndex).getStream().getTimeBase().getDouble() * openedCoders.get(videoStreamIndex).getStream().getDuration()) * 1000);
         audioFormat = new AudioFormat(
@@ -153,9 +152,9 @@ public class MovieStream implements MovieAttribute {
         return null;
     }
     public void close() {
-        for (Map.Entry<Integer, IStreamCoder> entry : openedCoders.entrySet()) {
+        openedCoders.entrySet().stream().forEach((entry) -> {
             entry.getValue().close();
-        }
+        });
         openedCoders.clear();
         container.close();
     }

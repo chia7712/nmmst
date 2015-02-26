@@ -30,52 +30,52 @@ public class LinearProcessor implements TimeFrameProcessor {
         timeRange.addAll(Arrays.asList(timeLocations));
         switch(location) {
             case LU:
-                xEquation = new LinearEquationInTwo(1.0 - format.getXOverlay(), format.getXScaleMax(), 1.0, format.getXScaleMin());
-                yEquation = new LinearEquationInTwo(1.0 - format.getYOverlay(), format.getYScaleMax(), 1.0, format.getYScaleMin());
-                xInitV	= 1.0 - format.getXOverlay();
+                xEquation = new LinearEquationInTwo(1.0 - format.getOverlayX(), format.getScaleMaxX(), 1.0, format.getScaleMinX());
+                yEquation = new LinearEquationInTwo(1.0 - format.getOverlayY(), format.getScaleMaxY(), 1.0, format.getScaleMinY());
+                xInitV	= 1.0 - format.getOverlayX();
                 xFinalV	= 1.0;
                 yInitV	= 0;
                 yFinalV	= 1.0;
                 xInitH	= 0;
                 xFinalH	= 1.0;
-                yInitH	= 1.0 - format.getYOverlay();
+                yInitH	= 1.0 - format.getOverlayY();
                 yFinalH	= 1.0;
                 break;
             case RU:
-                xEquation = new LinearEquationInTwo(0.0, format.getXScaleMin(), format.getXOverlay(), format.getXScaleMax());
-                yEquation = new LinearEquationInTwo(1.0 - format.getYOverlay(), format.getYScaleMax(), 1.0, format.getYScaleMin());
+                xEquation = new LinearEquationInTwo(0.0, format.getScaleMinX(), format.getOverlayX(), format.getScaleMaxX());
+                yEquation = new LinearEquationInTwo(1.0 - format.getOverlayY(), format.getScaleMaxY(), 1.0, format.getScaleMinY());
                 xInitV	= 0;
-                xFinalV	= format.getXOverlay();
+                xFinalV	= format.getOverlayX();
                 yInitV	= 0;
                 yFinalV	= 1.0;
                 xInitH	= 0;
                 xFinalH	= 1.0;
-                yInitH	= 1.0 - format.getYOverlay();
+                yInitH	= 1.0 - format.getOverlayY();
                 yFinalH	= 1.0;
                 break;
             case LD:
-                xEquation = new LinearEquationInTwo(1.0 - format.getXOverlay(), format.getXScaleMax(), 1.0, format.getXScaleMin());
-                yEquation = new LinearEquationInTwo(0.0, format.getYScaleMin(), format.getYOverlay(), format.getYScaleMax());
-                xInitV	= 1.0 - format.getXOverlay();
+                xEquation = new LinearEquationInTwo(1.0 - format.getOverlayX(), format.getScaleMaxX(), 1.0, format.getScaleMinX());
+                yEquation = new LinearEquationInTwo(0.0, format.getScaleMinY(), format.getOverlayY(), format.getScaleMaxY());
+                xInitV	= 1.0 - format.getOverlayX();
                 xFinalV	= 1.0;
                 yInitV	= 0;
                 yFinalV	= 1.0;
                 xInitH	= 0;
                 xFinalH	= 1.0;
                 yInitH	= 0;
-                yFinalH	= format.getYOverlay();
+                yFinalH	= format.getOverlayY();
                 break;
             case RD:
-                xEquation = new LinearEquationInTwo(0.0, format.getXScaleMin(), format.getXOverlay(), format.getXScaleMax());
-                yEquation = new LinearEquationInTwo(0.0, format.getYScaleMin(), format.getYOverlay(), format.getYScaleMax());
+                xEquation = new LinearEquationInTwo(0.0, format.getScaleMinX(), format.getOverlayX(), format.getScaleMaxX());
+                yEquation = new LinearEquationInTwo(0.0, format.getScaleMinY(), format.getOverlayY(), format.getScaleMaxY());
                 xInitV	= 0;
-                xFinalV	= format.getXOverlay();
+                xFinalV	= format.getOverlayX();
                 yInitV	= 0;
                 yFinalV	= 1.0;
                 xInitH	= 0;
                 xFinalH	= 1.0;
                 yInitH	= 0;
-                yFinalH	= format.getYOverlay();
+                yFinalH	= format.getOverlayY();
                 break;
             default:
                 throw new IllegalArgumentException("A error location of LinearProcessor");
@@ -131,12 +131,7 @@ public class LinearProcessor implements TimeFrameProcessor {
             if (timeRange.isEmpty()) {
                 return true;
             }
-            for (TimeLocation timeLocation : timeRange) {
-                if (timeLocation.include(frame)) {
-                    return true;
-                }
-            }
-            return false;
+            return timeRange.stream().anyMatch((timeLocation) -> (timeLocation.include(frame)));
         }
     }
     @Override
@@ -161,37 +156,37 @@ public class LinearProcessor implements TimeFrameProcessor {
     }
     public static class Format implements Serializable {
         private static final long serialVersionUID = -2453141672510568349L;
-        private final double x_overlay;
-        private final double y_overlay;
-        private final double x_scale_min;
-        private final double x_scale_max;
-        private final double y_scale_min;
-        private final double y_scale_max;
-        public Format(double x_overlay, double y_overlay, double x_scale_min, double x_scale_max, double y_scale_min, double y_scale_max) {
-            this.x_overlay = x_overlay;
-            this.y_overlay = y_overlay;
-            this.x_scale_min = x_scale_min;
-            this.x_scale_max = x_scale_max;
-            this.y_scale_min = y_scale_min;
-            this.y_scale_max = y_scale_max;
+        private final double overlayX;
+        private final double overlayY;
+        private final double scaleMinX;
+        private final double scaleMaxX;
+        private final double scaleMinY;
+        private final double scaleMaxY;
+        public Format(double overlayX, double overlayY, double scaleMinX, double scaleMaxX, double scaleMinY, double scaleMaxY) {
+            this.overlayX = overlayX;
+            this.overlayY = overlayY;
+            this.scaleMinX = scaleMinX;
+            this.scaleMaxX = scaleMaxX;
+            this.scaleMinY = scaleMinY;
+            this.scaleMaxY = scaleMaxY;
         }
-        public double getXOverlay() {
-            return x_overlay;
+        public double getOverlayX() {
+            return overlayX;
         }
-        public double getYOverlay() {
-            return y_overlay;
+        public double getOverlayY() {
+            return overlayY;
         }
-        public double getXScaleMin() {
-            return x_scale_min;
+        public double getScaleMinX() {
+            return scaleMinX;
         }
-        public double getXScaleMax() {
-            return x_scale_max;
+        public double getScaleMaxX() {
+            return scaleMaxX;
         }
-        public double getYScaleMin() {
-            return y_scale_min;
+        public double getScaleMinY() {
+            return scaleMinY;
         }
-        public double getYScaleMax() {
-            return y_scale_max;
+        public double getScaleMaxY() {
+            return scaleMaxY;
         }
     }
     private static class LinearEquationInTwo {

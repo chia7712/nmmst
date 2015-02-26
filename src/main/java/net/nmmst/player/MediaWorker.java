@@ -133,10 +133,9 @@ public class MediaWorker extends BackedRunner {
         @Override
         protected void work() {
             if (LOG.isDebugEnabled()) {
-                LOG.debug(buffer.getFrameSize() + ", " + buffer.getSampleSize());
+                LOG.debug(buffer.getFrameNumber() + ", " + buffer.getSampleNumber() + ", " + (buffer.getHeapSize() / (1024 * 1024)));
             }
         }
-
         @Override
         protected void init() {
         }

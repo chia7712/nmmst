@@ -7,6 +7,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import net.nmmst.controller.OvalInformation;
 import net.nmmst.request.Request;
@@ -39,10 +40,11 @@ public class BufferFactory {
         private final AtomicBoolean pause = new AtomicBoolean(false);
         private final AtomicBoolean hadPause = new AtomicBoolean(false);
         private final BlockingQueue<Frame> frameQueue;
-        private final int queueSize;
-        public SingleBuffer(int queueSize) {
-            this.queueSize = queueSize;
-            frameQueue = new ArrayBlockingQueue(queueSize);
+        private final int queueMaxLength;
+        private final AtomicLong heapSize = new AtomicLong();
+        public SingleBuffer(int queueMaxLength) {
+            this.queueMaxLength = queueMaxLength;
+            frameQueue = new ArrayBlockingQueue(queueMaxLength);
         }
         private boolean waitForPause() throws InterruptedException {
             boolean bePaused = false;
@@ -59,19 +61,25 @@ public class BufferFactory {
             if (waitForPause()) {
                 hadPause.set(true);
             }
-            return frameQueue.take(); 	
+            Frame frame = frameQueue.take(); 
+            heapSize.addAndGet(-frame.getHeapSize());
+            return frame;
         }
         @Override
         public Sample readSample() throws InterruptedException {
             waitForPause();
-            return samples.take();
+            Sample sample = samples.take();
+            heapSize.addAndGet(-sample.getHeapSize());
+            return sample;
         }
         @Override
         public void writeFrame(Frame frame) throws InterruptedException {
+            heapSize.addAndGet(frame.getHeapSize());
             frameQueue.put(frame);
         }
         @Override
         public void writeSample(Sample sample) throws InterruptedException {
+            heapSize.addAndGet(sample.getHeapSize());
             samples.put(sample);	
         }
         @Override
@@ -89,11 +97,11 @@ public class BufferFactory {
             samples.clear();
         }
         @Override
-        public int getFrameSize() {
+        public int getFrameNumber() {
             return frameQueue.size();
         }
         @Override
-        public int getSampleSize() {
+        public int getSampleNumber() {
             return samples.size();
         }
         @Override
@@ -105,12 +113,16 @@ public class BufferFactory {
             return hadPause.getAndSet(false);
         }
         @Override
-        public int getFrameQueueSize() {
-            return queueSize;
+        public int getFrameQueueMaxLength() {
+            return queueMaxLength;
         }
         @Override
-        public int getSampleQueueSize() {
+        public int getSampleQueueMaxLength() {
             return Integer.MAX_VALUE;
+        }
+        @Override
+        public long getHeapSize() {
+            return heapSize.get();
         }
     }
 }

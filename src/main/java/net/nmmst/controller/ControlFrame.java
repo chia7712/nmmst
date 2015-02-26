@@ -17,14 +17,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import javafx.util.Pair;
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.LineUnavailableException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import net.nmmst.movie.BufferFactory;
-import net.nmmst.movie.MovieAttribute;
 import net.nmmst.player.MediaWorker;
 import net.nmmst.register.RegisterServer;
 import net.nmmst.request.Request;
@@ -64,7 +62,10 @@ public class ControlFrame extends JFrame {
     private final RegisterServer registerServer = new RegisterServer(closer, Ports.REGISTER.get());
     private final OvalTrigger ovalTrigger = new OvalTrigger();
     private final WheelTrigger wheelTrigger = new WheelTrigger();
-    private final ControlEvent controlEvent = new ControlEvent(closer, Arrays.asList(ovalTrigger, wheelTrigger));
+    private final ControlEvent controlEvent = new ControlEvent(
+            closer,
+            Arrays.asList(ovalTrigger, wheelTrigger)
+    );
     private final MediaWorker media = new MediaWorker(closer, null, ovalTrigger, null);
     private final CardLayout cardLayout = new CardLayout();
     private final BlockingQueue<KeyDescriptor> keyQueue = new LinkedBlockingQueue();

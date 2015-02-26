@@ -11,7 +11,7 @@ public class NMConstants {
     public static final int MAX_SNAPSHOTS = 4;
     public static final Dimension FRAME_Dimension = new Dimension(1000, 1000);
     public static final int FONT_SIZE = 200;
-    public static final int FRAME_QUEUE_LIMIT = 70;
+    public static final int FRAME_QUEUE_LIMIT = 100;
     public static final double WHEEL_MAX_LIMIT = 1.0f;
     public static final double WHEEL_MIN_LIMIT = -1.0f;
     public static final double PRESS_LIMIT = 1.0f;

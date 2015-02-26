@@ -1,5 +1,6 @@
 package net.nmmst.controller;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import net.java.games.input.Controller;
@@ -18,6 +19,9 @@ public class ControlEvent extends BackedRunner {
     private static final Logger LOG = LoggerFactory.getLogger(ControlEvent.class);  
     private final List<Controller> controllers = new LinkedList();
     private final List<ControlTrigger> triggerList = new LinkedList();
+    public ControlEvent(Closer closer) {
+        this(closer, new ArrayList());
+    }
     public ControlEvent(Closer closer, List<ControlTrigger> triggerList) {
         super(closer);
         this.triggerList.addAll(triggerList);

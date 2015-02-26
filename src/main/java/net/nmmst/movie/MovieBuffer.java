@@ -13,8 +13,9 @@ public interface MovieBuffer {
     public boolean isPause();
     public boolean hadPause();
     public void clear();
-    public int getFrameSize();
-    public int getSampleSize();
-    public int getFrameQueueSize();
-    public int getSampleQueueSize();
+    public long getHeapSize();
+    public int getFrameNumber();
+    public int getSampleNumber();
+    public int getFrameQueueMaxLength();
+    public int getSampleQueueMaxLength();
 }
