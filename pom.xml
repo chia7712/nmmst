@@ -11,7 +11,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <xuggler.version>5.4</xuggler.version>
         <jinput.version>2.0.6</jinput.version>
-        <build.mode>deploy</build.mode>
+        <junit.version>4.11</junit.version>
     </properties>
     <repositories>
         <repository>
@@ -20,6 +20,11 @@
         </repository>
     </repositories>
     <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+        </dependency>
         <dependency>
             <groupId>xuggle</groupId>
             <artifactId>xuggle-xuggler</artifactId>
@@ -51,11 +56,10 @@
                        <phase>package</phase>
                        <configuration>  
                            <archive>  
-                             <!--<index>true</index>  -->
                              <manifest>  
                                <addClasspath>true</addClasspath>  
                                <classpathPrefix>lib/</classpathPrefix>
-                               <mainClass>net.nmmst.master.MasterFrame</mainClass>  
+                               <mainClass>net.nmmst.views.MasterFrame</mainClass>  
                              </manifest> 
                             <manifestEntries>
                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
@@ -65,22 +69,18 @@
                        </configuration>                     
                    </execution>
                    <execution>
-                        <id>PlayerFrame</id>
+                        <id>FusionFrame</id>
                         <goals><goal>jar</goal></goals>
                         <phase>package</phase>
                         <configuration>  
                             <archive>  
-                              <!--<index>true</index>  -->
                               <manifest>  
                                 <addClasspath>true</addClasspath>  
                                 <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.player.PlayerFrame</mainClass>  
+                                <mainClass>net.nmmst.views.FusionFrame</mainClass>  
                               </manifest> 
-                             <manifestEntries>
-                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
-                             </manifestEntries>
                             </archive>  
-                            <finalName>PlayerFrame</finalName>
+                            <finalName>FusionFrame</finalName>
                         </configuration>                     
                     </execution> 
                     <execution>
@@ -89,74 +89,13 @@
                         <phase>package</phase>
                         <configuration>  
                             <archive>  
-                              <!--<index>true</index>  -->
                               <manifest>  
                                 <addClasspath>true</addClasspath>  
                                 <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.controller.ControlFrame</mainClass>  
-                              </manifest> 
-                             <manifestEntries>
-                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
-                             </manifestEntries>
+                                <mainClass>net.nmmst.views.ControlFrame</mainClass>  
+                              </manifest>
                             </archive>  
                             <finalName>ControlFrame</finalName>
-                        </configuration>                     
-                    </execution>
-                    <execution>
-                        <id>CommandTest</id>
-                        <goals><goal>jar</goal></goals>
-                        <phase>package</phase>
-                        <configuration>  
-                            <archive>  
-                              <!--<index>true</index>  -->
-                              <manifest>  
-                                <addClasspath>true</addClasspath>  
-                                <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.test.CommandTest</mainClass>  
-                              </manifest> 
-                             <manifestEntries>
-                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
-                             </manifestEntries>
-                            </archive>  
-                            <finalName>CommandTest</finalName>
-                        </configuration>                     
-                    </execution>
-                    <execution>
-                        <id>ProjectorTest</id>
-                        <goals><goal>jar</goal></goals>
-                        <phase>package</phase>
-                        <configuration>  
-                            <archive>  
-                              <!--<index>true</index>  -->
-                              <manifest>  
-                                <addClasspath>true</addClasspath>  
-                                <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.test.ProjectorTest</mainClass>  
-                              </manifest> 
-                             <manifestEntries>
-                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
-                             </manifestEntries>
-                            </archive>  
-                            <finalName>ProjectorTest</finalName>
-                        </configuration>                     
-                    </execution>
-                    <execution>
-                        <id>Benchmarker</id>
-                        <goals><goal>jar</goal></goals>
-                        <phase>package</phase>
-                        <configuration>  
-                            <archive>  
-                              <!--<index>true</index>  -->
-                              <manifest>  
-                                <addClasspath>true</addClasspath>  
-                                <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.test.Benchmarker</mainClass>  
-                              </manifest> 
-                             <manifestEntries>
-                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
-                             </manifestEntries>
-                            </archive>  
-                            <finalName>Benchmarker</finalName>
                         </configuration>                     
                     </execution>
                 </executions>
@@ -167,7 +106,6 @@
                <executions>
                    <execution>
                        <id>copy</id>
-                       <phase>install</phase>
                        <goals>
                            <goal>copy-dependencies</goal>
                        </goals>

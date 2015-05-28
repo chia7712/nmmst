@@ -2,36 +2,85 @@ package net.nmmst.processor;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import net.nmmst.movie.Frame;
-import net.nmmst.player.NodeInformation;
+import java.util.Optional;
+import net.nmmst.media.Frame;
+import net.nmmst.NodeInformation;
 /**
- *
- * @author Tsai ChiaPing <chia7712@gmail.com>
+ * Calculates the fusion range by linear format.
+ * We decrease the RGB value for the image edge.
+ * The processed edges for LU image are as follows:
+ * <p>
+ * |-------------------------------|-------------------------------|
+ * |                              *|*                              |
+ * |             LU               *|*             RU               |
+ * |                              *|*                              |
+ * |*******************************|*******************************|
+ * |*******************************|*******************************|
+ * |                              *|*                              |
+ * |             LD               *|*             RD               |
+ * |                              *|*                              |
+ * |-------------------------------|-------------------------------|
  */
-public class LinearProcessor implements TimeFrameProcessor {
+public class LinearProcessor implements FrameProcessor {
+    /**
+     * The start x coordinate from verical axis.
+     */
     private final double xInitV;
+    /**
+     * The end x coordinate from verical axis.
+     */
     private final double xFinalV;
+    /**
+     * The start y coordinate from verical axis.
+     */
     private final double yInitV;
+    /**
+     * The end y coordinate from verical axis.
+     */
     private final double yFinalV;
+    /**
+     * The start x coordinate from horizontal axis.
+     */
     private final double xInitH;
+    /**
+     * The end x coordinate from horizontal axis.
+     */
     private final double xFinalH;
+    /**
+     * The start y coordinate from horizontal axis.
+     */
     private final double yInitH;
+    /**
+     * The end y coordinate from horizontal axis.
+     */
     private final double yFinalH;
+    /**
+     * The equation for calculating the vertical edge.
+     */
     private final LinearEquationInTwo xEquation;
-    private final LinearEquationInTwo  yEquation;
+    /**
+     * The equation for calculating the horizontal edge.
+     */
+    private final LinearEquationInTwo yEquation;
+    /**
+     * The node location.
+     */
     private final NodeInformation.Location location;
-    private final List<TimeLocation> timeRange = new LinkedList();
-    public LinearProcessor(NodeInformation.Location location, Format format, TimeLocation ... timeLocations) {
+    public LinearProcessor(final NodeInformation.Location location,
+            final Factor format) {
         this.location = location; 
-        timeRange.addAll(Arrays.asList(timeLocations));
         switch(location) {
             case LU:
-                xEquation = new LinearEquationInTwo(1.0 - format.getOverlayX(), format.getScaleMaxX(), 1.0, format.getScaleMinX());
-                yEquation = new LinearEquationInTwo(1.0 - format.getOverlayY(), format.getScaleMaxY(), 1.0, format.getScaleMinY());
+                xEquation = new LinearEquationInTwo(
+                        1.0 - format.getOverlayX(),
+                        format.getScaleMaxX(),
+                        1.0,
+                        format.getScaleMinX());
+                yEquation = new LinearEquationInTwo(
+                        1.0 - format.getOverlayY(),
+                        format.getScaleMaxY(),
+                        1.0,
+                        format.getScaleMinY());
                 xInitV	= 1.0 - format.getOverlayX();
                 xFinalV	= 1.0;
                 yInitV	= 0;
@@ -42,8 +91,16 @@ public class LinearProcessor implements TimeFrameProcessor {
                 yFinalH	= 1.0;
                 break;
             case RU:
-                xEquation = new LinearEquationInTwo(0.0, format.getScaleMinX(), format.getOverlayX(), format.getScaleMaxX());
-                yEquation = new LinearEquationInTwo(1.0 - format.getOverlayY(), format.getScaleMaxY(), 1.0, format.getScaleMinY());
+                xEquation = new LinearEquationInTwo(
+                        0.0,
+                        format.getScaleMinX(),
+                        format.getOverlayX(),
+                        format.getScaleMaxX());
+                yEquation = new LinearEquationInTwo(
+                        1.0 - format.getOverlayY(),
+                        format.getScaleMaxY(),
+                        1.0,
+                        format.getScaleMinY());
                 xInitV	= 0;
                 xFinalV	= format.getOverlayX();
                 yInitV	= 0;
@@ -54,8 +111,16 @@ public class LinearProcessor implements TimeFrameProcessor {
                 yFinalH	= 1.0;
                 break;
             case LD:
-                xEquation = new LinearEquationInTwo(1.0 - format.getOverlayX(), format.getScaleMaxX(), 1.0, format.getScaleMinX());
-                yEquation = new LinearEquationInTwo(0.0, format.getScaleMinY(), format.getOverlayY(), format.getScaleMaxY());
+                xEquation = new LinearEquationInTwo(
+                        1.0 - format.getOverlayX(),
+                        format.getScaleMaxX(),
+                        1.0,
+                        format.getScaleMinX());
+                yEquation = new LinearEquationInTwo(
+                        0.0,
+                        format.getScaleMinY(),
+                        format.getOverlayY(),
+                        format.getScaleMaxY());
                 xInitV	= 1.0 - format.getOverlayX();
                 xFinalV	= 1.0;
                 yInitV	= 0;
@@ -66,8 +131,16 @@ public class LinearProcessor implements TimeFrameProcessor {
                 yFinalH	= format.getOverlayY();
                 break;
             case RD:
-                xEquation = new LinearEquationInTwo(0.0, format.getScaleMinX(), format.getOverlayX(), format.getScaleMaxX());
-                yEquation = new LinearEquationInTwo(0.0, format.getScaleMinY(), format.getOverlayY(), format.getScaleMaxY());
+                xEquation = new LinearEquationInTwo(
+                        0.0,
+                        format.getScaleMinX(),
+                        format.getOverlayX(),
+                        format.getScaleMaxX());
+                yEquation = new LinearEquationInTwo(
+                        0.0,
+                        format.getScaleMinY(),
+                        format.getOverlayY(),
+                        format.getScaleMaxY());
                 xInitV	= 0;
                 xFinalV	= format.getOverlayX();
                 yInitV	= 0;
@@ -78,61 +151,63 @@ public class LinearProcessor implements TimeFrameProcessor {
                 yFinalH	= format.getOverlayY();
                 break;
             default:
-                throw new IllegalArgumentException("A error location of LinearProcessor");
+                throw new IllegalArgumentException(
+                    "A error location of LinearProcessor");
         }
     }
-    public void process(BufferedImage image) {
-        final byte[] data = ((DataBufferByte)image.getRaster().getDataBuffer()).getData();
+    /**
+     * Fuses the edge for specified image. We rewrite the RGB value in
+     * the source image instead of cloneing image.
+     * @param image The source image is to be fused
+     */
+    public void process(final BufferedImage image) {
+        final byte[] data
+            = ((DataBufferByte)image.getRaster()
+                                    .getDataBuffer())
+                                    .getData();
         final int width = image.getWidth();
         final int height = image.getHeight();
         //Vertical, use xEquation
-        for (int x = (int) (width * xInitV); x != (int)(width * xFinalV); ++x) {
+        for (int x = (int) (width * xInitV);
+                x != (int)(width * xFinalV); ++x) {
             final double weight = xEquation.getY((double)x / (double)width);
             if (weight >= 1.0) {
                 continue;
             }
-            for (int y = (int) (height * yInitV); y != (int)(height * yFinalV); ++y) {
-                final int rgb_init = (x + y * width) * 3;
-                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
-                    int value = (int)((data[rgb_index] & 0xff) * weight);
-                    data[rgb_index] = (byte)value;
+            for (int y = (int) (height * yInitV);
+                y != (int)(height * yFinalV); ++y) {
+                final int rgbInit = (x + y * width) * 3;
+                for (int rgbIndex = rgbInit;
+                        rgbIndex != rgbInit + 3; ++rgbIndex) {
+                    int value = (int)((data[rgbIndex] & 0xff) * weight);
+                    data[rgbIndex] = (byte)value;
                 }
             }
         }
         //horizontal, use yEquation
-        for (int y = (int) (height * yInitH); y != (int)(height * yFinalH); ++y) {
+        for (int y = (int) (height * yInitH);
+                y != (int)(height * yFinalH); ++y) {
             final double weight = yEquation.getY((double)y / (double)height);
             if (weight >= 1.0) {
                 continue;
             }
-            for (int x = (int) (width * xInitH); x != (int)(width * xFinalH); ++x) {
-                final int rgb_init = (x + y * width) * 3;
-                for (int rgb_index = rgb_init; rgb_index != rgb_init + 3; ++rgb_index) {
-                    int value = (int)((data[rgb_index] & 0xff) * weight);
-                    data[rgb_index] = (byte)value;
+            for (int x = (int) (width * xInitH);
+                    x != (int)(width * xFinalH); ++x) {
+                final int rgbInit = (x + y * width) * 3;
+                for (int rgbIndex = rgbInit;
+                    rgbIndex != rgbInit + 3; ++rgbIndex) {
+                    int value = (int)((data[rgbIndex] & 0xff) * weight);
+                    data[rgbIndex] = (byte)value;
                 }
             }
         }
     }
     @Override
-    public void setTimeLocation(List<TimeLocation> timeLocations){
-        synchronized(timeRange) {
-            timeRange.clear();
-            timeRange.addAll(timeLocations);
+    public Optional<Frame> postDecodeFrame(final Frame frame) {
+        if (frame != null) {
+            process(frame.getImage());
         }
-    }
-    @Override
-    public void process(Frame frame) {
-        process(frame.getImage());
-    }
-    @Override
-    public boolean needProcess(Frame frame) {
-        synchronized(timeRange) {
-            if (timeRange.isEmpty()) {
-                return true;
-            }
-            return timeRange.stream().anyMatch((timeLocation) -> (timeLocation.include(frame)));
-        }
+        return Optional.ofNullable(frame);
     }
     @Override
     public boolean equals(Object obj) {
@@ -148,21 +223,46 @@ public class LinearProcessor implements TimeFrameProcessor {
     }
     @Override
     public String toString() {
-        return location.toString() + " LinearIFrameProcessor";
+        return location.toString() + " " + getClass().getName();
     }
     @Override
     public int hashCode() {
         return toString().hashCode();
     }
-    public static class Format implements Serializable {
-        private static final long serialVersionUID = -2453141672510568349L;
+    /**
+     * The factor of linear progrmmming is used for fusing the image edge. 
+     */
+    public static class Factor {
+        /**
+         * Overlay for x axis.
+         */
         private final double overlayX;
+        /**
+         * Overlay for y axis.
+         */
         private final double overlayY;
+        /**
+         * The scale of first x axis.
+         */
         private final double scaleMinX;
+        /**
+         * The scale of end x axis.
+         */
         private final double scaleMaxX;
+        /**
+         * The scale of first y axis.
+         */
         private final double scaleMinY;
+        /**
+         * The scale of end y axis.
+         */
         private final double scaleMaxY;
-        public Format(double overlayX, double overlayY, double scaleMinX, double scaleMaxX, double scaleMinY, double scaleMaxY) {
+        public Factor(final double overlayX,
+                final double overlayY,
+                final double scaleMinX,
+                final double scaleMaxX,
+                final double scaleMinY,
+                final double scaleMaxY) {
             this.overlayX = overlayX;
             this.overlayY = overlayY;
             this.scaleMinX = scaleMinX;
@@ -189,9 +289,28 @@ public class LinearProcessor implements TimeFrameProcessor {
             return scaleMaxY;
         }
     }
+    /**
+     * Calculates the RGB value for fusing the edge.
+     * We use linear programming to evaluate the value.
+     */
     private static class LinearEquationInTwo {
+        /**
+         * The arg A.
+         */
         private final double argA;
+        /**
+         * The arg B.
+         */
         private final double argB;
+        /**
+         * Constructs a linear equation for two specified coordinates.
+         * The x represents the pixel location (x or y)
+         * and the y represents the weight for RGB value.
+         * @param x1 first x coordinate
+         * @param y1 first y coordinate
+         * @param x2 second x coordinate
+         * @param y2 second y coordinate
+         */
         public LinearEquationInTwo(double x1, double y1, double x2, double y2) {
             if (x1 == x2 && y1 == y2) {
                 throw new IllegalArgumentException();
@@ -203,6 +322,11 @@ public class LinearProcessor implements TimeFrameProcessor {
                 argB = y1 - argA * x1;
             }
         }
+        /**
+         * Calculate the weight for RGB value.
+         * @param x The pixel location (x or y)
+         * @return The weight for RGB value
+         */
         public double getY(double x) {
             return argA * x + argB;
         }
