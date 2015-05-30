@@ -24,23 +24,23 @@ public class BasePanel extends JPanel {
          */
         EXTENSION
     };
-    private static final long serialVersionUID 	= -4475038995493795754L;
     private BufferedImage image = null;
     private Mode mode = Mode.FULL_SCREEN;
-    public BasePanel() {}
-    public BasePanel(BufferedImage image) {
-        this.image = image;
+    public BasePanel() {
     }
-    public BasePanel(BufferedImage image, Mode mode) {
-        this.image = image;
-        this.mode = mode;
+    public BasePanel(final BufferedImage writeImage) {
+        image = writeImage;
     }
-    public void setMode(Mode mode) {
-        this.mode = mode;
+    public BasePanel(final BufferedImage writeImage, Mode newMode) {
+        image = writeImage;
+        mode = newMode;
     }
-    public void write(BufferedImage image) {
+    public void setMode(Mode newMode) {
+        mode = newMode;
+    }
+    public void write(BufferedImage writeImage) {
         if (image != null) {
-            this.image = image;
+            image = writeImage;
             repaint();
         }
     }
@@ -59,7 +59,9 @@ public class BasePanel extends JPanel {
                 final int panelH = getHeight();  
                 switch(mode) {
                     case FULL_SCREEN: {
-                        final double scale = Math.min((double)panelW / (double)width, (double)panelH / (double)height);
+                        final double scale = Math.min(
+                                (double)panelW / (double)width,
+                                (double)panelH / (double)height);
                         final int finalW = (int)(width * scale);
                         final int finalH = (int)(height * scale);
                         final int xAxis	= (int)((panelW - finalW) / 2);
@@ -72,7 +74,9 @@ public class BasePanel extends JPanel {
                         break;
                     }
                     case EXTENSION: {
-                        final double scale = Math.max((double)panelW / (double)width, (double)panelH / (double)height);
+                        final double scale = Math.max(
+                                (double)panelW / (double)width,
+                                (double)panelH / (double)height);
                         final int finalW = (int)(width * scale);
                         final int finalH = (int)(height * scale);
                         g.drawImage(image, 0, 0, finalW, finalH, null);

@@ -12,15 +12,10 @@ import java.util.Properties;
 import java.util.TreeMap;
 import javafx.util.Pair;
 import net.nmmst.NodeInformation.Location;
-import net.nmmst.utils.WolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NProperties {
-    public static void main(String[] args) {
-        WolUtil.wakeup("192.168.100.255", "00-0B-AB-67-4E-70");
-        System.out.println("Wake up");
-    }
     /**
      * Log.
      */

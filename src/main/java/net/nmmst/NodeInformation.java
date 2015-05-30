@@ -16,6 +16,37 @@ import java.util.TreeSet;
  * which includes the master, controler, fusion node and all projects.
  */
 public class NodeInformation implements Comparable<NodeInformation> {
+    public static class Builder {
+        private String ip;
+        private String mac;
+        private Location loc;
+        private int registerPort;
+        private int requestPort;
+        public NodeInformation build() {
+            return new NodeInformation(loc, ip, mac,
+                    requestPort, registerPort);
+        }
+        public Builder setAddress(String address) {
+            ip = address;
+            return this;
+        }
+        public Builder setLocation(Location location) {
+            loc = location;
+            return this;
+        }
+        public Builder setMac(String macNumber) {
+            mac = macNumber;
+            return this;
+        }
+        public Builder setRegisterPort(int port) {
+            registerPort = port;
+            return this;
+        }
+        public Builder setRequestPort(int port) {
+            requestPort = port;
+            return this;
+        }
+    }
     /**
      * Enumerates all valid node locations.
      * If we face the screen, the fusion node and project locations

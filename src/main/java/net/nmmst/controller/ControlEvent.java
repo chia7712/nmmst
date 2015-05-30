@@ -31,7 +31,6 @@ public abstract class ControlEvent implements Taskable {
                 } catch (InterruptedException ex) {
                 }
             }
-
             @Override
             public void close() {
             }
