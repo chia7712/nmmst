@@ -10,17 +10,17 @@ public interface MovieAttribute {
     /**
      * @return The index for this movie
      */
-    public int getIndex();
+    int getIndex();
     /**
      * @return The local file for this movie
      */
-    public File getFile();
+    File getFile();
     /**
      * @return The duration for this movie. The time scale is microtime.
      */
-    public long getDuration();
+    long getDuration();
     /**
      * @return The audio format from this movie
      */
-    public AudioFormat getAudioFormat();
+    AudioFormat getAudioFormat();
 }

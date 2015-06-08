@@ -5,7 +5,11 @@ import java.awt.image.DataBuffer;
 /**
  * Encapsulates the frame from movie.
  */
-public class Frame {
+public final class Frame {
+    /**
+     * Converts bit to byte.
+     */
+    private static final int BIT_TO_BYTES = 8;
     /**
      * MovieAttribute.
      */
@@ -22,13 +26,14 @@ public class Frame {
      * Heapsize of image.
      */
     private final long imageSize;
-    private final boolean end;
+    /**
+     * Constructs a frame with end flag.
+     */
     public Frame() {
         imageSize = 0;
         time = 0;
         attribute = null;
         image = null;
-        end = true;
     }
     /**
      * Constructs a frame for specified move attribute, timestamp and image.
@@ -44,8 +49,7 @@ public class Frame {
         DataBuffer buff = image.getRaster().getDataBuffer();
         imageSize = buff.getSize()
                     * DataBuffer.getDataTypeSize(buff.getDataType())
-                    / 8;
-        end = false;
+                    / BIT_TO_BYTES;
     }
     /**
      * @return A reference to movie attribute
@@ -67,16 +71,16 @@ public class Frame {
     }
     /**
      * The micro timestamp for this frame.
-     * @return The micro timestamp 
+     * @return The micro timestamp
      */
     public long getTimestamp() {
         return time;
     }
     /**
      * Indicates whether end.
-     * @return True if end of movie
+     * @return {@code true} if end of movie
      */
     public boolean isEnd() {
-        return end;
+        return image == null;
     }
 }

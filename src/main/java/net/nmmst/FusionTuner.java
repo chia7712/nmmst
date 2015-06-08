@@ -31,19 +31,51 @@ import net.nmmst.processor.LinearProcessor.Factor;
 import net.nmmst.utils.Painter;
 import net.nmmst.utils.RequestUtil.FusionTestRequest;
 import net.nmmst.utils.SerialStream;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+/**
+ * Tunes the fusion factor.
+ */
 public class FusionTuner extends JFrame implements WindowListener {
+    /**
+     * Log.
+     */
+    private static final Logger LOG
+        = LoggerFactory.getLogger(FusionTuner.class);
+    /**
+     * Default font size.
+     */
     private static final int FONT_SIZE = 30;
-    public static <T extends Component> T setFont(T component) {
+    /**
+     * Creates a component with default font size.
+     * @param <T> The subclass of component
+     * @param component The component to set
+     * @return Component
+     */
+    public static <T extends Component> T setFont(final T component) {
         Font textFont = new Font(component.getFont().getName(),
         component.getFont().getStyle(), FONT_SIZE);
         component.setFont(textFont);
         return component;
     }
+    /**
+     * Default width of frame.
+     */
     private static final int DEFAULT_WIDTH = 1024;
+    /**
+     * Default height of frame.
+     */
     private static final int DEFAULT_HEIGHT = 768;
+    /**
+     * Default image for testing fusion factor.
+     */
     private static final BufferedImage INIT_IMAGE
-        = Painter.getFillColor(DEFAULT_WIDTH, DEFAULT_HEIGHT, Color.WHITE);
+        = Painter.getFillColor(DEFAULT_WIDTH,
+                              DEFAULT_HEIGHT,
+                              Color.WHITE);
+    /**
+     * Default fusion factor.
+     */
     private static final LinearProcessor.Factor TENTATIVE_FACTOR
         = new LinearProcessor.Factor(
         0.0335,
@@ -53,12 +85,30 @@ public class FusionTuner extends JFrame implements WindowListener {
         0.6,
         0.9
     );
+    /**
+     * This image is set for absent node information.
+     */
     private static final BufferedImage NO_NODE_IMAGE =
-        Painter.getStringImage("No node", DEFAULT_WIDTH, DEFAULT_HEIGHT, 30);
+        Painter.getStringImage("No node",
+                              DEFAULT_WIDTH,
+                              DEFAULT_HEIGHT,
+                              30);
+    /**
+     * Queues the {@link net.nmmst.utils.RequestUtil.FusionTestRequest}.
+     * It is shared between node panels.
+     */
     private final BlockingQueue<Pair<NodeInformation, Factor>> queue
         = new LinkedBlockingQueue();
+    /**
+     * A thread for sending
+     * the {@link net.nmmst.utils.RequestUtil.FusionTestRequest}.
+     */
     private final ExecutorService service = Executors.newSingleThreadExecutor();
-    public FusionTuner(NProperties properties) {
+    /**
+     * A fusion tuner for tesing the fusion format of video node.
+     * @param properties NProperties
+     */
+    public FusionTuner(final NProperties properties) {
         List<NodeInformation> nodeList
             = new ArrayList(NodeInformation.getVideoNodes(properties));
         setLayout(new GridLayout(0, 2));
@@ -82,32 +132,40 @@ public class FusionTuner extends JFrame implements WindowListener {
                         properties);
                 }
             } catch (InterruptedException | IOException e) {
+                LOG.error(e.getMessage());
             }
         });
     }
     @Override
-    public void windowOpened(WindowEvent e) {
+    public void windowOpened(final WindowEvent e) {
     }
     @Override
-    public void windowClosing(WindowEvent e) {
+    public void windowClosing(final WindowEvent e) {
     }
     @Override
-    public void windowClosed(WindowEvent e) {
+    public final void windowClosed(final WindowEvent e) {
         service.shutdownNow();
     }
     @Override
-    public void windowIconified(WindowEvent e) {
+    public void windowIconified(final WindowEvent e) {
     }
     @Override
-    public void windowDeiconified(WindowEvent e) {
+    public void windowDeiconified(final WindowEvent e) {
     }
     @Override
-    public void windowActivated(WindowEvent e) {
+    public void windowActivated(final WindowEvent e) {
     }
     @Override
-    public void windowDeactivated(WindowEvent e) {
+    public void windowDeactivated(final WindowEvent e) {
     }
+    /**
+     * A node panel provides many fields to write the
+     * {@link NodeInformation} and {@link Factor}.
+     */
     private static class NodePanel extends JPanel {
+        /**
+         * The name of labels.
+         */
         private static final List<String> DESCRIPTIONS = Arrays.asList(
           "Overlay X",
           "Overlay Y",
@@ -116,20 +174,55 @@ public class FusionTuner extends JFrame implements WindowListener {
           "Min Y",
           "Max Y"
         );
+        /**
+         * Description index of overlay x.
+         */
         private static final int OVERLAY_X_INDEX = 0;
+        /**
+         * Description index of overlay y.
+         */
         private static final int OVERLAY_Y_INDEX = 1;
-        private static final int MIX_X = 2;
-        private static final int MAX_X = 3;
-        private static final int MIX_Y = 4;
-        private static final int MAX_Y = 5;
+        /**
+         * Description index of min x.
+         */
+        private static final int MIX_X_INDEX = 2;
+        /**
+         * Description index of max x.
+         */
+        private static final int MAX_X_INDEX = 3;
+        /**
+         * Description index of min y.
+         */
+        private static final int MIX_Y_INDEX = 4;
+        /**
+         * Description index of max y.
+         */
+        private static final int MAX_Y_INDEX = 5;
+        /**
+         * The labels and text fields.
+         */
         private final List<Pair<JLabel, JTextField>> components
             = new LinkedList();
+        /**
+         * A address field to set.
+         */
         private final JTextField addressText
             = FusionTuner.setFont(new JTextField());
+        /**
+         * Node location.
+         */
         private final NodeInformation.Location location;
+        /**
+         * Queues the {@link net.nmmst.utils.RequestUtil.FusionTestRequest}.
+         */
         private final BlockingQueue<Pair<NodeInformation, Factor>> queue;
-        public NodePanel(BlockingQueue<Pair<NodeInformation, Factor>>
-                requestQueue, NodeInformation nodeInfo) {
+        /**
+         * Constructs a node panel for shared queue and node information.
+         * @param requestQueue Shared queue
+         * @param nodeInfo Node inforamtion
+         */
+        NodePanel(final BlockingQueue<Pair<NodeInformation, Factor>>
+                requestQueue, final NodeInformation nodeInfo) {
             queue = requestQueue;
             addressText.setText(
                     nodeInfo.getIP() + ":" + nodeInfo.getRequestPort());
@@ -151,8 +244,12 @@ public class FusionTuner extends JFrame implements WindowListener {
                 add(panel);
             });
         }
+        /**
+         * Initializes the factor fields.
+         * @param components The components to initialize
+         */
         private static void initFactor(
-                List<Pair<JLabel, JTextField>> components) {
+                final List<Pair<JLabel, JTextField>> components) {
             components.add(new Pair(
                 FusionTuner.setFont(new JLabel(DESCRIPTIONS.get(
                     OVERLAY_X_INDEX))),
@@ -165,26 +262,29 @@ public class FusionTuner extends JFrame implements WindowListener {
                     TENTATIVE_FACTOR.getOverlayY())))));
             components.add(new Pair(
                 FusionTuner.setFont(new JLabel(DESCRIPTIONS.get(
-                    MIX_X))),
+                    MIX_X_INDEX))),
                 FusionTuner.setFont(new JTextField(String.valueOf(
                     TENTATIVE_FACTOR.getScaleMinX())))));
             components.add(new Pair(
                 FusionTuner.setFont(new JLabel(DESCRIPTIONS.get(
-                    MAX_X))),
+                    MAX_X_INDEX))),
                 FusionTuner.setFont(new JTextField(String.valueOf(
                     TENTATIVE_FACTOR.getScaleMaxX())))));
             components.add(new Pair(
                 FusionTuner.setFont(new JLabel(DESCRIPTIONS.get(
-                    MIX_Y))),
+                    MIX_Y_INDEX))),
                 FusionTuner.setFont(new JTextField(String.valueOf(
                     TENTATIVE_FACTOR.getScaleMinY())))));
             components.add(new Pair(
                 FusionTuner.setFont(new JLabel(DESCRIPTIONS.get(
-                    MAX_Y))),
+                    MAX_Y_INDEX))),
                 FusionTuner.setFont(new JTextField(String.valueOf(
                     TENTATIVE_FACTOR.getScaleMaxY())))));
         }
-        
+        /**
+         * Retrieves a factor according to text fields.
+         * @return A factor
+         */
         private Factor getFactor() {
             List<Double> values
                 = components.stream()
@@ -194,11 +294,15 @@ public class FusionTuner extends JFrame implements WindowListener {
             return new Factor(
                     values.get(OVERLAY_X_INDEX),
                     values.get(OVERLAY_Y_INDEX),
-                    values.get(MIX_X),
-                    values.get(MAX_X),
-                    values.get(MIX_Y),
-                    values.get(MAX_Y));
+                    values.get(MIX_X_INDEX),
+                    values.get(MAX_X_INDEX),
+                    values.get(MIX_Y_INDEX),
+                    values.get(MAX_Y_INDEX));
         }
+        /**
+         * Retrieves a node information according to text fields.
+         * @return A node information
+         */
         private NodeInformation getNodeInformation() {
             final int addressIndex = 0;
             final int portIndex = 1;
@@ -213,8 +317,12 @@ public class FusionTuner extends JFrame implements WindowListener {
                                       .build();
         }
     }
-
-    public static void main(String[] args) throws Exception {
+    /**
+     * Invokes a frame which provides the ability of testing fusion.
+     * @param args No use
+     * @throws Exception If any error
+     */
+    public static void main(final String[] args) throws Exception {
         JFrame frame = new FusionTuner(new NProperties());
         SwingUtilities.invokeLater(() -> {
             frame.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));

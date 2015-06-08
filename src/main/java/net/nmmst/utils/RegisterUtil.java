@@ -26,33 +26,37 @@ public final class RegisterUtil {
      */
     private static final Logger LOG
             = LoggerFactory.getLogger(RegisterUtil.class);
+    /**
+     * This interface is used for monitoring the buffer status
+     * of all video nodes.
+     */
     public interface Watcher {
         /**
-         * Checks the buffer status for specified node. 
+         * Checks the buffer status for specified node.
          * @param node NodeInformation
-         * @return True if the specified node has enough buffer,
-         * false otherwise
+         * @return {@code true} if the specified node has enough buffer,
+         * {@code false} otherwise
          */
-        public boolean isBufferInsufficient(NodeInformation node);
+        boolean isBufferInsufficient(NodeInformation node);
         /**
-         * Checks the buffer status for all nodes. 
-         * @return True if all node have enough buffer,
-         * false otherwise
+         * Checks the buffer status for all nodes.
+         * @return {@code true} if all node have enough buffer,
+         * {@code false} otherwise
          */
-        public boolean isBufferInsufficient();
+        boolean isBufferInsufficient();
         /**
          * Checks whether the modification of play flow is conflict with
          * currently decoded movie. We disallow changing the skip flag for being
          * decoded movie.
          * @see net.nmmst.movie.MovieOrder.MovieInfo
          * @param index The next movie index
-         * @return True if no conflict, false otherwist
+         * @return {@code true} if no conflict, {@code false} otherwist
          */
-        public boolean isConflictWithBuffer(int index);
+        boolean isConflictWithBuffer(int index);
         /**
          * Checks all video nodes right now.
          */
-        public void checkNow();
+        void checkNow();
     }
     /**
      * Instantiates a Watcher for monitoring buffer status for all video nodes.
@@ -83,10 +87,23 @@ public final class RegisterUtil {
      * A {@link Watcher} implementation.
      */
     private static class WatcherImpl implements Taskable, Watcher {
+        /**
+         * The node inforamtion to monitor.
+         */
         private final Collection<NodeInformation> nodeInformations;
+        /**
+         * The current status of video nodes.
+         */
         private final Map<NodeInformation, SerializedBufferMetrics> playerStates
                 = new HashMap();
+        /**
+         * The lower limit for frame buffer.
+         */
         private final double lowerLimit;
+        /**
+         * Instantiates a {@link Watcher}.
+         * @param properties NProperties
+         */
         public WatcherImpl(final NProperties properties) {
             nodeInformations = NodeInformation.getVideoNodes(properties);
             lowerLimit = properties.getDouble(
@@ -105,12 +122,14 @@ public final class RegisterUtil {
          * Checks the buffer status for specified node.
          * @param node The node to check
          * @param metrics The buffer metric of specified node
-         * @return True if the node has enough buffer, false otherwise
+         * @param lowerLimit The buffer size limit
+         * @return {@code true} if the node has enough buffer,
+         * {@code false} otherwise
          */
         private static boolean hasLowerBuffer(final NodeInformation node,
                 final SerializedBufferMetrics metrics,
                 final double lowerLimit) {
-            final double ratio = (double)metrics.getFrameNumber()
+            final double ratio = (double) metrics.getFrameNumber()
                     / (double) metrics.getFrameCapacity();
             if (ratio <= lowerLimit) {
                 StringBuilder builder = new StringBuilder(
@@ -127,8 +146,8 @@ public final class RegisterUtil {
             return false;
         }
         @Override
-        public boolean isBufferInsufficient(NodeInformation node) {
-            synchronized(playerStates) {
+        public boolean isBufferInsufficient(final NodeInformation node) {
+            synchronized (playerStates) {
                 SerializedBufferMetrics metrics = playerStates.get(node);
                 if (metrics == null) {
                     return true;
@@ -139,7 +158,7 @@ public final class RegisterUtil {
 
         @Override
         public boolean isBufferInsufficient() {
-            synchronized(playerStates) {
+            synchronized (playerStates) {
                 if (playerStates.size() != nodeInformations.size()) {
                     if (LOG.isDebugEnabled()) {
                         StringBuilder builder = new StringBuilder();
@@ -164,7 +183,7 @@ public final class RegisterUtil {
 
         @Override
         public void checkNow() {
-            synchronized(playerStates) {
+            synchronized (playerStates) {
                 playerStates.clear();
             }
             nodeInformations.stream().forEach((nodeInformation) -> {
@@ -172,22 +191,24 @@ public final class RegisterUtil {
                         nodeInformation.getIP(),
                         nodeInformation.getRegisterPort()))) {
                     Object obj = client.read();
-                    if (obj != null && obj instanceof SerializedBufferMetrics) {
-                        SerializedBufferMetrics state = (SerializedBufferMetrics)obj;
-                        synchronized(playerStates) {
+                    if (obj != null
+                        && obj.getClass() == SerializedBufferMetrics.class) {
+                        SerializedBufferMetrics state
+                            = (SerializedBufferMetrics) obj;
+                        synchronized (playerStates) {
                             playerStates.put(nodeInformation, state);
                         }
                         LOG.info(nodeInformation + "\n" + state);
                     }
-                } catch(IOException | ClassNotFoundException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     LOG.error(e.getMessage() + ":" + nodeInformation);
                 }
             });
         }
 
         @Override
-        public boolean isConflictWithBuffer(int index) {
-            synchronized(playerStates) {
+        public boolean isConflictWithBuffer(final int index) {
+            synchronized (playerStates) {
                 return playerStates.size() != nodeInformations.size();
             }
         }
@@ -207,7 +228,6 @@ public final class RegisterUtil {
         private final BufferMetrics metrics;
         /**
          * Constructs a server to provide the buffer info.
-         * @param closer Closer
          * @param info Node information
          * @param bufferMetrics BufferMetrics
          * @throws IOException If failed to establish a server socket
@@ -237,6 +257,10 @@ public final class RegisterUtil {
             }
         }
     }
+    /**
+     * This is a {@link BufferMetrics} wrapper which is able to
+     * be serialized.
+     */
     private static class SerializedBufferMetrics
         implements Serializable, BufferMetrics {
         /**
@@ -377,6 +401,5 @@ public final class RegisterUtil {
      * Can't be instantiated with this ctor.
      */
     private RegisterUtil() {
-        
     }
 }

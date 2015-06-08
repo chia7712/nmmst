@@ -1,20 +1,26 @@
 package net.nmmst.views;
 
 import java.awt.Dimension;
+import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import net.nmmst.NConstants;
 /**
  * The master node is used for sending main operation for all video nodes.
  */
-public class MasterFrame {
-    public static void main(String[] args) throws Exception {
+public final class MasterFrame {
+    /**
+     * Invokes a master frame.
+     * @param args No use
+     * @throws IOException If failed to open movie
+     */
+    public static void main(final String[] args) throws IOException {
         MasterFrameData frameData = new MasterFrameData();
         final int width = frameData.getNProperties().getInteger(
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final BaseFrame f = new BaseFrame(frameData);
+        final VideoFrame f = new VideoFrame(frameData);
         SwingUtilities.invokeLater(() -> {
             if (width <= 0 || height <= 0) {
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -26,5 +32,10 @@ public class MasterFrame {
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setVisible(true);
         });
+    }
+    /**
+     * Can't be instantiated with this ctor.
+     */
+    private MasterFrame() {
     }
 }

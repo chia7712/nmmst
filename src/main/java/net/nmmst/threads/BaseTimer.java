@@ -1,22 +1,37 @@
 package net.nmmst.threads;
 
 import java.util.concurrent.TimeUnit;
-
 /**
- * 
+ * Provides the sleep function.
  */
 public class BaseTimer implements Timer {
+    /**
+     * Time unit.
+     */
     private final TimeUnit unit;
+    /**
+     * Sleep time.
+     */
     private final int time;
-    public BaseTimer(int sleepTime, TimeUnit timeUnit) {
+    /**
+     * Constructs a timer with specified sleep time and time unit.
+     * @param sleepTime Sleep time
+     * @param timeUnit Time unit
+     */
+    public BaseTimer(final int sleepTime, final TimeUnit timeUnit) {
         this(timeUnit, sleepTime);
     }
-    public BaseTimer(TimeUnit timeUnit, int sleepTime) {
+    /**
+     * Constructs a timer with specified sleep time and time unit.
+     * @param sleepTime Sleep time
+     * @param timeUnit Time unit
+     */
+    public BaseTimer(final TimeUnit timeUnit, final int sleepTime) {
         unit = timeUnit;
         time = sleepTime;
     }
     @Override
-    public void sleep() throws InterruptedException {
+    public final void sleep() throws InterruptedException {
         unit.sleep(time);
     }
 }

@@ -14,47 +14,69 @@ import net.nmmst.utils.RequestUtil.Request;
 import net.nmmst.utils.RequestUtil.RequestType;
 import net.nmmst.utils.RequestUtil.SelectRequest;
 import net.nmmst.utils.WindowsUtil;
-
-public abstract class BaseFrameData implements FrameData {
+/**
+ * Base frame data is made up of {@link NProperties},
+ * {@link Closer}, {@link NodeInformation},
+ * {@link Request} queue and {@link RequestFunction}.
+ */
+public abstract class VideoData implements FrameData {
+    /**
+     * NProperties.
+     */
     private final NProperties properties = new NProperties();
+    /**
+     * Closer.
+     */
     private final Closer closer = new AtomicCloser();
+    /**
+     * Master information.
+     */
     private final NodeInformation selfInformation
-            = NodeInformation.getNodeInformationByAddress(properties);
-    private final BlockingQueue<Request> requestQueue
-            = RequestUtil.createRemoteQueue(selfInformation, closer);
+        = NodeInformation.getNodeInformationByAddress(properties);
+    /**
+     * Request queue.
+     */
+    private final BlockingQueue<RequestUtil.Request> requestQueue
+        = RequestUtil.createRemoteQueue(selfInformation, closer);
+    /**
+     * Request functions.
+     */
     private final Map<RequestUtil.RequestType, RequestFunction> functions
             = new TreeMap();
-    public BaseFrameData() throws IOException {
-        
+    /**
+     * Constructs a data of base frame.
+     * @throws IOException If failed to open movie
+     */
+    public VideoData() throws IOException {
         Arrays.asList(RequestType.values()).stream().forEach(type -> {
             switch (type) {
-                case START: 
+                case START:
                     functions.put(type, (data, request)
                         -> data.getMediaWorker().setPause(false));
                     break;
-                case STOP: 
+                case STOP:
                     functions.put(type, (data, request)
                         -> data.getMediaWorker().stopAsync());
                     break;
-                case PAUSE: 
+                case PAUSE:
                     functions.put(type, (data, request)
                         -> data.getMediaWorker().setPause(true));
                     break;
-                case SELECT: 
+                case SELECT:
                     functions.put(type, (data, request)
                         -> {
-                            if (request instanceof SelectRequest) {
-                                SelectRequest select = (SelectRequest)request;
+                            if (request.getClass() == SelectRequest.class) {
+                                SelectRequest select = (SelectRequest) request;
                                 data.getMediaWorker().setNextFlow(
                                     select.getIndex());
                             }
                         });
                     break;
-                case REBOOT: 
+                case REBOOT:
                     functions.put(type, (data, request)
                         -> WindowsUtil.reboot());
                     break;
-                case SHUTDOWN: 
+                case SHUTDOWN:
                     functions.put(type, (data, request)
                         -> WindowsUtil.shutdown());
                     break;

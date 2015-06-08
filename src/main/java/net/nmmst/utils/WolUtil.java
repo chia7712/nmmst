@@ -6,12 +6,25 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+/**
+ * Utility methods is able to wake all computers and projectors up.
+ */
 public final class WolUtil {
+    /**
+     * Log.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(WolUtil.class);
+    /**
+     * WOL port.
+     */
     private static final int PORT = 80;
-    private static byte[] genMagicPacket(String macStr) {
-        byte[] mac = getMacBytes(macStr);
+    /**
+     * Generates the magic packet.
+     * @param macNumber The mac number of node waked
+     * @return A bytes array
+     */
+    private static byte[] generateMagicPacket(final String macNumber) {
+        byte[] mac = convertToBytes(macNumber);
         if (mac.length == 0) {
             return mac;
         }
@@ -24,25 +37,36 @@ public final class WolUtil {
         }
         return bytes;
     }
-    public static boolean wakeup(String broadcase, String macStr) {
-        LOG.info("broadcase : " + broadcase + ", mac : " + macStr);
-        byte[] bytes = genMagicPacket(macStr);
+    /**
+     * Wakes the computer up by mac number.
+     * @param broadcast The broadcast address
+     * @param macNumber Mac number
+     * @return {@code true} if succeed
+     */
+    public static boolean wakeup(final String broadcast,
+            final String macNumber) {
+        LOG.info("broadcase : " + broadcast + ", mac : " + macNumber);
+        byte[] bytes = generateMagicPacket(macNumber);
         if (bytes.length == 0) {
             return false;
         }
         try (DatagramSocket socket = new DatagramSocket()) {
-            InetAddress address = InetAddress.getByName(broadcase);
+            InetAddress address = InetAddress.getByName(broadcast);
             socket.send(new DatagramPacket(bytes, bytes.length, address, PORT));
             return true;
         } catch (IOException e) {
             LOG.error(e.getMessage());
             return false;
         }
-        
     }
-    private static byte[] getMacBytes(String macStr) throws IllegalArgumentException {
+    /**
+     * Converts mac string to bytes.
+     * @param macNumber Mac number
+     * @return A bytes array of mac number
+     */
+    private static byte[] convertToBytes(final String macNumber) {
         byte[] bytes = new byte[6];
-        String[] hex = macStr.split("(\\:|\\-)");
+        String[] hex = macNumber.split("(\\:|\\-)");
         if (hex.length != 6) {
             return new byte[0];
         }

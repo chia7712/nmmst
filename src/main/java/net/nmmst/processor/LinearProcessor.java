@@ -66,89 +66,94 @@ public class LinearProcessor implements FrameProcessor {
      * The node location.
      */
     private final NodeInformation.Location location;
-    public LinearProcessor(final NodeInformation.Location location,
-            final Factor format) {
-        this.location = location; 
-        switch(location) {
+    /**
+     * Constructs a linear processor for specified location and factor.
+     * @param nodeLocation Node location
+     * @param factor The format factor
+     */
+    public LinearProcessor(final NodeInformation.Location nodeLocation,
+            final Factor factor) {
+        location = nodeLocation;
+        switch (nodeLocation) {
             case LU:
                 xEquation = new LinearEquationInTwo(
-                        1.0 - format.getOverlayX(),
-                        format.getScaleMaxX(),
+                        1.0 - factor.getOverlayX(),
+                        factor.getScaleMaxX(),
                         1.0,
-                        format.getScaleMinX());
+                        factor.getScaleMinX());
                 yEquation = new LinearEquationInTwo(
-                        1.0 - format.getOverlayY(),
-                        format.getScaleMaxY(),
+                        1.0 - factor.getOverlayY(),
+                        factor.getScaleMaxY(),
                         1.0,
-                        format.getScaleMinY());
-                xInitV	= 1.0 - format.getOverlayX();
-                xFinalV	= 1.0;
-                yInitV	= 0;
-                yFinalV	= 1.0;
-                xInitH	= 0;
-                xFinalH	= 1.0;
-                yInitH	= 1.0 - format.getOverlayY();
-                yFinalH	= 1.0;
+                        factor.getScaleMinY());
+                xInitV = 1.0 - factor.getOverlayX();
+                xFinalV = 1.0;
+                yInitV = 0;
+                yFinalV = 1.0;
+                xInitH = 0;
+                xFinalH = 1.0;
+                yInitH = 1.0 - factor.getOverlayY();
+                yFinalH = 1.0;
                 break;
             case RU:
                 xEquation = new LinearEquationInTwo(
                         0.0,
-                        format.getScaleMinX(),
-                        format.getOverlayX(),
-                        format.getScaleMaxX());
+                        factor.getScaleMinX(),
+                        factor.getOverlayX(),
+                        factor.getScaleMaxX());
                 yEquation = new LinearEquationInTwo(
-                        1.0 - format.getOverlayY(),
-                        format.getScaleMaxY(),
+                        1.0 - factor.getOverlayY(),
+                        factor.getScaleMaxY(),
                         1.0,
-                        format.getScaleMinY());
-                xInitV	= 0;
-                xFinalV	= format.getOverlayX();
-                yInitV	= 0;
-                yFinalV	= 1.0;
-                xInitH	= 0;
-                xFinalH	= 1.0;
-                yInitH	= 1.0 - format.getOverlayY();
-                yFinalH	= 1.0;
+                        factor.getScaleMinY());
+                xInitV = 0;
+                xFinalV = factor.getOverlayX();
+                yInitV = 0;
+                yFinalV = 1.0;
+                xInitH = 0;
+                xFinalH = 1.0;
+                yInitH = 1.0 - factor.getOverlayY();
+                yFinalH = 1.0;
                 break;
             case LD:
                 xEquation = new LinearEquationInTwo(
-                        1.0 - format.getOverlayX(),
-                        format.getScaleMaxX(),
+                        1.0 - factor.getOverlayX(),
+                        factor.getScaleMaxX(),
                         1.0,
-                        format.getScaleMinX());
+                        factor.getScaleMinX());
                 yEquation = new LinearEquationInTwo(
                         0.0,
-                        format.getScaleMinY(),
-                        format.getOverlayY(),
-                        format.getScaleMaxY());
-                xInitV	= 1.0 - format.getOverlayX();
-                xFinalV	= 1.0;
-                yInitV	= 0;
-                yFinalV	= 1.0;
-                xInitH	= 0;
-                xFinalH	= 1.0;
-                yInitH	= 0;
-                yFinalH	= format.getOverlayY();
+                        factor.getScaleMinY(),
+                        factor.getOverlayY(),
+                        factor.getScaleMaxY());
+                xInitV = 1.0 - factor.getOverlayX();
+                xFinalV = 1.0;
+                yInitV = 0;
+                yFinalV = 1.0;
+                xInitH = 0;
+                xFinalH = 1.0;
+                yInitH = 0;
+                yFinalH = factor.getOverlayY();
                 break;
             case RD:
                 xEquation = new LinearEquationInTwo(
                         0.0,
-                        format.getScaleMinX(),
-                        format.getOverlayX(),
-                        format.getScaleMaxX());
+                        factor.getScaleMinX(),
+                        factor.getOverlayX(),
+                        factor.getScaleMaxX());
                 yEquation = new LinearEquationInTwo(
                         0.0,
-                        format.getScaleMinY(),
-                        format.getOverlayY(),
-                        format.getScaleMaxY());
-                xInitV	= 0;
-                xFinalV	= format.getOverlayX();
-                yInitV	= 0;
-                yFinalV	= 1.0;
-                xInitH	= 0;
-                xFinalH	= 1.0;
-                yInitH	= 0;
-                yFinalH	= format.getOverlayY();
+                        factor.getScaleMinY(),
+                        factor.getOverlayY(),
+                        factor.getScaleMaxY());
+                xInitV = 0;
+                xFinalV = factor.getOverlayX();
+                yInitV = 0;
+                yFinalV = 1.0;
+                xInitH = 0;
+                xFinalH = 1.0;
+                yInitH = 0;
+                yFinalH = factor.getOverlayY();
                 break;
             default:
                 throw new IllegalArgumentException(
@@ -160,133 +165,162 @@ public class LinearProcessor implements FrameProcessor {
      * the source image instead of cloneing image.
      * @param image The source image is to be fused
      */
-    public void process(final BufferedImage image) {
+    public final void process(final BufferedImage image) {
         final byte[] data
-            = ((DataBufferByte)image.getRaster()
+            = ((DataBufferByte) image.getRaster()
                                     .getDataBuffer())
                                     .getData();
         final int width = image.getWidth();
         final int height = image.getHeight();
         //Vertical, use xEquation
         for (int x = (int) (width * xInitV);
-                x != (int)(width * xFinalV); ++x) {
-            final double weight = xEquation.getY((double)x / (double)width);
+                x != (int) (width * xFinalV); ++x) {
+            final double weight = xEquation.getY((double) x / (double) width);
             if (weight >= 1.0) {
                 continue;
             }
             for (int y = (int) (height * yInitV);
-                y != (int)(height * yFinalV); ++y) {
+                y != (int) (height * yFinalV); ++y) {
                 final int rgbInit = (x + y * width) * 3;
                 for (int rgbIndex = rgbInit;
                         rgbIndex != rgbInit + 3; ++rgbIndex) {
-                    int value = (int)((data[rgbIndex] & 0xff) * weight);
-                    data[rgbIndex] = (byte)value;
+                    int value = (int) ((data[rgbIndex] & 0xff) * weight);
+                    data[rgbIndex] = (byte) value;
                 }
             }
         }
         //horizontal, use yEquation
         for (int y = (int) (height * yInitH);
-                y != (int)(height * yFinalH); ++y) {
-            final double weight = yEquation.getY((double)y / (double)height);
+                y != (int) (height * yFinalH); ++y) {
+            final double weight = yEquation.getY((double) y / (double) height);
             if (weight >= 1.0) {
                 continue;
             }
             for (int x = (int) (width * xInitH);
-                    x != (int)(width * xFinalH); ++x) {
+                    x != (int) (width * xFinalH); ++x) {
                 final int rgbInit = (x + y * width) * 3;
                 for (int rgbIndex = rgbInit;
                     rgbIndex != rgbInit + 3; ++rgbIndex) {
-                    int value = (int)((data[rgbIndex] & 0xff) * weight);
-                    data[rgbIndex] = (byte)value;
+                    int value = (int) ((data[rgbIndex] & 0xff) * weight);
+                    data[rgbIndex] = (byte) value;
                 }
             }
         }
     }
     @Override
-    public Optional<Frame> postDecodeFrame(final Frame frame) {
+    public final Optional<Frame> postDecodeFrame(final Frame frame) {
         if (frame != null) {
             process(frame.getImage());
         }
         return Optional.ofNullable(frame);
     }
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }
-        if (obj instanceof LinearProcessor) {
-            if (((LinearProcessor) obj).location == location) {
-                return true;
-            }
+        if (obj.getClass() != LinearProcessor.class) {
+            return false;
         }
-        return false;
+        return ((LinearProcessor) obj).location == location;
     }
     @Override
-    public String toString() {
+    public final String toString() {
         return location.toString() + " " + getClass().getName();
     }
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return toString().hashCode();
     }
     /**
-     * The factor of linear progrmmming is used for fusing the image edge. 
+     * The factor of linear progrmmming is used for fusing the image edge.
+     * Each argument is represented as following:
+     * min scale        max scale
+     *     |-------------|
+     *         overlay
      */
     public static class Factor {
         /**
          * Overlay for x axis.
          */
-        private final double overlayX;
+        private final double coverX;
         /**
          * Overlay for y axis.
          */
-        private final double overlayY;
+        private final double coverY;
         /**
          * The scale of first x axis.
          */
-        private final double scaleMinX;
+        private final double minX;
         /**
          * The scale of end x axis.
          */
-        private final double scaleMaxX;
+        private final double maxX;
         /**
          * The scale of first y axis.
          */
-        private final double scaleMinY;
+        private final double minY;
         /**
          * The scale of end y axis.
          */
-        private final double scaleMaxY;
+        private final double maxY;
+        /**
+         * Constructs a factor for individual parameters.
+         * @param overlayX Overlay range for x axis
+         * @param overlayY Overlay range for y axis
+         * @param scaleMinX The min scale of x axis
+         * @param scaleMaxX The max scale of x axis
+         * @param scaleMinY The min scale of y axis
+         * @param scaleMaxY The max scale of y axis
+         */
         public Factor(final double overlayX,
                 final double overlayY,
                 final double scaleMinX,
                 final double scaleMaxX,
                 final double scaleMinY,
                 final double scaleMaxY) {
-            this.overlayX = overlayX;
-            this.overlayY = overlayY;
-            this.scaleMinX = scaleMinX;
-            this.scaleMaxX = scaleMaxX;
-            this.scaleMinY = scaleMinY;
-            this.scaleMaxY = scaleMaxY;
+            coverX = overlayX;
+            coverY = overlayY;
+            minX = scaleMinX;
+            maxX = scaleMaxX;
+            minY = scaleMinY;
+            maxY = scaleMaxY;
         }
-        public double getOverlayX() {
-            return overlayX;
+        /**
+         * @return Overlay for x axis
+         */
+        public final double getOverlayX() {
+            return coverX;
         }
-        public double getOverlayY() {
-            return overlayY;
+        /**
+         * @return Overlay for y axis
+         */
+        public final double getOverlayY() {
+            return coverY;
         }
-        public double getScaleMinX() {
-            return scaleMinX;
+        /**
+         * @return The min scale of x axis
+         */
+        public final double getScaleMinX() {
+            return minX;
         }
-        public double getScaleMaxX() {
-            return scaleMaxX;
+        /**
+         * @return The max scale of x axis
+         */
+        public final double getScaleMaxX() {
+            return maxX;
         }
-        public double getScaleMinY() {
-            return scaleMinY;
+        /**
+         * @return The min scale of y axis
+         */
+        public final double getScaleMinY() {
+            return minY;
         }
-        public double getScaleMaxY() {
-            return scaleMaxY;
+        /**
+         * @return The max scale of y axis
+         */
+        public final double getScaleMaxY() {
+            return maxY;
         }
     }
     /**
@@ -311,7 +345,8 @@ public class LinearProcessor implements FrameProcessor {
          * @param x2 second x coordinate
          * @param y2 second y coordinate
          */
-        public LinearEquationInTwo(double x1, double y1, double x2, double y2) {
+        public LinearEquationInTwo(final double x1, final double y1,
+            final double x2, final double y2) {
             if (x1 == x2 && y1 == y2) {
                 throw new IllegalArgumentException();
             } else if (x1 == x2) {
@@ -327,7 +362,7 @@ public class LinearProcessor implements FrameProcessor {
          * @param x The pixel location (x or y)
          * @return The weight for RGB value
          */
-        public double getY(double x) {
+        public double getY(final double x) {
             return argA * x + argB;
         }
     }

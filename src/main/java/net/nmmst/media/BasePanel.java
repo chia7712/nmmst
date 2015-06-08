@@ -8,9 +8,9 @@ import javax.swing.JPanel;
  */
 public class BasePanel extends JPanel {
     /**
-     * Indicates how to paint specified image on the panel. 
+     * Indicates how to paint specified image on the panel.
      */
-    public enum Mode{
+    public enum Mode {
         /**
          * Full screen.
          */
@@ -24,68 +24,96 @@ public class BasePanel extends JPanel {
          */
         EXTENSION
     };
+    /**
+     * The image to draw.
+     */
     private BufferedImage image = null;
+    /**
+     * The display mode.
+     */
     private Mode mode = Mode.FULL_SCREEN;
+    /**
+     * Constructs a empty panel.
+     */
     public BasePanel() {
     }
+    /**
+     * Constructs a panel with initial image.
+     * @param writeImage The image to draw
+     */
     public BasePanel(final BufferedImage writeImage) {
         image = writeImage;
     }
-    public BasePanel(final BufferedImage writeImage, Mode newMode) {
+    /**
+     * Constructs a panel with initial image and mode.
+     * @param writeImage The image to draw
+     * @param newMode The mode indicates the appearance for drawing image
+     */
+    public BasePanel(final BufferedImage writeImage, final Mode newMode) {
         image = writeImage;
         mode = newMode;
     }
-    public void setMode(Mode newMode) {
+    /**
+     * Sets a new mode for this panel.
+     * It does not repaint the image right now.
+     * @param newMode New mode
+     */
+    public final void setMode(final Mode newMode) {
         mode = newMode;
     }
-    public void write(BufferedImage writeImage) {
+    /**
+     * Draws a new image right now.
+     * @param writeImage The image to draw
+     */
+    public final void write(final BufferedImage writeImage) {
         if (image != null) {
             image = writeImage;
             repaint();
         }
     }
-    public void clearImage() {
+    /**
+     * Cleans the panle right now.
+     */
+    public final void clearImage() {
         image = null;
         repaint();
     }
     @Override
-    public void paintComponent(Graphics g) {
+    public final void paintComponent(final Graphics g) {
         super.paintComponent(g);
         if (image != null) {
             final int width = image.getWidth();
             final int height = image.getHeight();
             if (width != -1 && height != -1) {
-                final int panelW = getWidth();
-                final int panelH = getHeight();  
-                switch(mode) {
-                    case FULL_SCREEN: {
-                        final double scale = Math.min(
-                                (double)panelW / (double)width,
-                                (double)panelH / (double)height);
-                        final int finalW = (int)(width * scale);
-                        final int finalH = (int)(height * scale);
-                        final int xAxis	= (int)((panelW - finalW) / 2);
-                        final int yAxis	= (int)((panelH - finalH) / 2);
-                        g.drawImage(image, xAxis, yAxis, finalW, finalH, null);
+                int xAxis = 0;
+                int yAxis = 0;
+                int finalW, finalH;
+                switch (mode) {
+                    case FULL_SCREEN:
+                        double minScale = Math.min(
+                                (double) getWidth() / (double) width,
+                                (double) getHeight() / (double) height);
+                        finalW = (int) (width * minScale);
+                        finalH = (int) (height * minScale);
+                        xAxis = (int) ((getWidth() - finalW) / 2);
+                        yAxis = (int) ((getHeight() - finalH) / 2);
                         break;
-                    }
-                    case FILL: {
-                        g.drawImage(image, 0, 0, panelW, panelH, null);
+                    case FILL:
+                        finalW = getWidth();
+                        finalH = getHeight();
                         break;
-                    }
-                    case EXTENSION: {
-                        final double scale = Math.max(
-                                (double)panelW / (double)width,
-                                (double)panelH / (double)height);
-                        final int finalW = (int)(width * scale);
-                        final int finalH = (int)(height * scale);
-                        g.drawImage(image, 0, 0, finalW, finalH, null);
+                    case EXTENSION:
+                        double maxScale = Math.max(
+                                (double) getWidth() / (double) width,
+                                (double) getHeight() / (double) height);
+                        finalW = (int) (width * maxScale);
+                        finalH = (int) (height * maxScale);
                         break;
-                    }
                     default:
-                        break;
+                        return;
                 }
-            }	 
+                g.drawImage(image, xAxis, yAxis, finalW, finalH, null);
+            }
             image.flush();
         }
     }

@@ -15,11 +15,11 @@ public final class BufferFactory {
     /**
      * Instaniates the movie buffer.
      * The max size is getted from {@link NProperties} by
-     * {@link NConstants#FRAME_QUEUE_SIZE}.
-     * @param properties NProperties provides the size of queu 
+     * {@link NConstants#FRAME_QUEUE_SIZE}
+     * @param properties NProperties provides the size of queue
      * @return Movie buffer
      */
-    public static MovieBuffer createMovieBuffer(NProperties properties) {
+    public static MovieBuffer createMovieBuffer(final NProperties properties) {
         return new BaseBuffer(properties);
     }
     /**
@@ -53,21 +53,37 @@ public final class BufferFactory {
          * The total size of used heap.
          */
         private final AtomicLong heapSize = new AtomicLong();
+        /**
+         * A frame to read recently.
+         */
         private final AtomicReference<Frame> currentFrame
                 = new AtomicReference();
+        /**
+         * A frame to write recently.
+         */
         private final AtomicReference<Frame> lastFrame
                 = new AtomicReference();
-        public BaseBuffer(NProperties properties) {
+        /**
+         * Instantiates a buffer for specified properties.
+         * @param properties NProperties provides the limit of
+         * buffer.
+         */
+        public BaseBuffer(final NProperties properties) {
             frameBufferLimit = properties.getInteger(
                 NConstants.FRAME_QUEUE_SIZE);
             frameQueue = new ArrayBlockingQueue(frameBufferLimit);
         }
+        /**
+         * Waits until no pause.
+         * @return {@code true} if a pause event has happened
+         * @throws InterruptedException If any breaks
+         */
         private boolean waitForPause() throws InterruptedException {
             boolean bePaused = false;
-            synchronized(pause) {
+            synchronized (pause) {
                 while (pause.get()) {
                     pause.wait();
-                    bePaused = true; 
+                    bePaused = true;
                 }
             }
             return bePaused;
@@ -77,7 +93,7 @@ public final class BufferFactory {
             if (waitForPause()) {
                 hadPause.set(true);
             }
-            Frame frame = frameQueue.take(); 
+            Frame frame = frameQueue.take();
             heapSize.addAndGet(-frame.getHeapSize());
             if (!frame.isEnd()) {
                 currentFrame.set(frame);
@@ -92,7 +108,7 @@ public final class BufferFactory {
             return sample;
         }
         @Override
-        public void writeFrame(Frame frame) throws InterruptedException {
+        public void writeFrame(final Frame frame) throws InterruptedException {
             heapSize.addAndGet(frame.getHeapSize());
             frameQueue.put(frame);
             if (!frame.isEnd()) {
@@ -100,15 +116,16 @@ public final class BufferFactory {
             }
         }
         @Override
-        public void writeSample(Sample sample) throws InterruptedException {
+        public void writeSample(final Sample sample)
+                throws InterruptedException {
             heapSize.addAndGet(sample.getHeapSize());
-            samples.put(sample);	
+            samples.put(sample);
         }
         @Override
-        public void setPause(boolean value) {
+        public void setPause(final boolean value) {
             pause.set(value);
             if (!pause.get()) {
-                synchronized(pause) {
+                synchronized (pause) {
                     pause.notifyAll();
                 }
             }
@@ -203,6 +220,6 @@ public final class BufferFactory {
     /**
      * Can't be instantiated with this ctor.
      */
-    private BufferFactory(){
+    private BufferFactory() {
     }
 }

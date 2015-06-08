@@ -3,7 +3,7 @@ package net.nmmst;
 /**
  * The configuration constants.
  */
-public class NConstants {
+public final class NConstants {
     /**
      * The default width of frame.
      */
@@ -21,7 +21,7 @@ public class NConstants {
      */
     public static final String MOVIE_ORDER = "movie.order";
     /**
-     * The movie index and it's selectable index.
+     * The selectable movie index and it's selected index.
      */
     public static final String MOVIE_SELECT = "movie.select";
     /**
@@ -157,7 +157,7 @@ public class NConstants {
      */
     public static final String SNAPSHOT_SCALE = "snapshot.scale";
     /**
-     * Indicates whether wheel and stick are enable. 
+     * Indicates whether wheel and stick are enable.
      */
     public static final String CONTROLLER_ENABLE = "controller.enable";
     /**

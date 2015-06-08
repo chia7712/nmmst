@@ -15,8 +15,10 @@ import net.nmmst.threads.Closer;
 import net.nmmst.threads.Taskable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
+/**
+ * Utility medhods provide the queue for receiving the
+ * request from remote nodes.
+ */
 public final class RequestUtil {
     /**
      * Log.
@@ -39,7 +41,7 @@ public final class RequestUtil {
     /**
      * Receives the request from master node.
      */
-    private static class RemoteRequestQueue implements Taskable {
+    private static final class RemoteRequestQueue implements Taskable {
         /**
          * Buffers the request.
          */
@@ -50,18 +52,21 @@ public final class RequestUtil {
          */
         private final ServerSocket server;
         /**
-         * Constructs a request server for receiving the request from master node.
-         * @param closer Closer
+         * Constructs a request server for receiving the request
+         * from master node.
          * @param nodeInformation Node information
-         * @throws IOException 
+         * @throws IOException If failed to establish server socket
          */
-        private RemoteRequestQueue(final NodeInformation nodeInformation)
+        RemoteRequestQueue(final NodeInformation nodeInformation)
                 throws IOException {
             server = new ServerSocket(nodeInformation.getRequestPort());
             LOG.info(server.getLocalSocketAddress()
             + ":" + server.getLocalPort());
         }
-        private BlockingQueue<Request> get() {
+        /**
+         * @return The request queue
+         */
+        BlockingQueue<Request> get() {
             return requestQueue;
         }
         @Override
@@ -69,7 +74,7 @@ public final class RequestUtil {
             try (SerialStream stream = new SerialStream(server.accept())) {
                 Object obj = stream.read();
                 if (obj instanceof Request) {
-                    requestQueue.put((Request)obj);
+                    requestQueue.put((Request) obj);
                 }
             } catch (IOException | ClassNotFoundException
                     | InterruptedException e) {
@@ -85,29 +90,79 @@ public final class RequestUtil {
             }
         }
     }
+    /**
+     * Enumerates the request type for commanding node
+     * to do something.
+     */
     public enum RequestType {
+        /**
+         * START request.
+         */
         START,
+        /**
+         * STOP request.
+         */
         STOP,
+        /**
+         * PAUSE request.
+         */
         PAUSE,
+        /**
+         * INIT request.
+         */
         INIT,
+        /**
+         * SELECT request.
+         */
         SELECT,
+        /**
+         * FUSION_TEST request.
+         */
         FUSION_TEST,
-        PARTY1,
-        PARTY2,
+        /**
+         * PARTY_1 request.
+         */
+        PARTY_1,
+        /**
+         * PARTY_2 request.
+         */
+        PARTY_2,
+        /**
+         * LIGHT_OFF request.
+         */
         LIGHT_OFF,
+        /**
+         * REBOOT request.
+         */
         REBOOT,
+        /**
+         * SHUTDOWN request.
+         */
         SHUTDOWN,
+        /**
+         * WOL request.
+         */
         WOL
     }
     /**
      * Base request for encapsulating the {@link RequestType}.
      */
     public static class Request implements Serializable {
+        /**
+         * The request type.
+         */
         private final RequestType type;
+        /**
+         * Constructs a request with specified type.
+         * @param requestType Request type
+         */
         public Request(final RequestType requestType) {
             type = requestType;
         }
-        public RequestType getType() {
+        /**
+         * @return Request type
+         */
+        public final RequestType getType() {
             return type;
         }
     }
@@ -144,11 +199,17 @@ public final class RequestUtil {
          * The scale of end y axis.
          */
         private final double scaleMaxY;
+        /**
+         * Constructs a request for executing fusion test.
+         * @param image The image is sent to fusion nodes
+         * @param factor The fusion factor
+         * @throws IOException If failed to convert image to bytes
+         */
         public FusionTestRequest(final BufferedImage image,
                 final LinearProcessor.Factor factor) throws IOException {
             super(RequestType.FUSION_TEST);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "jpg", baos);    
+            ImageIO.write(image, "jpg", baos);
             imageData = baos.toByteArray();
             overlayX = factor.getOverlayX();
             overlayY = factor.getOverlayY();
@@ -157,14 +218,22 @@ public final class RequestUtil {
             scaleMinY = factor.getScaleMinY();
             scaleMaxY = factor.getScaleMaxY();
         }
-        public LinearProcessor.Factor getFactor() {
+        /**
+         * @return The fusion factor
+         */
+        public final LinearProcessor.Factor getFactor() {
             return new LinearProcessor.Factor(
                 overlayX, overlayY,
                 scaleMinX, scaleMaxX,
                 scaleMinY,  scaleMaxY
             );
         }
-        public BufferedImage getImage() throws IOException {
+        /**
+         * @return The image
+         * @throws IOException If failed to convert bytes array
+         * to image
+         */
+        public final BufferedImage getImage() throws IOException {
             return ImageIO.read(new ByteArrayInputStream(imageData));
         }
     }
@@ -180,14 +249,14 @@ public final class RequestUtil {
          * Constructs a SelectRequest for specified indexes and values.
          * @param movieIndex The movie index
          */
-        public SelectRequest(int movieIndex) {
+        public SelectRequest(final int movieIndex) {
             super(RequestType.SELECT);
             index = movieIndex;
         }
         /**
          * @return The movie index
          */
-        public int getIndex() {
+        public final int getIndex() {
             return index;
         }
     }

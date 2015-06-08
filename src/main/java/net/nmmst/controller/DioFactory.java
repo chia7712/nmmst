@@ -1,13 +1,12 @@
 package net.nmmst.controller;
 
-import java.io.IOException;
 import net.nmmst.NProperties;
 
 /**
  * Instaniates the dio controller which encapsulates the detail of
  * communication with dio device.
  */
-public class DioFactory {
+public final class DioFactory {
     /**
      * Retrieves the dio controller.
      * @param properties NMMST properties
@@ -16,7 +15,7 @@ public class DioFactory {
      * the empty instance is used for testing function of master node
      * because it may does not exist the pci device in the test enviroment.
      */
-    public static DioInterface getDefault(NProperties properties) {
+    public static DioInterface getDefault(final NProperties properties) {
         try {
             return new DioBdaq(properties);
         } catch (Exception e) {
@@ -27,6 +26,6 @@ public class DioFactory {
     /**
      * Can't be instantiated with this ctor.
      */
-    private DioFactory(){
+    private DioFactory() {
     }
 }

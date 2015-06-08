@@ -16,33 +16,75 @@ import java.util.TreeSet;
  * which includes the master, controler, fusion node and all projects.
  */
 public class NodeInformation implements Comparable<NodeInformation> {
-    public static class Builder {
+    /**
+     * Builds the node information with some optional arguments.
+     */
+    public static final class Builder {
+        /**
+         * Node address.
+         */
         private String ip;
+        /**
+         * Node mac number.
+         */
         private String mac;
+        /**
+         * Node location.
+         */
         private Location loc;
+        /**
+         * The port to bind for register.
+         */
         private int registerPort;
+        /**
+         * The port to bind for request.
+         */
         private int requestPort;
+        /**
+         * Builds a node information.
+         * @return Node information
+         */
         public NodeInformation build() {
             return new NodeInformation(loc, ip, mac,
                     requestPort, registerPort);
         }
-        public Builder setAddress(String address) {
+        /**
+         * @param address The node address to set
+         * @return The builder itself
+         */
+        public Builder setAddress(final String address) {
             ip = address;
             return this;
         }
-        public Builder setLocation(Location location) {
+        /**
+         * @param location The node location to set
+         * @return The builder itself
+         */
+        public Builder setLocation(final Location location) {
             loc = location;
             return this;
         }
-        public Builder setMac(String macNumber) {
+        /**
+         * @param macNumber The node mac number to set
+         * @return The builder itself
+         */
+        public Builder setMac(final String macNumber) {
             mac = macNumber;
             return this;
         }
-        public Builder setRegisterPort(int port) {
+        /**
+         * @param port The node port to set for register
+         * @return The builder itself
+         */
+        public Builder setRegisterPort(final int port) {
             registerPort = port;
             return this;
         }
-        public Builder setRequestPort(int port) {
+        /**
+         * @param port The node port to set for request
+         * @return The builder itself
+         */
+        public Builder setRequestPort(final int port) {
             requestPort = port;
             return this;
         }
@@ -63,25 +105,57 @@ public class NodeInformation implements Comparable<NodeInformation> {
      * |--------|--------|
      * <p>
      */
-    public enum Location{
+    public enum Location {
         /**
-         * The fusion node.
-         *//**
-         * The fusion node.
+         * The left-up pc.
          */
         LU,
+        /**
+         * The right-up pc.
+         */
         RU,
+        /**
+         * The left-down pc.
+         */
         LD,
+        /**
+         * The right-down pc.
+         */
         RD,
+        /**
+         * The left-up projector.
+         */
         LU_P,
+        /**
+         * The right-up projector.
+         */
         RU_P,
+         /**
+         * The left-down projector.
+         */
         LD_P,
+        /**
+         * The right-down projector.
+         */
         RD_P,
-        CONTROLLER, 
+        /**
+         * The controller pc.
+         */
+        CONTROLLER,
+        /**
+         * The master pc.
+         */
         MASTER;
-        public static Optional<Location> match(String str) {
+        /**
+         * Picks up a location for specified str by comparing
+         * the location name with argument.
+         * @param name The name to compare
+         * @return The location is equal with str. Oterwise, a empty
+         * optaional class returns.
+         */
+        public static Optional<Location> match(final String name) {
             for (Location location : Location.values()) {
-                if (location.name().compareToIgnoreCase(str) == 0) {
+                if (location.name().compareToIgnoreCase(name) == 0) {
                     return Optional.of(location);
                 }
             }
@@ -101,11 +175,11 @@ public class NodeInformation implements Comparable<NodeInformation> {
      */
     private final String mac;
     /**
-     * Used for request server;
+     * Used for request server.
      */
     private final int reqPort;
     /**
-     * Used for register server;
+     * Used for register server.
      */
     private final int regPort;
     /**
@@ -115,7 +189,8 @@ public class NodeInformation implements Comparable<NodeInformation> {
      */
     public static List<String> listIpV4() throws SocketException {
         List<String> addresses = new LinkedList();
-        Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+        Enumeration<NetworkInterface> nets
+            = NetworkInterface.getNetworkInterfaces();
         Collections
             .list(nets)
             .stream()
@@ -126,19 +201,20 @@ public class NodeInformation implements Comparable<NodeInformation> {
                     .stream()
                     .filter((inetAddress) ->
                             (inetAddress instanceof Inet4Address))
-                    .forEach((inetAddress) -> 
-                        addresses.add(((Inet4Address)inetAddress)
+                    .forEach((inetAddress) ->
+                        addresses.add(((Inet4Address) inetAddress)
                                 .getHostAddress())
                     );
         });
         return addresses;
     }
     /**
-     * Retrieves the node information by comparing the node address with all default
-     * node inforamtions.
+     * Retrieves the node information by comparing the node address
+     * with all default node inforamtions.
      * @param properties NProperties
      * @return The node information
-     * @throws java.net.SocketException
+     * @throws java.net.SocketException If failed to find the IPv4
+     * for local machine
      */
     public static NodeInformation getNodeInformationByAddress(
         final NProperties properties) throws SocketException {
@@ -160,7 +236,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
     }
     /**
      * Retrieves all selectable node information.
-     * @param properties
+     * @param properties NProperties
      * @return All selectable node information
      */
     public static Collection<NodeInformation> getSelectableNodes(
@@ -176,7 +252,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
     }
     /**
      * Retrieves all fusion node information.
-     * @param properties
+     * @param properties NProperties
      * @return All fustion node information
      */
     public static Collection<NodeInformation> getFusionVideoNodes(
@@ -227,7 +303,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
         return get(properties, locations);
     }
     /**
-     * Retrieves the node inforamtions by corresponding locations. 
+     * Retrieves the node inforamtions by corresponding locations.
      * @param properties NProperties
      * @param locations The locations to select the node information
      * @return A collection of node inforamtion
@@ -249,7 +325,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
         return rval;
     }
     /**
-     * Retrieves the node inforamtions by corresponding locations. 
+     * Retrieves the node inforamtions by corresponding locations.
      * @param properties NProperties
      * @param location The locations to select the node information
      * @return The node information
@@ -270,7 +346,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
      * Retrieves the broadcast address with non-loop network.
      * The runtime excpetion will be thrown if there are more than one
      * network interface in this machine.
-     * @param nodeInforation
+     * @param nodeInforation NodeInformation
      * @return The broadcast address
      * @throws SocketException If failed to get the network interface
      */
@@ -281,7 +357,9 @@ public class NodeInformation implements Comparable<NodeInformation> {
         List<String> address = new LinkedList();
         while (interfaces.hasMoreElements()) {
             NetworkInterface networkInterface = interfaces.nextElement();
-            if (networkInterface.isLoopback()) continue;
+            if (networkInterface.isLoopback()) {
+                continue;
+            }
             networkInterface.getInterfaceAddresses()
                 .stream()
                 .filter(interfaceAddress -> {
@@ -296,8 +374,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
         }
         if (address.size() == 1) {
             return address.get(0);
-        }
-        else if (address.isEmpty()) {
+        } else if (address.isEmpty()) {
             throw new RuntimeException("No valid broadcast address");
         } else {
             throw new RuntimeException(
@@ -306,12 +383,13 @@ public class NodeInformation implements Comparable<NodeInformation> {
         }
     }
     /**
-     * Constructs a node information with specified location, address and mac number.
+     * Constructs a node information with specified location,
+     * address and mac number.
      * @param nodeLocation The node location
      * @param nodeAddress The node address
      * @param nodeMacNo The node mac number
-     * @param requestPort
-     * @param registerPort
+     * @param requestPort The port to bind in request server
+     * @param registerPort The port to bind in register server
      */
     public NodeInformation(final Location nodeLocation,
                           final String nodeAddress,
@@ -328,60 +406,58 @@ public class NodeInformation implements Comparable<NodeInformation> {
      * Retrieves the node location.
      * @return The node location
      */
-    public Location getLocation() {
+    public final Location getLocation() {
         return location;
     }
     /**
      * Retrieves the node address.
      * @return The node address
      */
-    public String getIP() {
+    public final String getIP() {
         return ip;
     }
     /**
      * Retrieves the node mac number.
      * @return The node mac number
      */
-    public String getMac() {
+    public final String getMac() {
         return mac;
     }
     /**
      * @return Request port
      */
-    public int getRequestPort() {
+    public final int getRequestPort() {
         return reqPort;
     }
     /**
      * @return Register port
      */
-    public int getRegisterPort() {
+    public final int getRegisterPort() {
         return regPort;
     }
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(final Object obj) {
         if (obj == null) {
             return false;
         }
-        if (obj instanceof NodeInformation) {
-            NodeInformation nodeInformation = (NodeInformation)obj;
-            if (nodeInformation.location == location 
-                    && nodeInformation.ip.compareToIgnoreCase(ip) == 0 
-                    && nodeInformation.mac.compareToIgnoreCase(mac) == 0) {
-                return true;
-            }
+        if (getClass() != obj.getClass()) {
+            return false;
         }
-        return false;
+        NodeInformation nodeInformation = (NodeInformation) obj;
+        return nodeInformation.location == location
+                && nodeInformation.ip.compareToIgnoreCase(ip) == 0
+                && nodeInformation.mac.compareToIgnoreCase(mac) == 0;
     }
     @Override
-    public String toString() {
+    public final String toString() {
         return NProperties.nodeToString(this);
     }
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return toString().hashCode();
     }
     @Override
-    public int compareTo(NodeInformation other) {
+    public final int compareTo(final NodeInformation other) {
         int rval = location.compareTo(other.getLocation());
         if (rval != 0) {
             return rval;

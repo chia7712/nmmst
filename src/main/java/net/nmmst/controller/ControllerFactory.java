@@ -2,44 +2,54 @@ package net.nmmst.controller;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
 import net.nmmst.NConstants;
 import net.nmmst.NProperties;
+import net.nmmst.threads.Closer;
 import net.nmmst.threads.Taskable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
-* Captures all control events and use specified trigger to handle with
-* the control events.
-*/
-public abstract class ControlEvent implements Taskable {
-    public static ControlEvent createControlEvent(
-            final NProperties properties,
-            final List<ControlTrigger> triggerList) {
+ * Captures all control events and use specified trigger to handle
+ * with the control events.
+ */
+public final class ControllerFactory {
+    /**
+     * Handles with the controller data.
+     */
+    public interface Trigger {
+        /**
+         * @param component The controller component
+         */
+        void triggerOff(Component component);
+        /**
+         * @return The type of control trigger
+         */
+        Controller.Type getType();
+    }
+    /**
+     * Invokes all triggers with a inner listener which provides
+     * the data of I/O device. The inner listener is a thread invoked by
+     * closer.
+     * @param properties NProperties
+     * @param closer Invokes a inner listener thread
+     * @param triggerList The triggers to add
+     */
+    public static void invokeTriggers(final NProperties properties,
+            final Closer closer,
+            final List<ControllerFactory.Trigger> triggerList) {
         if (properties.getBoolean(NConstants.CONTROLLER_ENABLE)) {
-            return new BaseControlEvent(triggerList);
+            closer.invokeNewThread(new BaseControlEvent(triggerList));
         }
-        return new ControlEvent() {
-            @Override
-            public void work() {
-                try {
-                    TimeUnit.SECONDS.sleep(Long.MAX_VALUE);
-                } catch (InterruptedException ex) {
-                }
-            }
-            @Override
-            public void close() {
-            }
-        };
     }
     /**
     * The base implementation for control event.
     */
-   private static class BaseControlEvent extends ControlEvent {
+   private static class BaseControlEvent implements Taskable {
        /**
         * Log.
         */
@@ -52,16 +62,18 @@ public abstract class ControlEvent implements Taskable {
        /**
         * Collects the triggers for handlering with data.
         */
-       private final List<ControlTrigger> triggers = new LinkedList();
+       private final List<ControllerFactory.Trigger> triggers
+            = new LinkedList();
        /**
         * Constructs a control event for monitoring I/O.
         * @param triggerList A list of triggers
         */
-       public BaseControlEvent(final List<ControlTrigger> triggerList) {
+       public BaseControlEvent(
+            final List<ControllerFactory.Trigger> triggerList) {
            triggers.addAll(triggerList);
-           for (Controller controller
-               : ControllerEnvironment.getDefaultEnvironment().getControllers()) {
-               for (ControlTrigger trigger : triggers) {
+           for (Controller controller : ControllerEnvironment
+                   .getDefaultEnvironment().getControllers()) {
+               for (ControllerFactory.Trigger trigger : triggers) {
                    if (controller.getType() == trigger.getType()) {
                        LOG.info("use device : "
                                + controller
@@ -81,7 +93,7 @@ public abstract class ControlEvent implements Taskable {
            }).forEach((controller) -> {
                EventQueue queue = controller.getEventQueue();
                Event event = new Event();
-               while (queue.getNextEvent(event)) {  
+               while (queue.getNextEvent(event)) {
                    triggers.stream()
                        .filter((trigger)
                            -> (controller.getType() == trigger.getType()))
@@ -97,4 +109,9 @@ public abstract class ControlEvent implements Taskable {
            triggers.clear();
        }
    }
+    /**
+     * Can't be instantiated with this ctor.
+     */
+    private ControllerFactory() {
+    }
 }

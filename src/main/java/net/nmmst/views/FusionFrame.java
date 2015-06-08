@@ -14,19 +14,26 @@ import net.nmmst.media.BasePanel;
 import net.nmmst.processor.LinearProcessor;
 import net.nmmst.utils.RegisterUtil;
 import net.nmmst.utils.RequestUtil;
+import net.nmmst.utils.RequestUtil.FusionTestRequest;
 /**
- * The frame for fusion player.
+ * The fusion node plays the movies with fusing the image edge.
  */
-public class FusionFrame {
-    public static void main(String[] args) throws IOException {
+public final class FusionFrame {
+    /**
+     * Invokes a fusion frame.
+     * @param args No use
+     * @throws IOException If failed to open movie
+     */
+    public static void main(final String[] args) throws IOException {
         FusionFrameData frameData = new FusionFrameData();
         final int width = frameData.getNProperties().getInteger(
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final JFrame f = new BaseFrame(frameData);
+        final JFrame f = new VideoFrame(frameData);
+        final Point point = new Point(16, 16);
         f.setCursor(f.getToolkit().createCustomCursor(
-                new ImageIcon("").getImage(),new Point(16, 16),""));
+                new ImageIcon("").getImage(), point, ""));
         SwingUtilities.invokeLater(() -> {
             if (width <= 0 || height <= 0) {
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -39,9 +46,19 @@ public class FusionFrame {
             f.setVisible(true);
         });
     }
-    public static class FusionFrameData extends BaseFrameData {
+    /**
+     * Data of fusion nodes.
+     */
+    private static class FusionFrameData extends VideoData {
+        /**
+         * Media components.
+         */
         private final MediaWorker media;
-        public FusionFrameData() throws IOException {
+        /**
+         * Constructs the data with specified media.
+         * @throws IOException If failed to open movies
+         */
+        FusionFrameData() throws IOException {
             media = MediaWorker.createMediaWorker(
                 getNProperties(), getCloser(),
                 ProcessorFactory.createFrameProcessor(
@@ -51,9 +68,9 @@ public class FusionFrame {
             getFunctions().put(RequestUtil.RequestType.FUSION_TEST,
                 (FrameData data, RequestUtil.Request request)
                 -> {
-                    if (request instanceof RequestUtil.FusionTestRequest) {
+                    if (request.getClass() == FusionTestRequest.class) {
                         RequestUtil.FusionTestRequest fusionReq
-                                = (RequestUtil.FusionTestRequest)request;
+                                = (RequestUtil.FusionTestRequest) request;
                         BufferedImage image = fusionReq.getImage();
                         LinearProcessor processor
                             = new LinearProcessor(
@@ -72,5 +89,14 @@ public class FusionFrame {
         public MediaWorker getMediaWorker() {
             return media;
         }
+        @Override
+        public void setNextFlow(final int index) {
+            media.setNextFlow(index);
+        }
+    }
+    /**
+     * Can't be instantiated with this ctor.
+     */
+    private FusionFrame() {
     }
 }

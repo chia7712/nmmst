@@ -31,6 +31,9 @@
 
 -->
 <suppressions>
-      <suppress checks="." files="net.nmmst.EdgeTest"/>
-      <suppress checks="." files="net.nmmst.MovieSnapshoter"/>
+      <suppress checks="MagicNumberCheck" files="net.nmmst.controller.DioBdaq"/>
+      <suppress checks="MagicNumberCheck" files="net.nmmst.utils.WolUtil"/>
+      <suppress checks="MagicNumberCheck" files="net.nmmst.utils.ProjectorUtil"/>
+      <suppress checks="MagicNumberCheck" files="net.nmmst.processor.ProcessorFactory"/>
+      <suppress checks="MagicNumberCheck" files="net.nmmst.processor.LinearProcessor"/>
 </suppressions>

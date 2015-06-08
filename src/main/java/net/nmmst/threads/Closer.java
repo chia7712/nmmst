@@ -12,7 +12,7 @@ public interface Closer extends Closeable {
      * @param task The executed task
      * @return The task
      */
-    public <T extends Taskable> T invokeNewThread(final T task);
+    <T extends Taskable> T invokeNewThread(final T task);
     /**
      * Invokes an new thread for executing the task.
      * @param <T> A subclass of {@link Taskable}
@@ -20,12 +20,12 @@ public interface Closer extends Closeable {
      * @param timer Execution period
      * @return The task
      */
-    public <T extends Taskable> T invokeNewThread(
+    <T extends Taskable> T invokeNewThread(
             final T task, final Timer timer);
     @Override
-    public void close();
+    void close();
     /**
      * @return true if we should stop thread
      */
-    public boolean isClosed();
+    boolean isClosed();
 }

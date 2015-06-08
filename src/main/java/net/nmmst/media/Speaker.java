@@ -9,7 +9,7 @@ import javax.sound.sampled.SourceDataLine;
 /**
  * Audio output.
  */
-public class Speaker implements Closeable {
+public final class Speaker implements Closeable {
     /**
      * Control the audio using standard java library.
      */
@@ -17,7 +17,7 @@ public class Speaker implements Closeable {
     /**
      * Construct a speaker by audio format.
      * @param audioFormat Audio format
-     * @throws LineUnavailableException if failed to open audio output 
+     * @throws LineUnavailableException if failed to open audio output
      */
     public Speaker(final AudioFormat audioFormat)
             throws LineUnavailableException {
@@ -25,7 +25,7 @@ public class Speaker implements Closeable {
                 = new DataLine.Info(SourceDataLine.class, audioFormat);
         line = (SourceDataLine) AudioSystem.getLine(info);
         line.open(audioFormat);
-        line.start();	
+        line.start();
     }
     /**
      * Writes the audio data.
@@ -33,8 +33,8 @@ public class Speaker implements Closeable {
      */
     public void write(final byte[] data) {
         int count = 0;
-        while ((count += line.write(data, count, data.length - count))
-                != data.length) {
+        while (count != data.length) {
+            count += line.write(data, count, data.length - count);
         }
     }
     /**
@@ -51,7 +51,7 @@ public class Speaker implements Closeable {
      */
     public void drain() {
         line.drain();
-    }	
+    }
     /**
      * Flushes queued data from the line.
      * @see #drain()
@@ -60,7 +60,7 @@ public class Speaker implements Closeable {
         line.flush();
     }
     @Override
-    public void close() {
+    public  void close() {
         line.drain();
         line.close();
     }

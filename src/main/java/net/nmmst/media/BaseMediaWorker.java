@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.LineUnavailableException;
 import net.nmmst.processor.FrameProcessor;
 import net.nmmst.threads.AtomicCloser;
-import net.nmmst.threads.BaseTimer;
 import net.nmmst.threads.Closer;
 import net.nmmst.threads.Taskable;
 import net.nmmst.NConstants;
@@ -25,32 +24,72 @@ import org.slf4j.LoggerFactory;
  * and {@link net.nmmst.player.Speaker} as the audio output.
  */
 class BaseMediaWorker implements MediaWorker {
+    /**
+     * Log.
+     */
     private static final Logger LOG
             = LoggerFactory.getLogger(BaseMediaWorker.class);
+    /**
+     * Includes audio output, video output and decoder.
+     */
     private static final int THREAD_NUMBER = 3;
+    /**
+     * Initial image is drawn in the beginning of this media.
+     */
     private final BufferedImage initImage;
+    /**
+     * Frame processor.
+     */
     private final Optional<FrameProcessor> processor;
+    /**
+     * Image output.
+     */
     private final BasePanel panel;
-    private final MovieInfo movieOrder;
+    /**
+     * Movie info provides the order and information.
+     */
+    private final MovieInfo movieInfo;
+    /**
+     * Movie buffer.
+     */
     private final MovieBuffer buffer;
+    /**
+     * Working flag.
+     */
     private final AtomicBoolean working = new AtomicBoolean(false);
+    /**
+     * Thread pool.
+     */
     private ExecutorService service;
+    /**
+     * A reference to reader is used for modifying the play order.
+     * @see #setNextFlow(int)
+     */
     private MovieReader reader;
+    /**
+     * Closer.
+     */
     private AtomicCloser curCloser;
+    /**
+     * Constructs a media worker for specified properties,
+     * closer and frame processor.
+     * @param properties NProperties
+     * @param closer Closer
+     * @param frameProcessor FrameProcessor
+     * @throws IOException If failed to create movie info
+     */
     public BaseMediaWorker(final NProperties properties, final Closer closer,
             final FrameProcessor frameProcessor
             ) throws IOException {
-        movieOrder = new MovieInfo(properties);
+        movieInfo = new MovieInfo(properties);
         buffer = BufferFactory.createMovieBuffer(properties);
         processor = Optional.ofNullable(frameProcessor);
         buffer.setPause(true);
         initImage = Painter.getFillColor(
             properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
-            properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),   
+            properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
             Color.BLACK);
         panel = new BasePanel(initImage, BasePanel.Mode.FILL);
-        closer.invokeNewThread(new Checker(buffer),
-                new BaseTimer(TimeUnit.SECONDS, 5));
         closer.invokeNewThread(new Taskable() {
             @Override
             public void init() {
@@ -77,7 +116,7 @@ class BaseMediaWorker implements MediaWorker {
         }, null);
     }
     @Override
-    public void setNextFlow(int movieIndex) {
+    public void setNextFlow(final int movieIndex) {
         if (reader != null) {
             reader.setNextFlow(movieIndex);
         }
@@ -87,7 +126,7 @@ class BaseMediaWorker implements MediaWorker {
         return buffer;
     }
     @Override
-    public void setPause(boolean enable) {
+    public void setPause(final boolean enable) {
         buffer.setPause(enable);
     }
     @Override
@@ -98,12 +137,15 @@ class BaseMediaWorker implements MediaWorker {
             buffer.clear();
         }
     }
+    /**
+     * Initializes all threads only if this media isn't working.
+     */
     private void initializeMediaThreads() {
         if (working.compareAndSet(false, true)) {
             service = Executors.newFixedThreadPool(THREAD_NUMBER);
             curCloser = new AtomicCloser();
             reader = new MovieReader(
-                    curCloser, buffer, movieOrder, processor);
+                    curCloser, buffer, movieInfo, processor);
             service.execute(reader);
             service.execute(new PanelThread(
                     curCloser, buffer, panel, processor));
@@ -117,37 +159,47 @@ class BaseMediaWorker implements MediaWorker {
     public BasePanel getPanel() {
         return panel;
     }
-    private static class Checker implements Taskable {
-        private final BufferMetrics metrics;
-        public Checker(final BufferMetrics bufferMetrics) {
-            metrics = bufferMetrics;
-        }
-        @Override
-        public void work() {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(metrics.getFrameNumber()
-                        + " frames, " + metrics.getSampleNumber()
-                        + " samples, " 
-                        + (metrics.getHeapSize() / (1024 * 1024)) + " MB");
-            }
-        }
-    }
+    /**
+     * A thread for decoding the media.
+     */
     private static class MovieReader implements Runnable {
+        /**
+         * A movie buffer to write.
+         */
         private final MovieBuffer buffer;
+        /**
+         * This processor modify the frame after decode the frame.
+         */
         private final Optional<FrameProcessor> processor;
+        /**
+         * A closer is used to close this thread.
+         */
         private final AtomicCloser closer;
+        /**
+         * A play flow.
+         */
         private final MovieInfo.PlayFlow playFlow;
-        public MovieReader(final AtomicCloser atomicCloser,
+        /**
+         * Constructs a reader for decoding a list of media.
+         * @param atomicCloser Close
+         * @param movieBuffer Movie buffer
+         * @param movieInfo Movie info provides the play order
+         * @param frameProcessor Frame processor
+         */
+        MovieReader(final AtomicCloser atomicCloser,
                 final MovieBuffer movieBuffer,
-                final MovieInfo movieOrder,
+                final MovieInfo movieInfo,
                 final Optional<FrameProcessor> frameProcessor) {
             closer = atomicCloser;
             buffer = movieBuffer;
             processor = frameProcessor;
-            playFlow = movieOrder.createPlayFlow();
+            playFlow = movieInfo.createPlayFlow();
         }
-        
-        public void setNextFlow(int movieIndex) {
+        /**
+         * Sets the next movie index.
+         * @param movieIndex Movie index
+         */
+        void setNextFlow(final int movieIndex) {
             playFlow.setNextFlow(movieIndex);
         }
         @Override
@@ -163,8 +215,8 @@ class BaseMediaWorker implements MediaWorker {
                                 return;
                             }
                             MovieStream.Type type = stream.readNextType();
-                            switch(type) {
-                                case VIDEO: 
+                            switch (type) {
+                                case VIDEO:
                                     Optional<Frame> frame
                                         = stream.getFrame()
                                             .flatMap(f -> processor.flatMap(
@@ -173,7 +225,7 @@ class BaseMediaWorker implements MediaWorker {
                                         buffer.writeFrame(frame.get());
                                     }
                                     break;
-                                case AUDIO: 
+                                case AUDIO:
                                     Optional<Sample> sample
                                         = stream.getSample();
                                     if (sample.isPresent()) {
@@ -189,18 +241,43 @@ class BaseMediaWorker implements MediaWorker {
                 }
                 buffer.writeFrame(new Frame());
                 buffer.writeSample(new Sample());
-            } catch(InterruptedException | IOException e) {
+            } catch (InterruptedException | IOException e) {
                 LOG.error(e.getMessage() + "MovieReader is interrupted");
             }
         }
     }
+    /**
+     * A thread for writing frame data.
+     */
     private static class PanelThread implements Runnable {
+        /**
+         * Controls the sleep period for play video regularly.
+         */
         private final Sleeper sleeper = new Sleeper(0);
+        /**
+         * Movie buffer.
+         */
         private final MovieBuffer buffer;
+        /**
+         * Image output.
+         */
         private final BasePanel panel;
+        /**
+         * A closer is used for closing this thread.
+         */
         private final AtomicCloser closer;
+        /**
+         * A frame/image processor.
+         */
         private final Optional<FrameProcessor> processor;
-        public PanelThread(final AtomicCloser atomicCloser,
+        /**
+         * Constructs a thread for drawing the frame.
+         * @param atomicCloser Closer
+         * @param movieBuffer Movie buffer
+         * @param basePanel Image output
+         * @param frameProcessor Frame/Image processor
+         */
+        PanelThread(final AtomicCloser atomicCloser,
                 final MovieBuffer movieBuffer,
                 final BasePanel basePanel,
                 final Optional<FrameProcessor> frameProcessor) {
@@ -231,15 +308,29 @@ class BaseMediaWorker implements MediaWorker {
                     processor.flatMap(p -> p.prePrintPanel(frame.getImage()))
                              .ifPresent(image -> panel.write(image));
                 }
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 LOG.debug(e.getMessage() + "Panel thread is interrupted");
             }
         }
     }
+    /**
+     * A thread for writing audio data.
+     */
     private static class SpeakerThread implements Runnable {
+        /**
+         * Movie buffer.
+         */
         private final MovieBuffer buffer;
+        /**
+         * Closer.
+         */
         private final AtomicCloser closer;
-        public SpeakerThread(final AtomicCloser atomicCloser,
+        /**
+         * Constructs a thread for writing the audio data.
+         * @param atomicCloser Closer
+         * @param movieBuffer Movie buffer
+         */
+        SpeakerThread(final AtomicCloser atomicCloser,
                 final MovieBuffer movieBuffer) {
             closer = atomicCloser;
             buffer = movieBuffer;
@@ -266,7 +357,7 @@ class BaseMediaWorker implements MediaWorker {
                     }
                     spk.write(sample.getData());
                 }
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 LOG.debug(e.getMessage() + "Speak thread is interrupted");
             } catch (LineUnavailableException e) {
                 LOG.debug(e.getMessage());
@@ -275,40 +366,6 @@ class BaseMediaWorker implements MediaWorker {
                     spk.close();
                 }
             }
-        }
-    }
-    /**
-     * Controls the execution period.
-     * @see BackedRunner
-     */
-    private static class Sleeper {
-        private final long tolerance;
-        private long streamStartTime = 0;
-        private long clockStartTime = 0;
-        public Sleeper(final long microTolerance) {
-            tolerance = microTolerance;
-        }
-        public long sleepByTimeStamp(final long streamCurrentTime)
-                throws InterruptedException {
-            if (streamStartTime == 0) {
-                clockStartTime = System.nanoTime();
-                streamStartTime = streamCurrentTime;
-                return 0;
-            }
-            final long clockTimeInterval
-                    = (System.nanoTime() - clockStartTime) / 1000;
-            final long streamTimeInterval
-                    = (streamCurrentTime - streamStartTime);
-            final long microsecondsToSleep
-                    = (streamTimeInterval - (clockTimeInterval + tolerance));
-            if (microsecondsToSleep > 0) {
-                TimeUnit.MICROSECONDS.sleep(microsecondsToSleep);
-            }
-            return microsecondsToSleep;
-        }
-        public void reset() {
-            clockStartTime = 0;
-            streamStartTime = 0;
         }
     }
 }

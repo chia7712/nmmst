@@ -25,21 +25,59 @@ import javax.swing.SwingUtilities;
 import net.nmmst.media.Frame;
 import net.nmmst.media.MovieStream;
 import net.nmmst.media.Sample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Captures the frame of movie.
  */
 public class MovieSnapshoter extends JFrame implements WindowListener {
-    private static final int MOVIE_NUMBER = 4; 
+    /**
+     * Log.
+     */
+    private static final Logger LOG
+            = LoggerFactory.getLogger(MovieSnapshoter.class);
+    /**
+     * Total number of movies.
+     */
+    private static final int MOVIE_NUMBER = 4;
+    /**
+     * Frame width.
+     */
     private static final int DEFAULT_WIDTH = 1024;
+    /**
+     * Frame height.
+     */
     private static final int DEFAULT_HEIGHT = 768;
+    /**
+     * Time scale. For example, the value "1000 * 1000" represents
+     * microsecond.
+     */
     private static final int TIME_SCALE = 1000 * 1000;
+    /**
+     * The fields for filling in movie pathes.
+     */
     private final List<JTextField> pahtFields = new LinkedList();
+    /**
+     * The field for filling in directory path.
+     */
     private final JTextField saveField
             = FusionTuner.setFont(new JTextField("D:\\"));
+    /**
+     * The field for filling in the snapshot moment.
+     */
     private final JTextField timeField
-            = FusionTuner.setFont(new JTextField(5)); 
+            = FusionTuner.setFont(new JTextField(5));
+    /**
+     * Queues the request for snapshoting frame from movies.
+     */
     private final BlockingQueue<Boolean> queue = new LinkedBlockingQueue();
+    /**
+     * Thread pool.
+     */
     private final ExecutorService service = Executors.newSingleThreadExecutor();
+    /**
+     * Constructs a movie snapshotter.
+     */
     public MovieSnapshoter() {
         final JButton btn = FusionTuner.setFont(new JButton("Start"));
         btn.addActionListener(event -> {
@@ -69,50 +107,70 @@ public class MovieSnapshoter extends JFrame implements WindowListener {
                                 files.get(index), index)) {
                             boolean end = false;
                             while (!end) {
-                                switch(stream.readNextType()) {
-                                    case VIDEO: {
-                                        Optional<Frame> frame = stream.getFrame();
+                                switch (stream.readNextType()) {
+                                    case VIDEO:
+                                        Optional<Frame> frame
+                                            = stream.getFrame();
                                         if (frame.isPresent()
                                             && frame.get().getTimestamp()
                                                 >= getTime()) {
-                                            save(frame.get().getImage(), index);
+                                            save(frame.get().getImage(),
+                                                    index);
                                             end = true;
                                         }
                                         break;
-                                    }
-                                    case AUDIO: {
+                                    case AUDIO:
                                         Optional<Sample> sample
                                             = stream.getSample();
-                                    }
                                     default:
                                         break;
                                 }
-                            } 
+                            }
                         }
                     }
                     btn.setEnabled(true);
                 }
             } catch (InterruptedException | IOException e) {
+                LOG.error(e.getMessage());
             }
         });
     }
+    /**
+     * Gets the snapshot moment.
+     * @return The snapshot moment
+     */
     private int getTime() {
         return Integer.valueOf(timeField.getText()) * TIME_SCALE;
     }
-    private void save(BufferedImage image, int index) {
+    /**
+     * Saves the frame.
+     * @param image The image to save
+     * @param index The movie index
+     */
+    private void save(final BufferedImage image, final int index) {
         File f = new File(saveField.getText(), String.valueOf(index));
         try {
             ImageIO.write(image, ".jpg", f);
-        } catch (IOException ex) {
+        } catch (IOException e) {
+            LOG.error(e.getMessage());
         }
     }
+    /**
+     * Retrieves the movie pathes.
+     * @return A list of movie path
+     */
     private List<File> getMoviePathes() {
         return pahtFields.stream()
                          .map(text -> new File(text.getText()))
                          .collect(Collectors.toCollection(ArrayList::new));
     }
-    public static void main(String[] args)
-        throws IOException, InterruptedException {
+    /**
+     * Invokes a JFrame which is used for snapshoting frame of movie.
+     * @param args No use
+     * @throws IOException If failed to open movie file
+     */
+    public static void main(final String[] args)
+        throws IOException {
         JFrame frame = new MovieSnapshoter();
         SwingUtilities.invokeLater(() -> {
             frame.setSize(new Dimension(DEFAULT_WIDTH, DEFAULT_HEIGHT));
@@ -121,25 +179,25 @@ public class MovieSnapshoter extends JFrame implements WindowListener {
         });
     }
     @Override
-    public void windowOpened(WindowEvent e) {
+    public void windowOpened(final WindowEvent e) {
     }
     @Override
-    public void windowClosing(WindowEvent e) {
+    public void windowClosing(final WindowEvent e) {
     }
     @Override
-    public void windowClosed(WindowEvent e) {
+    public final void windowClosed(final WindowEvent e) {
         service.shutdownNow();
     }
     @Override
-    public void windowIconified(WindowEvent e) {
+    public void windowIconified(final WindowEvent e) {
     }
     @Override
-    public void windowDeiconified(WindowEvent e) {
+    public void windowDeiconified(final WindowEvent e) {
     }
     @Override
-    public void windowActivated(WindowEvent e) {
+    public void windowActivated(final WindowEvent e) {
     }
     @Override
-    public void windowDeactivated(WindowEvent e) {
+    public void windowDeactivated(final WindowEvent e) {
     }
 }

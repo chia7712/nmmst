@@ -1,25 +1,25 @@
 package net.nmmst.threads;
 
 import java.io.Closeable;
-import java.io.IOException;
-
-
+/**
+ * A thread interface for doing the loop work.
+ */
 public interface Taskable extends Closeable {
     /**
      * Periodically work.
      */
-    public void work();
+    void work();
     /**
      * Initialize this thread.
      */
-    public default void init() {
+    default void init() {
     }
     /**
      * Clears this object in the end phase.
      */
-    public default void clear() {
+    default void clear() {
     }
     @Override
-    public default void close() {
+    default void close() {
     }
 }

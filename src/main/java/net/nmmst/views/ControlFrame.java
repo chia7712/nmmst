@@ -9,24 +9,32 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import net.nmmst.NConstants;
-import net.nmmst.controller.ControlEvent;
+import net.nmmst.controller.ControllerFactory;
 import net.nmmst.controller.StickTrigger;
 import net.nmmst.controller.WheelTrigger;
 import net.nmmst.media.BasePanel;
 import net.nmmst.media.MediaWorker;
 import net.nmmst.utils.RegisterUtil;
-
-public class ControlFrame {
-    public static void main(String[] args) throws IOException {
+/**
+ * The control node plays the movies and interacts with user.
+ */
+public final class ControlFrame {
+    /**
+     * Invokes a control frame.
+     * @param args No use
+     * @throws IOException If failed to open movie
+     */
+    public static void main(final String[] args) throws IOException {
         ControlFrameData frameData = new ControlFrameData();
         final int width = frameData.getNProperties().getInteger(
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final JFrame f = new BaseFrame(frameData);
+        final JFrame f = new VideoFrame(frameData);
+        final Point point = new Point(16, 16);
         f.addKeyListener(frameData.getKeyListener());
         f.setCursor(f.getToolkit().createCustomCursor(
-                new ImageIcon("").getImage(),new Point(16, 16),""));
+                new ImageIcon("").getImage(), point, ""));
         SwingUtilities.invokeLater(() -> {
             if (width <= 0 || height <= 0) {
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -39,27 +47,55 @@ public class ControlFrame {
             f.setVisible(true);
         });
     }
-    public static class ControlFrameData extends BaseFrameData {
+    /**
+     * The data for control node. It provide a non-fusion media,
+     * wheel and stick trigger which provide the interaction with user.
+     */
+    private static class ControlFrameData extends VideoData {
+        /**
+         * Captures the stick event and interacts with user
+         * for playing the snapshot.
+         */
         private final StickTrigger stickTrigger;
+        /**
+         * Media work.
+         */
         private final MediaWorker media;
+        /**
+         * Captures the wheel event and sends the
+         * {@link net.nmmst.utils.RequestUtil.SelectRequest} to master.
+         */
         private final WheelTrigger wheelTrigger;
+        /**
+         * Displays the snapshot.
+         */
         private final MultiPanelController panelController;
-        public ControlFrameData() throws IOException {
+        /**
+         * Constructs a data of control node.
+         * @throws IOException If failed to open movies.
+         */
+        ControlFrameData() throws IOException {
             stickTrigger = new StickTrigger(getNProperties());
             media = MediaWorker.createMediaWorker(
                 getNProperties(), getCloser(), stickTrigger);
             wheelTrigger = new WheelTrigger(getNProperties(), getCloser(),
                 media);
-            getCloser().invokeNewThread(ControlEvent.createControlEvent(
-                    getNProperties(),
-                    Arrays.asList(stickTrigger, wheelTrigger)));
+            ControllerFactory.invokeTriggers(
+                getNProperties(),
+                getCloser(),
+                Arrays.asList(stickTrigger, wheelTrigger));
             panelController = new MultiPanelController(
                     getNProperties(), getCloser(), media.getPanel(),
                     stickTrigger);
             RegisterUtil.invokeReporter(getCloser(),
                     getNodeInformation(), media.getMovieBuffer());
         }
-        public KeyListener getKeyListener() {
+        /**
+         * Retrieves the key listener whihc is come from {@link StickTrigger}
+         * and {@link WheelTrigger}.
+         * @return The key listener
+         */
+        KeyListener getKeyListener() {
             return panelController;
         }
         @Override
@@ -70,5 +106,14 @@ public class ControlFrame {
         public MediaWorker getMediaWorker() {
             return media;
         }
+        @Override
+        public void setNextFlow(final int index) {
+            media.setNextFlow(index);
+        }
+    }
+    /**
+     * Can't be instantiated with this ctor.
+     */
+    private ControlFrame() {
     }
 }

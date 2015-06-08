@@ -9,14 +9,27 @@ import org.slf4j.LoggerFactory;
 /**
  * Inherits the methods of {@link java.awt.event.WindowListener}.
  * The purpose of this class is to focus subclass to implement
- * {@link java.awt.event.WindowListener#windowClosed(java.awt.event.WindowEvent)}
+ * {@link java.awt.event.WindowListener#windowClosed(
+ * java.awt.event.WindowEvent)}
  */
-public class BaseFrame
+public final class VideoFrame
     extends JFrame implements WindowListener {
+    /**
+     * Log.
+     */
     private static final Logger LOG
-            = LoggerFactory.getLogger(BaseFrame.class);
+            = LoggerFactory.getLogger(VideoFrame.class);
+    /**
+     * Frame data.
+     */
     private final FrameData data;
-    public BaseFrame(final FrameData frameData) {
+    /**
+     * Constructs a base frame with specified frame data.
+     * A thread is invoked for handleing with request by executeing
+     * the request function.
+     * @param frameData Frame data
+     */
+    public VideoFrame(final FrameData frameData) {
         data = frameData;
         add(data.getMainPanel());
         data.getCloser().invokeNewThread(() -> {
@@ -33,29 +46,33 @@ public class BaseFrame
             }
         });
     }
-    protected final FrameData getData() {
+    /**
+     * Retrieves a frame data.
+     * @return Frame data
+     */
+    protected  FrameData getData() {
         return data;
     }
     @Override
-    public final void windowClosed(WindowEvent e) {
+    public void windowClosed(final WindowEvent e) {
         data.getCloser().close();
     }
     @Override
-    public void windowOpened(WindowEvent e) {
+    public void windowOpened(final WindowEvent e) {
     }
     @Override
-    public void windowClosing(WindowEvent e) {
+    public void windowClosing(final WindowEvent e) {
     }
     @Override
-    public void windowIconified(WindowEvent e) {
+    public void windowIconified(final WindowEvent e) {
     }
     @Override
-    public void windowDeiconified(WindowEvent e) {
+    public void windowDeiconified(final WindowEvent e) {
     }
     @Override
-    public void windowActivated(WindowEvent e) {
+    public void windowActivated(final WindowEvent e) {
     }
     @Override
-    public void windowDeactivated(WindowEvent e) {
+    public void windowDeactivated(final WindowEvent e) {
     }
 }

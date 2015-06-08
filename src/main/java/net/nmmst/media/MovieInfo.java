@@ -15,23 +15,27 @@ import net.nmmst.NProperties;
  * Control the order of movies. Each movie has a skip tag to indicate whether
  * this movie should be skiped. So we can control the play flow by setting
  * the skip flag for each movie.
+ * @see MediaWorker
  */
-public class MovieInfo {
+public final class MovieInfo {
     /**
      * Maintains the movie file. Key is the movie index.
      */
-    private final TreeMap<Integer, MovieAttributeWrapper> movieMap = new TreeMap();
+    private final TreeMap<Integer, MovieAttributeClone> movieMap
+            = new TreeMap();
     /**
-     * Maintains the movie order. Key is the play sequenece which is incremental.
+     * Maintains the movie order.
+     * Key is the play sequenece which is incremental.
      */
-    private final Map<Integer, MovieAttributeWrapper> playOrder = new TreeMap();
+    private final Map<Integer, MovieAttributeClone> playOrder
+            = new TreeMap();
     /**
      * Constructs the movie order for specifed file list getted from properties.
      * The specified key is {@link NConstants#MOVIE_PATH}
      * @param properties NProperties
      * @throws java.io.IOException If failed to open movie file
      */
-    public MovieInfo(NProperties properties) throws IOException {
+    public MovieInfo(final NProperties properties) throws IOException {
         this(properties.getStrings(NConstants.MOVIE_PATH),
              properties.getIntegers(NConstants.MOVIE_ORDER));
     }
@@ -48,13 +52,13 @@ public class MovieInfo {
         for (int index = 0; index != movieFiles.size(); ++index) {
             try (MovieStream stream = new MovieStream(
                     movieFiles.get(index), index)) {
-                movieMap.put(index, new MovieAttributeWrapper(stream));
+                movieMap.put(index, new MovieAttributeClone(stream));
             }
         }
         for (Integer index : defaultPlayOrder) {
             if (!movieMap.containsKey(index)) {
                 throw new RuntimeException(
-                    "The movie doesn't exist for index " + index );
+                    "The movie doesn't exist for index " + index);
             }
         }
         int order = 0;
@@ -73,7 +77,14 @@ public class MovieInfo {
     public int size() {
         return movieMap.size();
     }
-    public boolean isIndexExist(int index) {
+    /**
+     * Returns {@code true} if this movie info contains a mapping
+     * for the specified key.
+     * @param index The index whose presence in this map is to be tested
+     * @return {@code true} if this map contains a mapping for the
+     *         specified key
+     */
+    public boolean containsIndex(final int index) {
         return movieMap.containsKey(index);
     }
     /**
@@ -81,32 +92,72 @@ public class MovieInfo {
      * @param index The movie index
      * @return Movie attuibute
      */
-    public Optional<MovieAttribute> getMovieAttribute(int index) {
+    public Optional<MovieAttribute> getMovieAttribute(final int index) {
         return Optional.ofNullable(movieMap.get(index));
     }
+    /**
+     * Clones the movie order.
+     * @return Movie order
+     */
     private Map<Integer, MovieAttribute> cloneOrder() {
         return new TreeMap(playOrder);
     }
+    /**
+     * Creates a play flow with a order.
+     * The {@link PlayFlow}'s order is the same as this movie's.
+     * @return A play flow
+     */
     public PlayFlow createPlayFlow() {
         return new PlayFlow(this);
     }
-    public static class PlayFlow implements Iterator<MovieAttribute> {
-        private final MovieInfo mOrder;
+    /**
+     * The flow for plaing all movie.
+     */
+    public static final class PlayFlow implements Iterator<MovieAttribute> {
+        /**
+         * The movies to play.
+         */
+        private final MovieInfo mInfo;
+        /**
+         * Key is the movie index, and value is the movie attribute.
+         */
         private final Map<Integer, MovieAttribute> playOrder;
+        /**
+         * Synchronize the modification for playOrder.
+         */
         private final Object lock = new Object();
+        /**
+         * Current play ordr.
+         */
         private int currentOrder = 0;
+        /**
+         * Current movie attribute to play.
+         */
         private MovieAttribute attribute = null;
-        public PlayFlow(final MovieInfo movieOrder) {
-            mOrder = movieOrder;
-            playOrder = mOrder.cloneOrder();
+        /**
+         * Constructs a play flow with default order.
+         * @param movieInfo The movie info
+         */
+        public PlayFlow(final MovieInfo movieInfo) {
+            mInfo = movieInfo;
+            playOrder = mInfo.cloneOrder();
         }
-        public void setNextFlow(int index) {
+        /**
+         * Sets the movie index for next order.
+         * @param index The movie index
+         */
+        public void setNextFlow(final int index) {
             setFlow(currentOrder + 1, index);
         }
-        private void setFlow(int order, int index) {
-            synchronized(lock) {
+        /**
+         * Sets the movie index for specified order.
+         * @param order The play order
+         * @param index The movie index
+         */
+        private void setFlow(final int order, final int index) {
+            synchronized (lock) {
                 if (order != currentOrder) {
-                    mOrder.getMovieAttribute(index).ifPresent(m -> {
+                    mInfo.getMovieAttribute(index).ifPresent(m -> {
                         playOrder.put(order, m);
                     });
                 }
@@ -114,7 +165,7 @@ public class MovieInfo {
         }
         @Override
         public boolean hasNext() {
-            synchronized(lock) {
+            synchronized (lock) {
                 try {
                     if (attribute != null) {
                         attribute = null;
@@ -131,12 +182,10 @@ public class MovieInfo {
             return attribute;
         }
     }
-
-     
     /**
-     * Maintains the ref count, file, skip flag.
+     * A clone for specified movie attribute.
      */
-    private static class MovieAttributeWrapper implements MovieAttribute {
+    private static class MovieAttributeClone implements MovieAttribute {
         /**
          * Movid order.
          */
@@ -153,7 +202,11 @@ public class MovieInfo {
          * Movie audio format.
          */
         private final AudioFormat audioFormat;
-        public MovieAttributeWrapper(final MovieAttribute attribute) {
+        /**
+         * Constructs a clone for a movie atrribute.
+         * @param attribute The movie attribute to clone
+         */
+        public MovieAttributeClone(final MovieAttribute attribute) {
             file = attribute.getFile().getAbsoluteFile();
             index = attribute.getIndex();
             duration = attribute.getDuration();

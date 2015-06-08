@@ -21,33 +21,83 @@ import javax.sound.sampled.AudioFormat;
  * @see Frame
  * @see Sample
  */
-public class MovieStream implements MovieAttribute, Closeable {
+public final class MovieStream implements MovieAttribute, Closeable {
     /**
-     * Indicates current decoded type.
+     * Indicates the type for current media.
      */
-    public enum	Type{
+    public enum Type {
+        /**
+         * Video media.
+         */
         VIDEO,
+        /**
+         * Audio media.
+         */
         AUDIO,
+        /**
+         * End of the movie file.
+         * It indicates that no more media can be decoded
+         * for thie MovieStream.
+         */
         EOF
     };
     /**
      * Scales the timestamp to micro base.
      */
     private static final int TIME_SCALE = 1000 * 1000;
+    /**
+     * Packets the audio and video data.
+     */
     private final IPacket packet = IPacket.make();
+    /**
+     * Media container.
+     */
     private final IContainer container;
+    /**
+     * Indexes and coders.
+     */
     private final Map<Integer, IStreamCoder> openedCoders;
+    /**
+     * Image converter.
+     */
     private final IConverter converter;
+    /**
+     * Video data.
+     */
     private final IVideoPicture picture;
+    /**
+     * Index of video stream in movie.
+     */
     private final int videoStreamIndex;
+    /**
+     * Index of audio stream in movie.
+     */
     private final int audioStreamIndex;
+    /**
+     * Movie duration.
+     */
     private final long duration;
+    /**
+     * Audio format of movie.
+     */
     private final AudioFormat audioFormat;
-    private final int movieIndex;
-    private final File movieFile;
+    /**
+     * Index of this movie.
+     */
+    private final int index;
+    /**
+     * Local movie file.
+     */
+    private final File file;
+    /**
+     * Opens the audio and video coders.
+     * @param container The movie container
+     * @return The audio and video coders
+     * @throws IOException If failed to open the coders
+     */
     private static Map<Integer, IStreamCoder> newOpenedCoders(
-            IContainer container) throws IOException {
-        Map<Integer, IStreamCoder> openedCoders	= new HashMap();
+            final IContainer container) throws IOException {
+        Map<Integer, IStreamCoder> openedCoders = new HashMap();
         for (int indexStream = 0;
                 indexStream != container.getNumStreams();
                 ++indexStream) {
@@ -56,17 +106,17 @@ public class MovieStream implements MovieAttribute, Closeable {
             if (coder.isOpen()) {
                 throw new IllegalArgumentException();
             }
-            switch(coder.getCodecType()) {
+            switch (coder.getCodecType()) {
                 case CODEC_TYPE_VIDEO:
                     if (openedCoders.get(indexStream) == null
                             && coder.open(null, null) >= 0) {
-                        openedCoders.put(indexStream, coder);		
+                        openedCoders.put(indexStream, coder);
                     }
                     break;
                 case CODEC_TYPE_AUDIO:
                     if (openedCoders.get(indexStream) == null
                             && coder.open(null, null) >= 0) {
-                        openedCoders.put(indexStream, coder);					
+                        openedCoders.put(indexStream, coder);
                     }
                     break;
                 default:
@@ -78,7 +128,13 @@ public class MovieStream implements MovieAttribute, Closeable {
         }
         return openedCoders;
     }
-    private static IContainer newIContainer(String moviePath)
+    /**
+     * Creates a container for specified movie path.
+     * @param moviePath The local path of movie
+     * @return A container
+     * @throws IOException If failed to open local file
+     */
+    private static IContainer newIContainer(final String moviePath)
             throws IOException {
         IContainer container = IContainer.make();
         if (container.open(moviePath, IContainer.Type.READ, null) < 0) {
@@ -86,7 +142,17 @@ public class MovieStream implements MovieAttribute, Closeable {
         }
         return container;
     }
-    public MovieStream(File file, int movieIndex) throws IOException {
+    /**
+     * Constructs a movie stream for local file and specified index.
+     * The index should be unique.
+     * @param movieFile The local file
+     * @param movieIndex Movie index
+     * @throws IOException If failed to open movie file
+     */
+    public MovieStream(final File movieFile,
+            final int movieIndex) throws IOException {
+        index = movieIndex;
+        file = movieFile;
         container = newIContainer(file.getAbsolutePath());
         openedCoders = newOpenedCoders(container);
         if (openedCoders.get(0).getCodecType()
@@ -97,25 +163,24 @@ public class MovieStream implements MovieAttribute, Closeable {
             videoStreamIndex = 1;
             audioStreamIndex = 0;
         }
-        duration = (long)((
+        duration = (long) ((
                 openedCoders.get(videoStreamIndex)
                             .getStream()
                             .getTimeBase()
                             .getDouble()
                 * openedCoders.get(videoStreamIndex)
                               .getStream()
-                              .getDuration()) 
+                              .getDuration())
                 * TIME_SCALE);
         audioFormat = new AudioFormat(
             openedCoders.get(audioStreamIndex).getSampleRate(),
-            (int)IAudioSamples.findSampleBitDepth(
+            (int) IAudioSamples.findSampleBitDepth(
                     openedCoders.get(audioStreamIndex).getSampleFormat()),
             openedCoders.get(audioStreamIndex).getChannels(),
-            true, 
-            false
-        );	
+            true,
+            false);
         IStreamCoder coder = openedCoders.get(videoStreamIndex);
-        picture	= IVideoPicture.make(
+        picture = IVideoPicture.make(
                 coder.getPixelType(),
                 coder.getWidth(),
                 coder.getHeight());
@@ -124,10 +189,17 @@ public class MovieStream implements MovieAttribute, Closeable {
                 coder.getHeight(),
                 BufferedImage.TYPE_3BYTE_BGR),
                 picture.getPixelType());
-        this.movieIndex = movieIndex;
-        this.movieFile = file;
+
     }
-    public MovieStream(String moviePath, int movieIndex) throws IOException {
+    /**
+     * Constructs a movie stream for local file and specified index.
+     * The index should be unique.
+     * @param moviePath The path of local file
+     * @param movieIndex Movie index
+     * @throws IOException If failed to open movie file
+     */
+    public MovieStream(final String moviePath,
+            final int movieIndex) throws IOException {
         this(new File(moviePath), movieIndex);
     }
     @Override
@@ -138,23 +210,34 @@ public class MovieStream implements MovieAttribute, Closeable {
     public AudioFormat getAudioFormat() {
         return audioFormat;
     }
+    /**
+     * Retrieves the next media type.
+     * User should call this method before invoking {@link #getFrame()}
+     * and {@link #getSample()}.
+     * @return The type for next media
+     */
     public Type readNextType() {
         if (container.readNextPacket(packet) < 0) {
             return Type.EOF;
         }
         IStreamCoder coder = openedCoders.get(packet.getStreamIndex());
         if (coder == null) {
-            return Type.EOF; 
+            return Type.EOF;
         }
-        switch(coder.getCodecType()) {
+        switch (coder.getCodecType()) {
             case CODEC_TYPE_VIDEO:
                 return Type.VIDEO;
             case CODEC_TYPE_AUDIO:
                 return Type.AUDIO;
-            default: 
+            default:
                 return Type.EOF;
         }
     }
+    /**
+     * @return If the {@link Frame} is decoded successfully,
+     * a optional which maintains a frame will return. Otherwise,
+     * a empty optional will return
+     */
     public Optional<Frame> getFrame() {
         int offset = 0;
         while (offset < packet.getSize()) {
@@ -168,12 +251,17 @@ public class MovieStream implements MovieAttribute, Closeable {
                                     * picture.getTimeBase().getDouble()
                                     * TIME_SCALE),
                             converter.toImage(picture)));
-                }							
+                }
             }
             return Optional.empty();
-        }	
+        }
         return Optional.empty();
     }
+    /**
+     * @return If the {@link Sample} is decoded successfully,
+     * a optional which maintains a frame will return. Otherwise,
+     * a empty optional will return
+     */
     public Optional<Sample> getSample() {
         IAudioSamples samples = IAudioSamples.make(
                 packet.getSize(),
@@ -190,7 +278,7 @@ public class MovieStream implements MovieAttribute, Closeable {
                 }
             }
             return Optional.empty();
-        }	
+        }
         return Optional.empty();
     }
     @Override
@@ -201,15 +289,18 @@ public class MovieStream implements MovieAttribute, Closeable {
         openedCoders.clear();
         container.close();
     }
+    /**
+     * @return If the coders are closed, the {@code true} will return
+     */
     public boolean isClosed() {
         return openedCoders.isEmpty();
     }
     @Override
     public int getIndex() {
-        return movieIndex;
+        return index;
     }
     @Override
     public File getFile() {
-        return movieFile;
+        return file;
     }
 }

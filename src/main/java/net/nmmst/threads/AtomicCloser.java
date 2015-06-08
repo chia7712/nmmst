@@ -12,8 +12,11 @@ import org.slf4j.LoggerFactory;
  * Instantiate a closer with atomic method.
  */
 public class AtomicCloser implements Closer {
+    /**
+     * Log.
+     */
     private static final Logger LOG
-            = LoggerFactory.getLogger(AtomicCloser.class);  
+            = LoggerFactory.getLogger(AtomicCloser.class);
     /**
      * Indicates closable state.
      */
@@ -29,11 +32,11 @@ public class AtomicCloser implements Closer {
     private final List<Taskable> tasks
             = Collections.synchronizedList(new LinkedList());
     @Override
-    public <T extends Taskable> T invokeNewThread(final T task) {
+    public final <T extends Taskable> T invokeNewThread(final T task) {
         return invokeNewThread(task, null);
     }
     @Override
-    public <T extends Taskable> T invokeNewThread(
+    public final <T extends Taskable> T invokeNewThread(
             final T task, final Timer timer) {
         if (isClosed()) {
             throw new RuntimeException("AtomicCloser is closed");
@@ -42,13 +45,14 @@ public class AtomicCloser implements Closer {
         service.execute(() -> {
             try {
                 task.init();
-                while(!isClosed() && !Thread.interrupted()) {
+                while (!isClosed() && !Thread.interrupted()) {
                     task.work();
                     if (timer != null) {
                         timer.sleep();
                     }
                 }
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
+                LOG.error(e.getMessage());
             } finally {
                 task.clear();
             }
@@ -56,15 +60,14 @@ public class AtomicCloser implements Closer {
         return task;
     }
     @Override
-    public void close() {
+    public final void close() {
         if (closed.compareAndSet(false, true)) {
             service.shutdownNow();
             tasks.stream().forEach(task -> task.close());
-            tasks.clear();
         }
     }
     @Override
-    public boolean isClosed() {
+    public final boolean isClosed() {
         return closed.get();
     }
 }

@@ -3,7 +3,6 @@ package net.nmmst.controller;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -17,24 +16,67 @@ import net.nmmst.NConstants;
 import net.nmmst.NProperties;
 import net.nmmst.utils.Painter;
 /**
- * Draws the oval before printing frame on the panel.
+ * Draws the snapshots before printing frame on the panel.
  */
-public class StickTrigger implements ControlTrigger, FrameProcessor {
+public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
+    /**
+     * Supplies three modes for displaying the current snapshot.
+     */
     private enum SnapshotMode {
+        /**
+         * Full.
+         */
         FULL,
+        /**
+         * Normal. A small snapshot in the right-down.
+         */
         NORMAL,
+        /**
+         * No snapshot.
+         */
         NONE
     }
+    /**
+     * The captured snapshots.
+     */
     private final List<BufferedImage> snapshots = new LinkedList();
-    private final DirectionDetector verticalDector;
-    private final DirectionDetector horizontalDector;
+    /**
+     * Detects the vertical direction.
+     */
+    private final DirectionDetector verticalDetector;
+    /**
+     * Detects the horizontal direction.
+     */
+    private final DirectionDetector horizontalDetector;
+    /**
+     * The max number of captured snapshots.
+     */
     private final int snapshotLimit;
+    /**
+     * The threshold value of press.
+     */
     private final double stickPressValue;
+    /**
+     * The scale of snapshot.
+     */
     private final double snapshotScale;
+    /**
+     * The index of current snapshot.
+     */
     private final AtomicInteger snapshotIndex = new AtomicInteger();
+    /**
+     * The index of current mode.
+     */
     private final AtomicInteger modeIndex
             = new AtomicInteger(SnapshotMode.NORMAL.ordinal());
+    /**
+     * Press flag.
+     */
     private final AtomicBoolean pressed = new AtomicBoolean();
+    /**
+     * Constructs a strick trigger with specified properties.
+     * @param properties NProperties
+     */
     public StickTrigger(final NProperties properties) {
         final double stickMinValue
                 = properties.getDouble(NConstants.STICK_MIN_VALUE);
@@ -44,25 +86,30 @@ public class StickTrigger implements ControlTrigger, FrameProcessor {
                 = properties.getDouble(NConstants.STICK_MIN_INIT_VALUE);
         final double stickMaxInitValue
                 = properties.getDouble(NConstants.STICK_MAX_INIT_VALUE);
-        verticalDector = new DirectionDetector(
+        verticalDetector = new DirectionDetector(
                 new Pair(stickMinValue, stickMaxValue),
                 new Pair(stickMinInitValue, stickMaxInitValue));
-        horizontalDector = new DirectionDetector(
+        horizontalDetector = new DirectionDetector(
                 new Pair(stickMinValue, stickMaxValue),
                 new Pair(stickMinInitValue, stickMaxInitValue));
         stickPressValue = properties.getDouble(NConstants.STICK_PRESS_VALUE);
         snapshotScale = properties.getDouble(NConstants.SNAPSHOT_SCALE);
         snapshotLimit = (int) Math.pow(Math.pow(snapshotScale, -1), 2);
     }
-    public List<BufferedImage> cloneSnapshot() {
+    /**
+     * Clones the current snapshots.
+     * @return A list of snapshots
+     */
+    public final List<BufferedImage> cloneSnapshot() {
         return new ArrayList(snapshots);
     }
     @Override
-    public void init() {
+    public final void init() {
         snapshots.clear();
     }
     @Override
-    public Optional<BufferedImage> prePrintPanel(final BufferedImage image) {
+    public final Optional<BufferedImage> prePrintPanel(
+            final BufferedImage image) {
         if (pressed.compareAndSet(true, false)
                 && snapshots.size() < snapshotLimit) {
             snapshots.add(Painter.process(image, Painter.getCopyPainter()));
@@ -72,34 +119,34 @@ public class StickTrigger implements ControlTrigger, FrameProcessor {
             return Optional.of(image);
         }
         BufferedImage snapshot = snapshots.get(snapshotIndex.get());
-        switch(SnapshotMode.values()[modeIndex.get()]) {
+        switch (SnapshotMode.values()[modeIndex.get()]) {
             case FULL:
                 return Optional.of(snapshot);
             case NORMAL:
-                Graphics2D g = (Graphics2D)image.getGraphics();
+                Graphics2D g = (Graphics2D) image.getGraphics();
                 g.drawImage(
                     snapshot,
                     Math.max(0, image.getWidth()
-                        - (int) ((double)image.getWidth() * snapshotScale)),
+                        - (int) ((double) image.getWidth() * snapshotScale)),
                     Math.max(0, image.getHeight()
-                        - (int) ((double)image.getHeight() * snapshotScale)),
-                    image.getWidth(), 
+                        - (int) ((double) image.getHeight() * snapshotScale)),
+                    image.getWidth(),
                     image.getHeight(),
-                    0, 
-                    0, 
-                    snapshot.getWidth(), 
-                    snapshot.getHeight(), 
+                    0,
+                    0,
+                    snapshot.getWidth(),
+                    snapshot.getHeight(),
                     null);
                 g.dispose();
                 return Optional.of(image);
             default:
-                return Optional.of(image); 
+                return Optional.of(image);
         }
     }
     @Override
-    public void triggerOff(Component component) {
+    public final void triggerOff(final Component component) {
         if (component.getName().contains("X")) {
-            switch(horizontalDector.detect(component.getPollData())) {
+            switch (horizontalDetector.detect(component.getPollData())) {
                 case LARGER:
                     snapshotIndex.accumulateAndGet(snapshotIndex.get() + 1,
                         (int a, int b) -> {
@@ -121,7 +168,7 @@ public class StickTrigger implements ControlTrigger, FrameProcessor {
                 default:
             }
         } else if (component.getName().contains("Y")) {
-            switch(verticalDector.detect(component.getPollData())) {
+            switch (verticalDetector.detect(component.getPollData())) {
                 case LARGER:
                     modeIndex.accumulateAndGet(modeIndex.get() + 1,
                         (int a, int b) -> {
@@ -147,7 +194,7 @@ public class StickTrigger implements ControlTrigger, FrameProcessor {
         }
     }
     @Override
-    public Controller.Type getType() {
+    public final Controller.Type getType() {
         return Controller.Type.STICK;
     }
 }

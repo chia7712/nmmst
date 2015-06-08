@@ -14,10 +14,21 @@ import java.util.Arrays;
 import java.util.List;
 import javax.imageio.ImageIO;
 /**
- * Utility mehods is used for painting some image when no specified image in local disk.
+ * Utility mehods is used for painting some image when no specified image
+ * in local disk.
  */
 public interface Painter {
-    public static BufferedImage loadOrStringImage(
+    /**
+     * Loads a image from the local file.
+     * The path is got from {@link NProperties} for the
+     * specified key. If the path doesn't exisit, a image
+     * drawed with the file name will return.
+     * @param properties NProperties provides the default set
+     * @param key The string to write
+     * @return A image loaded from local file,
+     * or a image drawed with file name
+     */
+    static BufferedImage loadOrStringImage(
             final NProperties properties, final String key) {
         return loadOrStringImage(
             new File(properties.getString(key)),
@@ -25,7 +36,19 @@ public interface Painter {
             properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
             properties.getInteger(NConstants.GENERATED_FONT_SIZE));
     }
-    public static BufferedImage loadOrStringImage(final File file,
+    /**
+     * Loads a image from the local file.
+     * The path is got from {@link NProperties} for the
+     * specified key. If the path doesn't exisit, a image
+     * drawed with the file name will return.
+     * @param file The local file
+     * @param width Image width
+     * @param height Image height
+     * @param fontSize Font size
+     * @return A image loaded from local file,
+     * or a image drawed with file name
+     */
+    static BufferedImage loadOrStringImage(final File file,
                                                  final int width,
                                                  final int height,
                                                  final int fontSize) {
@@ -35,142 +58,72 @@ public interface Painter {
                               height,
                               fontSize);
     }
-    public static BufferedImage loadOrStringImage(final File file,
+    /**
+     * Loads a image from the local file.
+     * The path is got from {@link NProperties} for
+     * the specified key. If the path doesn't exisit, a image
+     * drawed with the file name will return.
+     * @param file The local file
+     * @param string The default string to draw
+     * @param width Image width
+     * @param height Image height
+     * @param fontSize Font size
+     * @return A image loaded from local file,
+     * or a image drawed with file name
+     */
+    static BufferedImage loadOrStringImage(final File file,
                                                  final String string,
                                                  final int width,
                                                  final int height,
                                                  final int fontSize) {
-        BufferedImage image = null; 
-        if (file.exists()) {
-            try {
-                image = ImageIO.read(file);
-            } catch (IOException e) {
-            }
+        BufferedImage image = null;
+        try {
+            return ImageIO.read(file);
+        } catch (IOException e) {
+            return Painter.getStringImage(string, width, height, fontSize);
         }
-        if (image == null) {
-            image = Painter.getStringImage(string, width, height, fontSize);
-        }
-        return image;
     }
-    public abstract BufferedImage paint(final BufferedImage oriImage);
-    public static BufferedImage process(final BufferedImage oriImage,
+    /**
+     * Draws some on the ori image.
+     * @param oriImage Source image
+     * @return The image is processed
+     */
+    BufferedImage paint(final BufferedImage oriImage);
+    /**
+     * Processes the image by a painter.
+     * @param oriImage Source image
+     * @param painter A painter is used for processing the image
+     * @return The image is processed
+     */
+    static BufferedImage process(final BufferedImage oriImage,
                                        final Painter painter) {
         return process(oriImage, Arrays.asList(painter));
     }
-    public static BufferedImage process(final BufferedImage oriImage,
+    /**
+     * Processes the image by the painters.
+     * @param oriImage Source image
+     * @param painters A list of painter is used for processing the image
+     * @return The image is processed
+     */
+    static BufferedImage process(final BufferedImage oriImage,
                                        final List<Painter> painters) {
         BufferedImage dstImage = oriImage;
-        for (Painter filter : painters) {
-            dstImage = filter.paint(dstImage);
+        for (Painter painter : painters) {
+            dstImage = painter.paint(dstImage);
         }
         return dstImage;
     }
-    public static Painter getTypePainter(final int imageType) {
-        return (BufferedImage oriImage) -> {
-            final int width = oriImage.getWidth();
-            final int height = oriImage.getHeight();
-            BufferedImage dstImage = new BufferedImage(
-                    width, height, imageType);
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
-            while (true) {
-                if (g2d.drawImage(oriImage, 0, 0, width, height, null)) {
-                    break;
-                }
-            }
-            g2d.dispose();
-            return dstImage;
-        };
-    }
-
-    public static Painter getMirrorPainter() {
-        return (BufferedImage oriImage) -> {
-            final int width = oriImage.getWidth();
-            final int height = oriImage.getHeight();
-            BufferedImage dstImage = new BufferedImage(
-                    width, height, oriImage.getType());
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
-            while (true) {
-                if (g2d.drawImage(oriImage,
-                        0,
-                        0,
-                        width - 1,
-                        height - 1,
-                        width - 1,
-                        0,
-                        0,
-                        height - 1,
-                        null)) {
-                    break;
-                }
-            }
-            g2d.dispose();
-            return dstImage;
-        };
-    }
-    public static Painter getScalePainter(final double scale) {
-        return (BufferedImage oriImage) -> {
-            final int width = (int)((double)oriImage.getWidth() * scale);
-            final int height = (int)((double)oriImage.getHeight() * scale);
-            BufferedImage dstImage = new BufferedImage(
-                    width, height, oriImage.getType());
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
-            while (true) {
-                if (g2d.drawImage(oriImage, 0, 0, width, height, null)) {
-                    break;
-                }
-            }
-            g2d.dispose();
-            return dstImage;
-        };
-    }
-    public static Painter getScalePainter(final int maxLength) {
-        return (BufferedImage oriImage) -> {
-            final double scale = Math.min(
-                    (double)(maxLength) / (double)oriImage.getWidth(),
-                    (double)(maxLength) / (double)oriImage.getHeight());
-            final int width
-                    = (int)((double)oriImage.getWidth() * scale);
-            final int height
-                    = (int)((double)oriImage.getHeight() * scale);
-            BufferedImage dstImage = new BufferedImage(
-                    width, height, oriImage.getType());
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
-            while (true) {
-                if (g2d.drawImage(oriImage, 0, 0, width, height, null)) {
-                    break;
-                }
-            }
-            g2d.dispose();
-            return dstImage;
-        };
-    }
-    public static Painter getScalePainter(final int dstWidth,
-                                        final int dstHeight) {
-        return (BufferedImage oriImage) -> {
-            BufferedImage dstImage = new BufferedImage(
-                    dstWidth, dstHeight, oriImage.getType());
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
-            while (true) {
-                if (g2d.drawImage(oriImage,
-                        0,
-                        0,
-                        dstWidth,
-                        dstHeight,
-                        null)) {
-                    break;
-                }
-            }
-            g2d.dispose();
-            return dstImage;
-        };
-    }
-    public static Painter getCopyPainter() {
+    /**
+     * Creates a painter for cloneing the image.
+     * @return A painter is able to clone image
+     */
+    static Painter getCopyPainter() {
         return (final BufferedImage oriImage) -> {
-            final int width = oriImage.getWidth();
-            final int height = oriImage.getHeight();
+            int width = oriImage.getWidth();
+            int height = oriImage.getHeight();
             BufferedImage dstImage = new BufferedImage(
                     width, height, oriImage.getType());
-            Graphics2D g2d = (Graphics2D)dstImage.createGraphics();
+            Graphics2D g2d = (Graphics2D) dstImage.createGraphics();
             while (true) {
                 if (g2d.drawImage(oriImage, 0, 0, width, height, null)) {
                     break;
@@ -180,15 +133,30 @@ public interface Painter {
             return dstImage;
         };
     }
-    public static BufferedImage getStringImage(final String str,
+    /**
+     * Creates a image drawed a <code>string</code>.
+     * @param str The string to draw
+     * @param width Image width
+     * @param height Image height
+     * @param fontSize String size
+     * @return A image drawed a <code>string</code>.
+     */
+    static BufferedImage getStringImage(final String str,
             final int width, final int height, final int fontSize) {
         BufferedImage image = new BufferedImage(
                 width, height, BufferedImage.TYPE_3BYTE_BGR);
         return getStringImage(image, str, fontSize);
     }
-    public static BufferedImage getStringImage(final BufferedImage image,
+    /**
+     * Draws the <code>string</code> on the image.
+     * @param image Source image
+     * @param str String to draw
+     * @param fontSize Font size
+     * @return A image with specified string
+     */
+    static BufferedImage getStringImage(final BufferedImage image,
             final String str, final int fontSize) {
-        Graphics2D g2d = (Graphics2D)image.createGraphics();
+        Graphics2D g2d = (Graphics2D) image.createGraphics();
         g2d.setFont(new Font("Serif", Font.BOLD, fontSize));
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString(str,
@@ -197,11 +165,18 @@ public interface Painter {
         g2d.dispose();
         return image;
     }
-    public static BufferedImage getFillColor(final int width, final int height,
+    /**
+     * Creates a image with pure color.
+     * @param width Image width
+     * @param height Image height
+     * @param color The color to draw
+     * @return A image with pure color
+     */
+     static BufferedImage getFillColor(final int width, final int height,
             final Color color) {
         BufferedImage image = new BufferedImage(
                 width, height, BufferedImage.TYPE_3BYTE_BGR);
-        Graphics2D g = (Graphics2D)image.getGraphics();
+        Graphics2D g = (Graphics2D) image.getGraphics();
         g.setColor(color);
         g.fill(new Rectangle(width, height));
         return image;

@@ -10,14 +10,14 @@ public interface FrameProcessor {
     /**
      * Initialzes this processor.
      */
-    public default void init() {
+    default void init() {
     }
     /**
      * Called after decoding a frame.
      * @param frame The frame to decode
      * @return Frame
      */
-    public default Optional<Frame> postDecodeFrame(Frame frame) {
+    default Optional<Frame> postDecodeFrame(Frame frame) {
         return Optional.ofNullable(frame);
     }
     /**
@@ -25,7 +25,7 @@ public interface FrameProcessor {
      * @param image The image to draw
      * @return Image
      */
-    public default Optional<BufferedImage> prePrintPanel(BufferedImage image) {
+    default Optional<BufferedImage> prePrintPanel(BufferedImage image) {
         return Optional.ofNullable(image);
     }
     /**
@@ -33,7 +33,7 @@ public interface FrameProcessor {
      * @param image The image to draw
      * @return Image
      */
-    public default Optional<BufferedImage> playOver(BufferedImage image) {
+    default Optional<BufferedImage> playOver(BufferedImage image) {
         return Optional.ofNullable(image);
     }
 }

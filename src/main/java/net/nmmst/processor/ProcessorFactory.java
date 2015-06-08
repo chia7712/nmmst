@@ -39,7 +39,7 @@ public final class ProcessorFactory {
      */
     public static FrameProcessor createFrameProcessor(
             final NodeInformation.Location location) {
-        switch(location) {
+        switch (location) {
             case LU:
                 return new LinearProcessor(location,
                         new LinearProcessor.Factor(
@@ -49,7 +49,7 @@ public final class ProcessorFactory {
                             0.9,
                             0.6,
                             0.9
-                )); 
+                ));
             case RU:
                 return new LinearProcessor(location,
                         new LinearProcessor.Factor(
@@ -59,7 +59,7 @@ public final class ProcessorFactory {
                             0.9,
                             0.6,
                             0.9
-                )); 
+                ));
             case LD:
                 return new LinearProcessor(location,
                         new LinearProcessor.Factor(
@@ -69,7 +69,7 @@ public final class ProcessorFactory {
                             0.9,
                             0.6,
                             0.9
-                )); 
+                ));
             case RD:
                 return new LinearProcessor(location,
                         new LinearProcessor.Factor(
@@ -79,9 +79,9 @@ public final class ProcessorFactory {
                             0.9,
                             0.6,
                             0.9
-                )); 
+                ));
             default:
-               return new LinearProcessor(location, GRAY_FORMTA); 
+               return new LinearProcessor(location, GRAY_FORMTA);
         }
     }
     /**

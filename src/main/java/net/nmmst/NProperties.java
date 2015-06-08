@@ -14,13 +14,15 @@ import javafx.util.Pair;
 import net.nmmst.NodeInformation.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+/**
+ * Provides access to configuration parameters.
+ */
 public class NProperties {
     /**
      * Log.
      */
     private static final Logger LOG
-            = LoggerFactory.getLogger(NProperties.class);  
+            = LoggerFactory.getLogger(NProperties.class);
     /**
      * The default width of frame.
      */
@@ -86,13 +88,28 @@ public class NProperties {
     private static final List<Integer> MOVIE_ORDER
         = Arrays.asList(0, 1, 3, 4, 6);
     /**
-     * The movie index and it's selectable index.
+     * The selectable movie indexes.
+     */
+    private static final int[] SELECTABLE_IDNEX = {0, 3};
+    /**
+     * The selected movie indexes.
+     * In default, the number of selected index is two.
+     */
+    private static final int[][] SELECTED_INDEX = {{1, 2}, {4, 5}};
+    /**
+     * The selectable movie index and it's selected index.
      */
     private static final Map<Integer, Pair<Integer, Integer>> MOVIE_SELECT
         = new TreeMap();
     static {
-        MOVIE_SELECT.put(0, new Pair(1, 2));
-        MOVIE_SELECT.put(3, new Pair(4, 5));
+        final int firstIndex = 0;
+        final int secondIndex = 1;
+        for (int index = 0; index != SELECTABLE_IDNEX.length
+            && index != SELECTED_INDEX.length; ++index) {
+            MOVIE_SELECT.put(SELECTABLE_IDNEX[index],
+                    new Pair(SELECTED_INDEX[index][firstIndex],
+                             SELECTED_INDEX[index][secondIndex]));
+        }
     }
     /**
      * The node information includes fusion nodes, control node, master node
@@ -213,7 +230,7 @@ public class NProperties {
      */
     private static final double SNAPSHOT_SCALE = 0.25;
     /**
-     * Indicates whether wheel and stick are enable. 
+     * Indicates whether wheel and stick are enable.
      */
     private static final boolean CONTROLLER_ENABLE = true;
     /**
@@ -251,30 +268,30 @@ public class NProperties {
         this(new File(NProperties.class.getName()));
     }
     /**
-     * Initializes a newly created NProperties object so that it represents the same
-     * properties as the argument
+     * Initializes a newly created NProperties object so that it represents
+     * the same properties as the argument.
      * @param nproperties Another properties
      */
-    public NProperties(NProperties nproperties) {
+    public NProperties(final NProperties nproperties) {
         properties = new Properties(nproperties.properties);
     }
     /**
-     * Initializes a newly created NProperties object so that it loads the properties
-     * from the local file.
+     * Initializes a newly created NProperties object so that it loads
+     * the properties from the local file.
      * @param propertyFile The properties file
      */
-    public NProperties(File propertyFile) {
+    public NProperties(final File propertyFile) {
         properties = new Properties();
         init(propertyFile);
     }
     /**
-     * Returns a string list to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a string list to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A string list to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public List<String> getStrings(final String key) {
+    public final List<String> getStrings(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -282,13 +299,13 @@ public class NProperties {
         return Arrays.asList(value.split(DIVIDER_FIRST));
     }
     /**
-     * Returns a boolean value to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a boolean value to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A boolean value to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public boolean getBoolean(final String key) {
+    public final boolean getBoolean(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -296,13 +313,13 @@ public class NProperties {
         return Boolean.valueOf(value);
     }
     /**
-     * Returns a double value to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a double value to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A double value to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public double getDouble(final String key) {
+    public final double getDouble(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -310,13 +327,13 @@ public class NProperties {
         return Double.valueOf(value);
     }
     /**
-     * Returns a long value to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a long value to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A long value to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public long getLong(final String key) {
+    public final long getLong(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -324,26 +341,26 @@ public class NProperties {
         return Long.valueOf(value);
     }
     /**
-     * Returns a integer list to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a integer list to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A integer list to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public List<Integer> getIntegers(final String key) {
+    public final List<Integer> getIntegers(final String key) {
         List<Integer> rval = new LinkedList();
         getStrings(key).stream()
                        .forEach(value -> rval.add(Integer.valueOf(value)));
         return rval;
     }
     /**
-     * Returns a int value to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a int value to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A int value to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public int getInteger(final String key) {
+    public final int getInteger(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -351,13 +368,13 @@ public class NProperties {
         return Integer.valueOf(value);
     }
     /**
-     * Returns a string to which the specified key is mapped, or RuntimeException if this
-     * properties contains no mapping for the key.
+     * Returns a string to which the specified key is mapped,
+     * or RuntimeException if this properties contains no mapping for the key.
      * @param key The key whose associated value is to be returned
      * @return A string to which the specified key is mapped,
      * or RuntimeException if this properties contains no mapping for the key.
      */
-    public String getString(String key) {
+    public final String getString(final String key) {
         String value = properties.getProperty(key);
         if (value == null) {
             throw throwException(key);
@@ -505,6 +522,11 @@ public class NProperties {
             LOG.error(ex.getMessage());
         }
     }
+    /**
+     * Converts a {@link NodeInformation} to a {@code string}.
+     * @param node The {@link NodeInformation} to convert
+     * @return A {@code string} is got from node information
+     */
     public static String nodeToString(final NodeInformation node) {
         StringBuilder builder = new StringBuilder();
         return builder.append(node.getLocation())
@@ -518,6 +540,11 @@ public class NProperties {
                       .append(node.getRegisterPort())
                       .toString();
     }
+    /**
+     * Converts a  {@code string} to a list of {@link NodeInformation}.
+     * @param str The {@code string} to convert
+     * @return A list of {@link NodeInformation}.
+     */
     public static List<NodeInformation> stringToNodes(final String str) {
         List<NodeInformation> nodes = new LinkedList();
         final int locationIndex = 0;
@@ -536,6 +563,11 @@ public class NProperties {
         }
         return nodes;
     }
+    /**
+     * Converts a list of {@link NodeInformation} to a {@code string}.
+     * @param nodes A list of {@link NodeInformation}  to convert
+     * @return A {@code string} is created by list of {@link NodeInformation}
+     */
     public static String nodesToString(final List<NodeInformation> nodes) {
         StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
         nodes.stream().forEach((node) -> {
@@ -544,6 +576,11 @@ public class NProperties {
         });
         return builder.toString();
     }
+    /**
+     * Converts a list of {@link File} to a {@code string}.
+     * @param movieList A list of {@link File}  to convert
+     * @return A {@code string} is created by a list of {@link File}
+     */
     public static String moviesToString(
             final List<File> movieList) {
         StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
@@ -553,6 +590,11 @@ public class NProperties {
         });
         return builder.toString();
     }
+    /**
+     * Converts the play order to a list of {@code String}.
+     * @param orderList The play order
+     * @return A {@code String} is created by play order
+     */
     public static String orderToString(
             final List<Integer> orderList) {
         StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
@@ -562,6 +604,12 @@ public class NProperties {
         });
         return builder.toString();
     }
+    /**
+     * Converts a {@code String} to a map of selectable movie index
+     * and selected movie index.
+     * @param str A map of selectable movie index and selected movie index
+     * @return A map of selectable movie index and selected movie index
+     */
     public static Map<Integer, Pair<Integer, Integer>> stringToSelectable(
         final String str) {
         Map<Integer, Pair<Integer, Integer>> selectable
@@ -577,6 +625,11 @@ public class NProperties {
         }
         return selectable;
     }
+    /**
+     * Converts a list of play order to a {@code string}.
+     * @param movieSelectable A list of play order to convert
+     * @return A {@code string} is created by a list of play order
+     */
     public static String selectableToString(
             final Map<Integer, Pair<Integer, Integer>> movieSelectable) {
         StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);

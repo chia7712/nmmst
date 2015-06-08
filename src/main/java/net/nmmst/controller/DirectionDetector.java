@@ -12,16 +12,48 @@ import javafx.util.Pair;
  * @see OvalTrigger
  */
 public class DirectionDetector {
-    public enum Mode {
+    /**
+     * Value trend.
+     */
+    public enum Trend {
+        /**
+         * Larger.
+         */
         LARGER,
+        /**
+         * Smaller.
+         */
         SMALLER,
+        /**
+         * No change.
+         */
         NONE;
     }
+    /**
+     * Max threshold.
+     */
     private final double maxValue;
+    /**
+     * Min threshold.
+     */
     private final double minValue;
+    /**
+     * Max init value.
+     */
     private final double maxInit;
+    /**
+     * Min init value.
+     */
     private final double minInit;
+    /**
+     * Initialized flag.
+     */
     private boolean initialized = true;
+    /**
+     * A detector with specified thresholds.
+     * @param directionLimit Max and min threshold
+     * @param initLimit Intial limit
+     */
     public DirectionDetector(final Pair<Double, Double> directionLimit,
                            final Pair<Double, Double> initLimit) {
         maxValue = Math.max(directionLimit.getKey(),
@@ -33,18 +65,23 @@ public class DirectionDetector {
         minInit = Math.min(initLimit.getKey(),
                             initLimit.getValue());
     }
-    public Mode detect(double value) {
+    /**
+     * Detects current trend.
+     * @param value Current value
+     * @return The trend
+     */
+    public final Trend detect(final double value) {
         if (initialized && value >= maxValue) {
             initialized = false;
-            return Mode.LARGER;
+            return Trend.LARGER;
         } else if (initialized && value <= minValue) {
             initialized = false;
-            return Mode.SMALLER;
+            return Trend.SMALLER;
         } else if (value <= maxInit && value >= minInit) {
             initialized = true;
-            return Mode.NONE;
+            return Trend.NONE;
         } else {
-            return Mode.NONE;
+            return Trend.NONE;
         }
     }
 }
