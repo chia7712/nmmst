@@ -31,9 +31,9 @@
 
 -->
 <suppressions>
-      <suppress checks="MagicNumberCheck" files="net.nmmst.controller.DioBdaq"/>
-      <suppress checks="MagicNumberCheck" files="net.nmmst.utils.WolUtil"/>
-      <suppress checks="MagicNumberCheck" files="net.nmmst.utils.ProjectorUtil"/>
-      <suppress checks="MagicNumberCheck" files="net.nmmst.processor.ProcessorFactory"/>
-      <suppress checks="MagicNumberCheck" files="net.nmmst.processor.LinearProcessor"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.controller.DioBdaq"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.WolUtil"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.ProjectorUtil"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.ProcessorFactory"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.LinearProcessor"/>
 </suppressions>

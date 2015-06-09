@@ -59,7 +59,7 @@
                              <manifest>  
                                <addClasspath>true</addClasspath>  
                                <classpathPrefix>lib/</classpathPrefix>
-                               <mainClass>net.nmmst.views.MasterFrame</mainClass>  
+                               <mainClass>tw.gov.nmmst.views.MasterFrame</mainClass>  
                              </manifest> 
                             <manifestEntries>
                                <Class-Path>lib/Automation.BDaq.jar</Class-Path>
@@ -77,7 +77,7 @@
                               <manifest>  
                                 <addClasspath>true</addClasspath>  
                                 <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.views.FusionFrame</mainClass>  
+                                <mainClass>tw.gov.nmmst.views.FusionFrame</mainClass>  
                               </manifest> 
                             </archive>  
                             <finalName>FusionFrame</finalName>
@@ -92,7 +92,7 @@
                               <manifest>  
                                 <addClasspath>true</addClasspath>  
                                 <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>net.nmmst.views.ControlFrame</mainClass>  
+                                <mainClass>tw.gov.nmmst.views.ControlFrame</mainClass>  
                               </manifest>
                             </archive>  
                             <finalName>ControlFrame</finalName>
