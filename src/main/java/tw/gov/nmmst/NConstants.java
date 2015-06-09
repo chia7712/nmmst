@@ -1,4 +1,4 @@
-package tw.gov.spright.nmmst;
+package tw.gov.nmmst;
 
 /**
  * The configuration constants.

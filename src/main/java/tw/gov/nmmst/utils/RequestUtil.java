@@ -9,7 +9,7 @@ import java.net.ServerSocket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.imageio.ImageIO;
-import tw.gov.spright.nmmst.NodeInformation;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.processor.LinearProcessor;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.threads.Taskable;

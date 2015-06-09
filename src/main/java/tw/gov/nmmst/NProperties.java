@@ -1,4 +1,4 @@
-package tw.gov.spright.nmmst;
+package tw.gov.nmmst;
 
 import java.io.File;
 import java.io.FileReader;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import javafx.util.Pair;
-import tw.gov.spright.nmmst.NodeInformation.Location;
+import tw.gov.nmmst.NodeInformation.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**

@@ -6,8 +6,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import tw.gov.spright.nmmst.NConstants;
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
 /**
  * Factory to create the sample and frame buffer.
  */

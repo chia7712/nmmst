@@ -8,7 +8,7 @@ import java.util.Arrays;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import tw.gov.spright.nmmst.NConstants;
+import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.controller.ControllerFactory;
 import tw.gov.nmmst.controller.StickTrigger;
 import tw.gov.nmmst.controller.WheelTrigger;

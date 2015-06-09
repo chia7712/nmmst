@@ -1,6 +1,6 @@
 package tw.gov.nmmst.processor;
 
-import tw.gov.spright.nmmst.NodeInformation;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.processor.LinearProcessor.Factor;
 /**
  * instantiates the {@link FrameProcessor} which only overrides

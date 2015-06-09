@@ -12,8 +12,8 @@ import javafx.util.Pair;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import tw.gov.nmmst.processor.FrameProcessor;
-import tw.gov.spright.nmmst.NConstants;
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.utils.Painter;
 /**
  * Draws the snapshots before printing frame on the panel.

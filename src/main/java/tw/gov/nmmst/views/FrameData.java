@@ -2,8 +2,8 @@ package tw.gov.nmmst.views;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import tw.gov.spright.nmmst.NProperties;
-import tw.gov.spright.nmmst.NodeInformation;
+import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.media.MediaWorker;
 import tw.gov.nmmst.threads.Closer;

@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import javax.sound.sampled.AudioFormat;
-import tw.gov.spright.nmmst.NConstants;
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
 
 /**
  * Control the order of movies. Each movie has a skip tag to indicate whether

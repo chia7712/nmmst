@@ -1,6 +1,6 @@
 package tw.gov.nmmst.controller;
 
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NProperties;
 
 /**
  * Instaniates the dio controller which encapsulates the detail of

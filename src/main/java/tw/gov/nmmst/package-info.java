@@ -3,4 +3,4 @@
  *
  * @since 0.1
  */
-package tw.gov.spright.nmmst;
+package tw.gov.nmmst;

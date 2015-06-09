@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit;
 import Automation.BDaq.DeviceInformation;
 import Automation.BDaq.InstantDoCtrl;
 import java.io.IOException;
-import tw.gov.spright.nmmst.NConstants;
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**

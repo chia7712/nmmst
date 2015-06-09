@@ -4,7 +4,7 @@ import java.awt.Dimension;
 import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import tw.gov.spright.nmmst.NConstants;
+import tw.gov.nmmst.NConstants;
 /**
  * The master node is used for sending main operation for all video nodes.
  */

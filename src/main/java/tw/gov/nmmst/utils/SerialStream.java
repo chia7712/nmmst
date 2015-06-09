@@ -1,7 +1,7 @@
 package tw.gov.nmmst.utils;
 
-import tw.gov.spright.nmmst.NProperties;
-import tw.gov.spright.nmmst.NodeInformation;
+import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;

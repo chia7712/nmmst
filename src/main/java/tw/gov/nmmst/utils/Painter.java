@@ -1,7 +1,7 @@
 package tw.gov.nmmst.utils;
 
-import tw.gov.spright.nmmst.NProperties;
-import tw.gov.spright.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NConstants;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;

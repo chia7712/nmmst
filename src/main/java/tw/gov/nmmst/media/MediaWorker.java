@@ -3,7 +3,7 @@ package tw.gov.nmmst.media;
 import java.io.IOException;
 import tw.gov.nmmst.processor.FrameProcessor;
 import tw.gov.nmmst.threads.Closer;
-import tw.gov.spright.nmmst.NProperties;
+import tw.gov.nmmst.NProperties;
 /**
  * A media controller encapsulates the details of video output, audio output
  * and the media decoder. It may invokes many threads for decodeing

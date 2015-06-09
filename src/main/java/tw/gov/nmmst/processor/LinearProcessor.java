@@ -4,7 +4,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.Optional;
 import tw.gov.nmmst.media.Frame;
-import tw.gov.spright.nmmst.NodeInformation;
+import tw.gov.nmmst.NodeInformation;
 /**
  * Calculates the fusion range by linear format.
  * We decrease the RGB value for the image edge.

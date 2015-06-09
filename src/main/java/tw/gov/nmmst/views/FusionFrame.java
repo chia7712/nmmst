@@ -7,7 +7,7 @@ import java.io.IOException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import tw.gov.spright.nmmst.NConstants;
+import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.media.MediaWorker;
 import tw.gov.nmmst.processor.ProcessorFactory;
 import tw.gov.nmmst.media.BasePanel;
