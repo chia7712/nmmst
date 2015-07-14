@@ -242,9 +242,13 @@ public final class RequestUtil {
      */
     public static class SelectRequest extends Request {
         /**
-         * The next movie index.
+         * The movie index.
          */
         private final int index;
+        /**
+         * The movie order;
+         */
+//        private final int order;
         /**
          * Constructs a SelectRequest for specified indexes and values.
          * @param movieIndex The movie index
@@ -253,11 +257,21 @@ public final class RequestUtil {
             super(RequestType.SELECT);
             index = movieIndex;
         }
+//        /**
+//         * @return The movie order
+//         */
+//        public final int getOrder() {
+//            return order;
+//        }
         /**
          * @return The movie index
          */
         public final int getIndex() {
             return index;
+        }
+        @Override
+        public final String toString() {
+            return String.valueOf(index);
         }
     }
     /**

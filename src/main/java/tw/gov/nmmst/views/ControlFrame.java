@@ -4,7 +4,8 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -30,7 +31,7 @@ public final class ControlFrame {
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final JFrame f = new VideoFrame(frameData);
+        final JFrame f = new BaseFrame(frameData);
         final Point point = new Point(16, 16);
         f.addKeyListener(frameData.getKeyListener());
         f.setCursor(f.getToolkit().createCustomCursor(
@@ -53,19 +54,9 @@ public final class ControlFrame {
      */
     private static class ControlFrameData extends VideoData {
         /**
-         * Captures the stick event and interacts with user
-         * for playing the snapshot.
-         */
-        private final StickTrigger stickTrigger;
-        /**
          * Media work.
          */
         private final MediaWorker media;
-        /**
-         * Captures the wheel event and sends the
-         * {@link net.nmmst.utils.RequestUtil.SelectRequest} to master.
-         */
-        private final WheelTrigger wheelTrigger;
         /**
          * Displays the snapshot.
          */
@@ -75,15 +66,23 @@ public final class ControlFrame {
          * @throws IOException If failed to open movies.
          */
         ControlFrameData() throws IOException {
-            stickTrigger = new StickTrigger(getNProperties());
+            List<ControllerFactory.Trigger> triggerList
+                = new LinkedList();
+            StickTrigger stickTrigger = null;
+            if (getNProperties().getBoolean(NConstants.STICK_ENABLE)) {
+                stickTrigger = new StickTrigger(getNProperties());
+                triggerList.add(stickTrigger);
+            }
             media = MediaWorker.createMediaWorker(
                 getNProperties(), getCloser(), stickTrigger);
-            wheelTrigger = new WheelTrigger(getNProperties(), getCloser(),
-                media);
+            if (getNProperties().getBoolean(NConstants.WHEEL_ENABLE)) {
+                triggerList.add(new WheelTrigger(
+                    getNProperties(), getCloser(), media));
+            }
             ControllerFactory.invokeTriggers(
                 getNProperties(),
                 getCloser(),
-                Arrays.asList(stickTrigger, wheelTrigger));
+                triggerList);
             panelController = new MultiPanelController(
                     getNProperties(), getCloser(), media.getPanel(),
                     stickTrigger);

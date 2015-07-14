@@ -96,6 +96,10 @@ public final class NConstants {
     public static final String FRAME_BUFFER_LOWERLIMIT
             = "frame.buffer.lowerLimit";
     /**
+     * Indicates whether we enable the wheel trigger.
+     */
+    public static final String WHEEL_ENABLE = "wheel.enable";
+    /**
      * The max microtime for selecting the direction from control node.
      * @see net.nmmst.controller.WheelTrigger
      */
@@ -128,6 +132,10 @@ public final class NConstants {
      */
     public static final String WHEEL_MIN_INIT_VALUE = "wheel.min.init.value";
     /**
+     * Indicates whether we enable the stick trigger.
+     */
+    public static final String STICK_ENABLE = "stick.enable";
+    /**
      * The valid max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
@@ -141,12 +149,12 @@ public final class NConstants {
      * The valid init max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    public static final String STICK_MAX_INIT_VALUE = "stick.max..init.value";
+    public static final String STICK_MAX_INIT_VALUE = "stick.max.init.value";
     /**
      * The valid init min value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    public static final String STICK_MIN_INIT_VALUE = "stick.min..init.value";
+    public static final String STICK_MIN_INIT_VALUE = "stick.min.init.value";
     /**
      * The valid value for pressing stick.
      * @see net.nmmst.controller.StickTrigger

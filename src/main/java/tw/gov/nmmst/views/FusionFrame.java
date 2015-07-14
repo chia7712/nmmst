@@ -3,6 +3,7 @@ package tw.gov.nmmst.views;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -25,12 +26,16 @@ public final class FusionFrame {
      * @throws IOException If failed to open movie
      */
     public static void main(final String[] args) throws IOException {
-        FusionFrameData frameData = new FusionFrameData();
+        File file = null;
+        if (args.length == 1) {
+            file = new File(args[0]);
+        }
+        FusionFrameData frameData = new FusionFrameData(file);
         final int width = frameData.getNProperties().getInteger(
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final JFrame f = new VideoFrame(frameData);
+        final JFrame f = new BaseFrame(frameData);
         final Point point = new Point(16, 16);
         f.setCursor(f.getToolkit().createCustomCursor(
                 new ImageIcon("").getImage(), point, ""));
@@ -56,9 +61,11 @@ public final class FusionFrame {
         private final MediaWorker media;
         /**
          * Constructs the data with specified media.
+         * @param file The initial properties
          * @throws IOException If failed to open movies
          */
-        FusionFrameData() throws IOException {
+        FusionFrameData(final File file) throws IOException {
+            super(file);
             media = MediaWorker.createMediaWorker(
                 getNProperties(), getCloser(),
                 ProcessorFactory.createFrameProcessor(

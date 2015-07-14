@@ -19,6 +19,18 @@ import org.slf4j.LoggerFactory;
  */
 public class NProperties {
     /**
+     * Saves the default properties.
+     * @param args Indicates the saved path
+     */
+    public static void main(final String[] args) {
+        NProperties pro = new NProperties();
+        if (args.length > 0) {
+            pro.save(new File(args[0]));
+        } else {
+            pro.save(new File(NProperties.class.getName()));
+        }
+    }
+    /**
      * Log.
      */
     private static final Logger LOG
@@ -169,6 +181,10 @@ public class NProperties {
      */
     private static final double FRAME_BUFFER_LOWERLIMIT = 0.9f;
     /**
+     * Indicates whether we enable the wheel trigger.
+     */
+    private static final boolean WHEEL_ENABLE = true;
+    /**
      * The max microtime for selecting the direction from control node.
      * @see net.nmmst.controller.WheelTrigger
      */
@@ -200,6 +216,10 @@ public class NProperties {
      * @see net.nmmst.controller.WheelTrigger
      */
     private static final double WHEEL_MIN_INIT_VALUE = -0.1;
+    /**
+     * Indicates whether we enable the stick trigger.
+     */
+    private static final boolean STICK_ENABLE = true;
     /**
      * The valid max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
@@ -467,6 +487,8 @@ public class NProperties {
         setIfAbsent(
             NConstants.FRAME_BUFFER_LOWERLIMIT,
             String.valueOf(FRAME_BUFFER_LOWERLIMIT));
+        setIfAbsent(NConstants.WHEEL_ENABLE,
+            String.valueOf(WHEEL_ENABLE));
         setIfAbsent(NConstants.WHEEL_ENABLE_MAX_MICROTIME_PERIOD,
             String.valueOf(WHEEL_ENABLE_MAX_MICROTIME_PERIOD));
         setIfAbsent(NConstants.WHEEL_ENABLE_MIN_MICROTIME_PERIOD,
@@ -479,6 +501,8 @@ public class NProperties {
             String.valueOf(WHEEL_MAX_INIT_VALUE));
         setIfAbsent(NConstants.WHEEL_MIN_INIT_VALUE,
             String.valueOf(WHEEL_MIN_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_ENABLE,
+            String.valueOf(STICK_ENABLE));
         setIfAbsent(NConstants.STICK_MAX_VALUE,
             String.valueOf(STICK_MAX_VALUE));
         setIfAbsent(NConstants.STICK_MIN_VALUE,

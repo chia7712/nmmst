@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import javax.sound.sampled.AudioFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 
@@ -18,6 +20,11 @@ import tw.gov.nmmst.NProperties;
  * @see MediaWorker
  */
 public final class MovieInfo {
+    /**
+     * Log.
+     */
+    private static final Logger LOG
+            = LoggerFactory.getLogger(MovieInfo.class);
     /**
      * Maintains the movie file. Key is the movie index.
      */
@@ -63,6 +70,7 @@ public final class MovieInfo {
         }
         int order = 0;
         for (Integer index : defaultPlayOrder) {
+            LOG.info("order:index," + order + ":" + index);
             playOrder.put(order, movieMap.get(index));
             ++order;
         }
@@ -127,9 +135,9 @@ public final class MovieInfo {
          */
         private final Object lock = new Object();
         /**
-         * Current play ordr.
+         * Next play ordr.
          */
-        private int currentOrder = 0;
+        private int nextOrder = 0;
         /**
          * Current movie attribute to play.
          */
@@ -147,20 +155,15 @@ public final class MovieInfo {
          * @param index The movie index
          */
         public void setNextFlow(final int index) {
-            setFlow(currentOrder + 1, index);
-        }
-        /**
-         * Sets the movie index for specified order.
-         * @param order The play order
-         * @param index The movie index
-         */
-        private void setFlow(final int order, final int index) {
+            LOG.info("nextOrder:index," + nextOrder + ":" + index);
             synchronized (lock) {
-                if (order != currentOrder) {
-                    mInfo.getMovieAttribute(index).ifPresent(m -> {
-                        playOrder.put(order, m);
-                    });
-                }
+                mInfo.getMovieAttribute(index).ifPresent(m -> {
+                    playOrder.put(nextOrder, m);
+                });
+                playOrder.forEach((k, v) -> {
+                    LOG.info("order:index," + k + ":" + v.getIndex()
+                    + " " + v.getFile().getName());
+                });
             }
         }
         @Override
@@ -170,10 +173,14 @@ public final class MovieInfo {
                     if (attribute != null) {
                         attribute = null;
                     }
-                    attribute = playOrder.get(currentOrder);
+                    attribute = playOrder.get(nextOrder);
+                    if (attribute != null) {
+                        LOG.info("currentOrder:index," + nextOrder + ":"
+                        + attribute.getIndex());
+                    }
                     return attribute != null;
                 } finally {
-                    ++currentOrder;
+                    ++nextOrder;
                 }
             }
         }

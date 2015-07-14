@@ -99,7 +99,8 @@ public class MultiPanelController implements KeyListener {
                     key -> key.compareToIgnoreCase(keyPress) == 0)) {
                     if (keyPress.equals(keyList.get(snapshotPanelIndex))) {
                         JPanel panel = panelList.get(snapshotPanelIndex);
-                        if (panel.getClass() == SnapshotPanel.class) {
+                        if (panel.getClass() == SnapshotPanel.class
+                           && stickTrigger != null) {
                             ((SnapshotPanel) panel).addImages(
                                     stickTrigger.cloneSnapshot());
                         }

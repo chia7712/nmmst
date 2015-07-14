@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
  * {@link java.awt.event.WindowListener#windowClosed(
  * java.awt.event.WindowEvent)}
  */
-public final class VideoFrame
+public final class BaseFrame
     extends JFrame implements WindowListener {
     /**
      * Log.
      */
     private static final Logger LOG
-            = LoggerFactory.getLogger(VideoFrame.class);
+            = LoggerFactory.getLogger(BaseFrame.class);
     /**
      * Frame data.
      */
@@ -29,7 +29,7 @@ public final class VideoFrame
      * the request function.
      * @param frameData Frame data
      */
-    public VideoFrame(final FrameData frameData) {
+    public BaseFrame(final FrameData frameData) {
         data = frameData;
         add(data.getMainPanel());
         data.getCloser().invokeNewThread(() -> {

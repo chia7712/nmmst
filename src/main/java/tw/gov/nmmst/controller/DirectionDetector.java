@@ -50,6 +50,10 @@ public class DirectionDetector {
      */
     private boolean initialized = true;
     /**
+     * A lock for synchronizing the direction.
+     */
+    private final Object lock = new Object();
+    /**
      * A detector with specified thresholds.
      * @param directionLimit Max and min threshold
      * @param initLimit Intial limit
@@ -71,17 +75,19 @@ public class DirectionDetector {
      * @return The trend
      */
     public final Trend detect(final double value) {
-        if (initialized && value >= maxValue) {
-            initialized = false;
-            return Trend.LARGER;
-        } else if (initialized && value <= minValue) {
-            initialized = false;
-            return Trend.SMALLER;
-        } else if (value <= maxInit && value >= minInit) {
-            initialized = true;
-            return Trend.NONE;
-        } else {
-            return Trend.NONE;
+        synchronized (lock) {
+            if (initialized && value >= maxValue) {
+                initialized = false;
+                return Trend.LARGER;
+            } else if (initialized && value <= minValue) {
+                initialized = false;
+                return Trend.SMALLER;
+            } else if (value <= maxInit && value >= minInit) {
+                initialized = true;
+                return Trend.NONE;
+            } else {
+                return Trend.NONE;
+            }
         }
     }
 }

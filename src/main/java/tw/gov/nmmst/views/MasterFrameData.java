@@ -5,6 +5,7 @@
  */
 package tw.gov.nmmst.views;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +36,7 @@ public class MasterFrameData implements FrameData {
     /**
      * NProperties.
      */
-    private final NProperties properties = new NProperties();
+    private final NProperties properties;
     /**
      * Closer.
      */
@@ -43,41 +44,35 @@ public class MasterFrameData implements FrameData {
     /**
      * Master information.
      */
-    private final NodeInformation selfInformation
-        = NodeInformation.getNodeInformationByAddress(properties);
+    private final NodeInformation selfInformation;
     /**
      * Request queue.
      */
-    private final BlockingQueue<RequestUtil.Request> requestQueue
-        = RequestUtil.createRemoteQueue(selfInformation, closer);
+    private final BlockingQueue<RequestUtil.Request> requestQueue;
     /**
      * Digital I/O.
      */
-    private final DioInterface dio = DioFactory.getDefault(properties);
+    private final DioInterface dio;
     /**
      * Watchs the buffer status.
      */
-    private final RegisterUtil.Watcher watcher = RegisterUtil.createWatcher(
-        closer, new BaseTimer(TimeUnit.SECONDS, 2), properties);
+    private final RegisterUtil.Watcher watcher;
     /**
      * Provides the movie duration.
      */
-    private final MovieInfo order = new MovieInfo(properties);
+    private final MovieInfo order;
     /**
      * Start flow is used for triggering the digital I/O to play the audio.
      */
-    private final StartFlow flow = new StartFlow(properties,
-            watcher, order, dio);
+    private final StartFlow flow;
     /**
      * Deploys the panel.
      */
-    private final PanelController panelController
-            = new PanelController(properties, requestQueue);
+    private final PanelController panelController;
     /**
      * All video nodes.
      */
-    private final Collection<NodeInformation> videoNodes
-            = NodeInformation.getVideoNodes(properties);
+    private final Collection<NodeInformation> videoNodes;
     /**
      * Request functions.
      */
@@ -85,9 +80,25 @@ public class MasterFrameData implements FrameData {
             = new TreeMap();
     /**
      * Constructs a data of master frame.
+     * @param file The initial properties
      * @throws IOException If failed to open movie
      */
-    public MasterFrameData() throws IOException {
+    public MasterFrameData(final File file) throws IOException {
+        if (file == null) {
+            properties = new NProperties();
+        } else {
+            properties = new NProperties(file);
+        }
+        selfInformation
+            = NodeInformation.getNodeInformationByAddress(properties);
+        requestQueue = RequestUtil.createRemoteQueue(selfInformation, closer);
+        dio = DioFactory.getDefault(properties);
+        watcher = RegisterUtil.createWatcher(closer,
+            new BaseTimer(TimeUnit.SECONDS, 2), properties);
+        order = new MovieInfo(properties);
+        flow = new StartFlow(properties, watcher, order, dio);
+        panelController = new PanelController(properties, requestQueue);
+        videoNodes = NodeInformation.getVideoNodes(properties);
         Arrays.asList(RequestUtil.RequestType.values())
               .stream()
               .forEach(type -> {

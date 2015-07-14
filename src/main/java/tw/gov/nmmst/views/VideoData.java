@@ -1,5 +1,6 @@
 package tw.gov.nmmst.views;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
@@ -23,7 +24,7 @@ public abstract class VideoData implements FrameData {
     /**
      * NProperties.
      */
-    private final NProperties properties = new NProperties();
+    private final NProperties properties;
     /**
      * Closer.
      */
@@ -31,13 +32,11 @@ public abstract class VideoData implements FrameData {
     /**
      * Master information.
      */
-    private final NodeInformation selfInformation
-        = NodeInformation.getNodeInformationByAddress(properties);
+    private final NodeInformation selfInformation;
     /**
      * Request queue.
      */
-    private final BlockingQueue<RequestUtil.Request> requestQueue
-        = RequestUtil.createRemoteQueue(selfInformation, closer);
+    private final BlockingQueue<RequestUtil.Request> requestQueue;
     /**
      * Request functions.
      */
@@ -45,9 +44,26 @@ public abstract class VideoData implements FrameData {
             = new TreeMap();
     /**
      * Constructs a data of base frame.
-     * @throws IOException If failed to open movie
+     * @throws IOException If failed to open movies
      */
     public VideoData() throws IOException {
+        this(null);
+    }
+    /**
+     * Constructs a data of base frame.
+     * @param file The initial properties
+     * @throws IOException If failed to open movies
+     */
+    public VideoData(final File file) throws IOException {
+        if (file == null) {
+            properties = new NProperties();
+        } else {
+            properties = new NProperties(file);
+        }
+        selfInformation
+            = NodeInformation.getNodeInformationByAddress(properties);
+        requestQueue
+            = RequestUtil.createRemoteQueue(selfInformation, closer);
         Arrays.asList(RequestType.values()).stream().forEach(type -> {
             switch (type) {
                 case START:
