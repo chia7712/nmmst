@@ -16,13 +16,14 @@ import tw.gov.nmmst.processor.LinearProcessor;
 import tw.gov.nmmst.utils.RegisterUtil;
 import tw.gov.nmmst.utils.RequestUtil;
 import tw.gov.nmmst.utils.RequestUtil.FusionTestRequest;
+import tw.gov.nmmst.utils.RequestUtil.Request;
 /**
  * The fusion node plays the movies with fusing the image edge.
  */
 public final class FusionFrame {
     /**
      * Invokes a fusion frame.
-     * @param args No use
+     * @param args Properties path or no use
      * @throws IOException If failed to open movie
      */
     public static void main(final String[] args) throws IOException {
@@ -73,11 +74,11 @@ public final class FusionFrame {
             RegisterUtil.invokeReporter(getCloser(),
                     getNodeInformation(), media.getMovieBuffer());
             getFunctions().put(RequestUtil.RequestType.FUSION_TEST,
-                (FrameData data, RequestUtil.Request request)
+                (FrameData data, Request previousReq, Request currentReq)
                 -> {
-                    if (request.getClass() == FusionTestRequest.class) {
+                    if (currentReq.getClass() == FusionTestRequest.class) {
                         RequestUtil.FusionTestRequest fusionReq
-                                = (RequestUtil.FusionTestRequest) request;
+                                = (RequestUtil.FusionTestRequest) currentReq;
                         BufferedImage image = fusionReq.getImage();
                         LinearProcessor processor
                             = new LinearProcessor(

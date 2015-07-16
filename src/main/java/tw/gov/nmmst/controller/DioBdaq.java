@@ -27,6 +27,14 @@ public final class DioBdaq implements DioInterface {
      */
     private final InstantDoCtrl pci1739u = new InstantDoCtrl();
     /**
+     * The submarine start time.
+     */
+    private final long submarineStart;
+    /**
+     * The submarine end time.
+     */
+    private final long submarineEnd;
+    /**
      * Constructs a DioBdaq with pci 1735u and 1739u.
      * @param properties DioBdaq
      * @throws Exception If failed to control the dio
@@ -37,6 +45,10 @@ public final class DioBdaq implements DioInterface {
                     properties.getString(NConstants.PCI_1735U_NAME)));
             pci1739u.setSelectedDevice(new DeviceInformation(
                     properties.getString(NConstants.PCI_1739U_NAME)));
+            submarineStart = properties.getLong(
+                    NConstants.MASTER_SUBMARINE_START);
+            submarineEnd = properties.getLong(
+                    NConstants.MASTER_SUBMARINE_END);
         } catch (Exception | UnsatisfiedLinkError e) {
             LOG.error(e.getMessage());
             pci1735u.Cleanup();
@@ -46,26 +58,20 @@ public final class DioBdaq implements DioInterface {
     }
     @Override
     public void submarineGotoEnd() throws InterruptedException {
-        try {
-            pci1739u.Write(0, (byte) 0xbf);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xff);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xdf);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xff);
-            TimeUnit.MILLISECONDS.sleep(1000);
-            pci1739u.Write(0, (byte) 0xfd);
-            TimeUnit.MILLISECONDS.sleep(500);
-            pci1739u.Write(0, (byte) 0xed);
-            TimeUnit.SECONDS.sleep(20);
-            pci1739u.Write(0, (byte) 0xff);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xf5);
-            TimeUnit.SECONDS.sleep(20);
-        } finally {
-            submarineStop();
-        }
+        //submarine light on
+        pci1739u.Write(0, (byte) 0x9f);
+        TimeUnit.MILLISECONDS.sleep(600);
+        pci1739u.Write(0, (byte) 0xff);
+        TimeUnit.MILLISECONDS.sleep(600);
+        //submarine down and forward
+        pci1739u.Write(0, (byte) 0xed);
+        TimeUnit.SECONDS.sleep(20);
+        pci1739u.Write(0, (byte) 0xff);
+        TimeUnit.MILLISECONDS.sleep(600);
+        //submarine up and forward
+        pci1739u.Write(0, (byte) 0xf5);
+        TimeUnit.SECONDS.sleep(20);
+        pci1739u.Write(0, (byte) 0xff);
     }
     @Override
     public void stoneGotoRight() throws InterruptedException {
@@ -79,21 +85,54 @@ public final class DioBdaq implements DioInterface {
         TimeUnit.SECONDS.sleep(35);
         pci1735u.Write(0, (byte) 0x00);
     }
+    /**
+     * None.
+     * @throws InterruptedException error
+     */
+    void submarineGotoBack() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0xfb);
+        TimeUnit.SECONDS.sleep(40);
+        pci1739u.Write(0, (byte) 0xff);
+    }
+    /**
+     * None.
+     * @throws InterruptedException error
+     */
+    void submarineGotoForware() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0xfd);
+        TimeUnit.SECONDS.sleep(40);
+        pci1739u.Write(0, (byte) 0xff);
+    }
+     /**
+     * None.
+     * @throws InterruptedException error
+     */
+    void submarineGotoDown() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0xef);
+        TimeUnit.SECONDS.sleep(40);
+        pci1739u.Write(0, (byte) 0xff);
+    }
+     /**
+     * None.
+     * @throws InterruptedException error
+     */
+    void submarineGotoUp() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0xf7);
+        TimeUnit.SECONDS.sleep(40);
+        pci1739u.Write(0, (byte) 0xff);
+    }
     @Override
     public void initializeSubmarineAndGray() throws InterruptedException {
         try {
-            submarineBackardAndUp();
+            pci1739u.Write(0, (byte) 0xfb);
             grayDown();
             TimeUnit.SECONDS.sleep(60);
         } finally {
-            submarineStop();
+            pci1739u.Write(0, (byte) 0xff);
             grayStop();
             TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xbf);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xff);
-            TimeUnit.MILLISECONDS.sleep(600);
-            pci1739u.Write(0, (byte) 0xdf);
+            //submarine light off
+            pci1739u.Write(0, (byte) 0x9f);
             TimeUnit.MILLISECONDS.sleep(600);
             pci1739u.Write(0, (byte) 0xff);
         }
@@ -150,6 +189,7 @@ public final class DioBdaq implements DioInterface {
     @Override
     public void light(final int mode) throws InterruptedException {
         final int sleepTime = 500;
+        final int nanoToMicro = 1000;
         switch (mode) {
             case 0://PCI-1739U CN1 12 one-movie
                 pci1739u.Write(1, (byte) 0xEF);
@@ -182,9 +222,13 @@ public final class DioBdaq implements DioInterface {
                 pci1739u.Write(2, (byte) 0xFF);
                 break;
             case 6://PCI-1739U CN1 18 sevent-movie
+                final long p6Time = System.nanoTime();
                 pci1739u.Write(2, (byte) 0xFB);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 pci1739u.Write(2, (byte) 0xFF);
+                TimeUnit.MICROSECONDS.sleep(submarineStart
+                    - (System.nanoTime() - p6Time) / nanoToMicro);
+                submarineGotoEnd();
                 break;
             default:
                 throw new RuntimeException("Error mode of light");
@@ -213,17 +257,5 @@ public final class DioBdaq implements DioInterface {
     private void grayDown() {
         grayPowerOn();
         pci1735u.Write(0, (byte) 0x20);
-    }
-    /**
-     * Positions the submarine to up-back location.
-     */
-    private void submarineBackardAndUp() {
-        pci1739u.Write(0, (byte) 0xf3);
-    }
-    /**
-     * Stops the submarine.
-     */
-    private void submarineStop() {
-        pci1739u.Write(0, (byte) 0xff);
     }
 }

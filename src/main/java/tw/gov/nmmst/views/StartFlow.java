@@ -80,7 +80,7 @@ public class StartFlow {
      * Synchronously stop all action.
      * @throws InterruptedException If the sleep had be interrupted
      */
-    public final void stop() throws InterruptedException {
+    public final void stopMasterPlay() throws InterruptedException {
         if (service != null) {
             service.shutdownNow();
             service.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
@@ -110,7 +110,7 @@ public class StartFlow {
      * @throws InterruptedException If this flow is broke
      * @throws IOException If failed to send request to any video nodes
      */
-    public final boolean start()
+    public final boolean invokeStartThread()
             throws IOException, InterruptedException {
         if (!started.compareAndSet(false, true)) {
             return false;
@@ -136,9 +136,10 @@ public class StartFlow {
                     MovieAttribute attribute = flow.next();
                     final long startTime = System.nanoTime();
                     dio.light(attribute.getIndex());
-                    final long spendTime = System.nanoTime() - startTime;
+                    LOG.info("dio index = " + attribute.getIndex());
                     TimeUnit.MICROSECONDS.sleep(
-                    attribute.getDuration() - (spendTime / nanoToMicro));
+                    attribute.getDuration()
+                        - (System.nanoTime() - startTime) / nanoToMicro);
                 }
             } catch (InterruptedException e) {
                 LOG.debug(e.getMessage());

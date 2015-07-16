@@ -7,18 +7,22 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.Map;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.media.BasePanel;
+import tw.gov.nmmst.media.BufferMetrics;
 import tw.gov.nmmst.utils.Painter;
+import tw.gov.nmmst.utils.RegisterUtil;
 import tw.gov.nmmst.utils.RequestUtil;
 /**
  * Maintains all the button and image for {@link MasterFrame}.
  */
-public class PanelController {
+public class PanelController implements RegisterUtil.Notifiable {
     /**
      * This panel will send a
      * {@link net.nmmst.utils.RequestUtil.RequestType#START}
@@ -89,6 +93,10 @@ public class PanelController {
     private final List<Component> componentList
             = new LinkedList();
     /**
+     * Displays the node metrics.
+     */
+    private final JLabel text = new JLabel("所有電腦的資訊");
+    /**
      * Adds the listener to panel.
      * @param panel The panel to set
      * @param listener The listener to add
@@ -118,10 +126,10 @@ public class PanelController {
     /**
      * Constructs the panel controller for displaing the master node.
      * @param properties NProperties
-     * @param requestQueue The request queue
+     * @param masterFrameData The request queue
      */
     public PanelController(final NProperties properties,
-            final BlockingQueue<RequestUtil.Request> requestQueue) {
+            final MasterFrameData masterFrameData) {
         final Dimension startDim = new Dimension(400, 400);
         final Dimension stopDim = new Dimension(100, 100);
         final Dimension rebootDim = new Dimension(100, 100);
@@ -130,20 +138,20 @@ public class PanelController {
             properties, NConstants.IMAGE_MASTER_START),
             BasePanel.Mode.FILL);
         startPanel.setPreferredSize(startDim);
-        addListener(startPanel, event -> requestQueue.offer(
+        addListener(startPanel, event -> masterFrameData.offer(
             new RequestUtil.Request(RequestUtil.RequestType.START)));
         stopPanel = new BasePanel(Painter.loadOrStringImage(
             properties, NConstants.IMAGE_MASTER_STOP),
             BasePanel.Mode.FILL);
         stopPanel.setPreferredSize(stopDim);
-        addListener(stopPanel, event -> requestQueue.offer(
+        addListener(stopPanel, event -> masterFrameData.offer(
             new RequestUtil.Request(RequestUtil.RequestType.STOP)));
         rebootPanel = new BasePanel(Painter.loadOrStringImage(
             properties, NConstants.IMAGE_MASTER_REFRESH),
             BasePanel.Mode.FILL);
         rebootPanel.setPreferredSize(rebootDim);
         addListener(rebootPanel, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.REBOOT)));
         testPanel = new BasePanel(Painter.loadOrStringImage(
             properties, NConstants.IMAGE_MASTER_TEST),
@@ -152,27 +160,41 @@ public class PanelController {
         addListener(testPanel, event -> {
         });
         addListener(initButton, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.INIT)));
         addListener(shurdownButton, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.SHUTDOWN)));
         addListener(wakeupButton, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.WOL)));
         addListener(party1Button, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.PARTY_1)));
         addListener(party2Button, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.PARTY_2)));
         addListener(lightOffButton, event
-            -> requestQueue.offer(new RequestUtil.Request(
+            -> masterFrameData.offer(new RequestUtil.Request(
                 RequestUtil.RequestType.LIGHT_OFF)));
+        componentList.add(text);
         backgroundPanel = new BasePanel(Painter.loadOrStringImage(
             properties, NConstants.IMAGE_MASTER_BACKGROUND),
             BasePanel.Mode.FILL);
         componentList.stream().forEach(backgroundPanel::add);
+    }
+
+    @Override
+    public final void notify(
+        final Map<NodeInformation, BufferMetrics> nodeMetrics) {
+        StringBuilder str = new StringBuilder();
+        nodeMetrics.forEach((node, metrics) -> {
+            str.append(node.getLocation())
+               .append(":")
+               .append(metrics.getFrameNumber())
+               .append(" ");
+        });
+        text.setText(str.toString());
     }
     /**
      * A wrapper for implementing th functional interface.

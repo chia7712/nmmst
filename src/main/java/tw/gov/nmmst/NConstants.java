@@ -184,6 +184,16 @@ public final class NConstants {
     public static final String CONTROL_KEYBOARD
             = "control.keyboard";
     /**
+     * The keyword value for staring the submarine.
+     */
+    public static final String MASTER_SUBMARINE_START
+            = "master.submarine.start";
+    /**
+     * The keyword value for ending the submarine.
+     */
+    public static final String MASTER_SUBMARINE_END
+            = "master.submarine.end";
+    /**
      * Can't be instantiated with this ctor.
      */
     private NConstants() {

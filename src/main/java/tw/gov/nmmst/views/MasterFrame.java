@@ -12,7 +12,7 @@ import tw.gov.nmmst.NConstants;
 public final class MasterFrame {
     /**
      * Invokes a master frame.
-     * @param args No use
+     * @param args Properties path or no use
      * @throws IOException If failed to open movie
      */
     public static void main(final String[] args) throws IOException {
@@ -25,7 +25,7 @@ public final class MasterFrame {
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
                 NConstants.FRAME_HEIGHT);
-        final BaseFrame f = new BaseFrame(frameData);
+        final JFrame f = new BaseFrame(frameData);
         SwingUtilities.invokeLater(() -> {
             if (width <= 0 || height <= 0) {
                 f.setExtendedState(JFrame.MAXIMIZED_BOTH);

@@ -35,7 +35,8 @@ public final class WheelTrigger implements ControllerFactory.Trigger {
      */
     public static void main(final String[] args)
         throws InterruptedException, IOException {
-        NProperties properties = new NProperties(new File("D:\\2.NProperties"));
+        NProperties properties
+            = new NProperties(new File("D:\\MasterFrame.NProperties"));
         SelectRequest req = new SelectRequest(2);
         NodeInformation masterInformation
             = NodeInformation.getMasterNode(properties).get();

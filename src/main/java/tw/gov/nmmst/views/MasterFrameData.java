@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package tw.gov.nmmst.views;
 
 import java.io.File;
@@ -13,6 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import javax.swing.JOptionPane;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.controller.DioFactory;
@@ -34,6 +30,11 @@ import tw.gov.nmmst.utils.WolUtil;
  */
 public class MasterFrameData implements FrameData {
     /**
+     * Message for resetting the hardware.
+     */
+    private static final String INIT_HARDWARE_MESSAGE
+        = "確定重置硬體?此動作將耗費約60秒重置硬體，此期間請勿執行其他操作";
+    /**
      * NProperties.
      */
     private final NProperties properties;
@@ -50,6 +51,10 @@ public class MasterFrameData implements FrameData {
      */
     private final BlockingQueue<RequestUtil.Request> requestQueue;
     /**
+     * Deploys the panel.
+     */
+    private final PanelController panelController;
+    /**
      * Digital I/O.
      */
     private final DioInterface dio;
@@ -65,10 +70,6 @@ public class MasterFrameData implements FrameData {
      * Start flow is used for triggering the digital I/O to play the audio.
      */
     private final StartFlow flow;
-    /**
-     * Deploys the panel.
-     */
-    private final PanelController panelController;
     /**
      * All video nodes.
      */
@@ -89,35 +90,43 @@ public class MasterFrameData implements FrameData {
         } else {
             properties = new NProperties(file);
         }
-        selfInformation
-            = NodeInformation.getNodeInformationByAddress(properties);
+        selfInformation = NodeInformation.getNodeInformationByAddress(
+            properties);
         requestQueue = RequestUtil.createRemoteQueue(selfInformation, closer);
+        panelController = new PanelController(properties, this);
         dio = DioFactory.getDefault(properties);
         watcher = RegisterUtil.createWatcher(closer,
-            new BaseTimer(TimeUnit.SECONDS, 2), properties);
+            new BaseTimer(TimeUnit.SECONDS, 2), properties, panelController);
         order = new MovieInfo(properties);
         flow = new StartFlow(properties, watcher, order, dio);
-        panelController = new PanelController(properties, requestQueue);
         videoNodes = NodeInformation.getVideoNodes(properties);
         Arrays.asList(RequestUtil.RequestType.values())
               .stream()
               .forEach(type -> {
             switch (type) {
                 case START:
-                    functions.put(type, (data, request)-> flow.start());
+                    functions.put(type, (data, previousReq, currentReq)-> {
+                        if (flow.isStart()) {
+                            JOptionPane.showMessageDialog(null, "正在播放");
+                        } else {
+                            flow.invokeStartThread();
+                        }
+                    });
                     break;
                 case STOP:
-                    functions.put(type, (data, request) -> {
-                        flow.stop();
+                    functions.put(type, (data, previousReq, currentReq) -> {
+                        flow.stopMasterPlay();
+                        SerialStream.sendAll(
+                            NodeInformation.getVideoNodes(properties),
+                            new RequestUtil.Request(
+                                RequestUtil.RequestType.STOP));
                         dio.lightOff();
-                        SerialStream.sendAll(videoNodes,
-                            new RequestUtil.Request(type));
                     });
                     break;
                 case SELECT:
-                    functions.put(type, (data, request) -> {
-                        if (request.getClass() == SelectRequest.class) {
-                            SelectRequest select = (SelectRequest) request;
+                    functions.put(type, (data, previousReq, currentReq) -> {
+                        if (currentReq.getClass() == SelectRequest.class) {
+                            SelectRequest select = (SelectRequest) currentReq;
                             if (!watcher.isConflictWithBuffer(
                                     select.getIndex())) {
                                 SerialStream.sendAll(
@@ -129,7 +138,7 @@ public class MasterFrameData implements FrameData {
                     });
                     break;
                 case REBOOT:
-                    functions.put(type, (data, request) -> {
+                    functions.put(type, (data, previousReq, currentReq) -> {
                         if (flow.isStart()) {
                             dio.lightOff();
                         }
@@ -139,7 +148,7 @@ public class MasterFrameData implements FrameData {
                     });
                     break;
                 case SHUTDOWN:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
                             SerialStream.sendAll(
                                 videoNodes,
@@ -148,37 +157,61 @@ public class MasterFrameData implements FrameData {
                         });
                     break;
                 case INIT:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
-                        dio.stoneGotoLeft();
-                        dio.lightWork();
-                        dio.initializeSubmarineAndGray();
+                        int value = JOptionPane.showConfirmDialog(null,
+                            INIT_HARDWARE_MESSAGE, null,
+                            JOptionPane.YES_NO_OPTION);
+                        flow.stopMasterPlay();
+                        SerialStream.sendAll(
+                            NodeInformation.getVideoNodes(properties),
+                            new RequestUtil.Request(
+                                RequestUtil.RequestType.STOP));
+                        if (value == JOptionPane.OK_OPTION) {
+                            dio.stoneGotoLeft();
+                            dio.lightWork();
+                            dio.initializeSubmarineAndGray();
+                            JOptionPane.showMessageDialog(null, "準備完成");
+                        }
                     });
                     break;
                 case LIGHT_OFF:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
-                        dio.lightOff();
+                        if (flow.isStart()) {
+                            JOptionPane.showMessageDialog(null, "正在播放");
+                        } else {
+                            dio.lightOff();
+                        }
                     });
                     break;
                 case PARTY_1:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
-                        dio.grayUptoEnd();
-                        dio.stoneGotoRight();
-                        dio.lightParty1();
+                        if (flow.isStart()) {
+                            JOptionPane.showMessageDialog(null, "正在播放");
+                        } else {
+                            dio.grayUptoEnd();
+                            dio.stoneGotoRight();
+                            dio.lightParty1();
+                        }
                     });
                     break;
                 case PARTY_2:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
-                        dio.grayUptoEnd();
-                        dio.stoneGotoRight();
-                        dio.lightParty2();
+                        if (flow.isStart()) {
+                            JOptionPane.showMessageDialog(null, "正在播放");
+                        } else {
+                            dio.grayUptoEnd();
+                            dio.stoneGotoRight();
+                            dio.lightParty2();
+                        }
+
                     });
                     break;
                 case WOL:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
                         for (NodeInformation nodeInformation : videoNodes) {
                             WolUtil.wakeup(
@@ -194,7 +227,13 @@ public class MasterFrameData implements FrameData {
             }
         });
     }
-
+    /**
+     * Offers a request command.
+     * @param request Request
+     */
+    public final void offer(final RequestUtil.Request request) {
+        requestQueue.offer(request);
+    }
     @Override
     public final void setNextFlow(final int index) {
         flow.setNextFlow(index);

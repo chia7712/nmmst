@@ -36,4 +36,5 @@
       <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.ProjectorUtil"/>
       <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.ProcessorFactory"/>
       <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.LinearProcessor"/>
+      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.NProperties"/>
 </suppressions>

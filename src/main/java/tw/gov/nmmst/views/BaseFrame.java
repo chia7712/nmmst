@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import tw.gov.nmmst.utils.RequestUtil.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tw.gov.nmmst.threads.Taskable;
 /**
  * Inherits the methods of {@link java.awt.event.WindowListener}.
  * The purpose of this class is to focus subclass to implement
@@ -32,26 +33,27 @@ public final class BaseFrame
     public BaseFrame(final FrameData frameData) {
         data = frameData;
         add(data.getMainPanel());
-        data.getCloser().invokeNewThread(() -> {
-            try {
-                Request request = data.getQueue().take();
-                LOG.info("request : " + request.getType());
-                RequestFunction f = data.getFunctions().get(request.getType());
-                if (f != null) {
-                    f.work(data, request);
+        data.getCloser().invokeNewThread(new Taskable() {
+            private Request previousReq;
+            @Override
+            public void work() {
+                try {
+                    Request request = data.getQueue().take();
+                    LOG.info("request : " + request.getType());
+                    RequestFunction f
+                        = data.getFunctions().get(request.getType());
+                    if (f != null) {
+                        f.work(data, previousReq, request);
+                        previousReq = request;
+                    }
+                    LOG.info("request : " + request.getType() + " done");
+                } catch (Exception e) {
+                    LOG.error(e.getMessage());
+                } finally {
+                    data.getQueue().clear();
                 }
-                LOG.info("request : " + request.getType() + " done");
-            } catch (Exception e) {
-                LOG.error(e.getMessage());
             }
         });
-    }
-    /**
-     * Retrieves a frame data.
-     * @return Frame data
-     */
-    protected  FrameData getData() {
-        return data;
     }
     @Override
     public void windowClosed(final WindowEvent e) {

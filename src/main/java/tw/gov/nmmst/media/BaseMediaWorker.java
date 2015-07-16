@@ -290,6 +290,7 @@ class BaseMediaWorker implements MediaWorker {
         public void run() {
             try {
                 MovieAttribute attribute = null;
+                int previousIndex = -1;
                 while (!closer.isClosed() && !Thread.interrupted()) {
                     Frame frame = buffer.readFrame();
                     if (frame.isEnd()) {
@@ -307,6 +308,11 @@ class BaseMediaWorker implements MediaWorker {
                     sleeper.sleepByTimeStamp(frame.getTimestamp());
                     processor.flatMap(p -> p.prePrintPanel(frame.getImage()))
                              .ifPresent(image -> panel.write(image));
+                    int currentIndex = frame.getMovieAttribute().getIndex();
+                    if (currentIndex != previousIndex) {
+                        LOG.info("play index : " + currentIndex);
+                        previousIndex = currentIndex;
+                    }
                 }
             } catch (InterruptedException e) {
                 LOG.debug(e.getMessage() + "Panel thread is interrupted");

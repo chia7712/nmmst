@@ -67,33 +67,34 @@ public abstract class VideoData implements FrameData {
         Arrays.asList(RequestType.values()).stream().forEach(type -> {
             switch (type) {
                 case START:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> data.getMediaWorker().setPause(false));
                     break;
                 case STOP:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> data.getMediaWorker().stopAsync());
                     break;
                 case PAUSE:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> data.getMediaWorker().setPause(true));
                     break;
                 case SELECT:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> {
-                            if (request.getClass() == SelectRequest.class) {
-                                SelectRequest select = (SelectRequest) request;
+                            if (currentReq.getClass() == SelectRequest.class) {
+                                SelectRequest select
+                                    = (SelectRequest) currentReq;
                                 data.getMediaWorker().setNextFlow(
                                     select.getIndex());
                             }
                         });
                     break;
                 case REBOOT:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> WindowsUtil.reboot());
                     break;
                 case SHUTDOWN:
-                    functions.put(type, (data, request)
+                    functions.put(type, (data, previousReq, currentReq)
                         -> WindowsUtil.shutdown());
                     break;
                 default:

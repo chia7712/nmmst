@@ -3,6 +3,7 @@ package tw.gov.nmmst.views;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,11 +23,15 @@ import tw.gov.nmmst.utils.RegisterUtil;
 public final class ControlFrame {
     /**
      * Invokes a control frame.
-     * @param args No use
+     * @param args Properties path or no use
      * @throws IOException If failed to open movie
      */
     public static void main(final String[] args) throws IOException {
-        ControlFrameData frameData = new ControlFrameData();
+        File file = null;
+        if (args.length == 1) {
+            file = new File(args[0]);
+        }
+        ControlFrameData frameData = new ControlFrameData(file);
         final int width = frameData.getNProperties().getInteger(
                 NConstants.FRAME_WIDTH);
         final int height = frameData.getNProperties().getInteger(
@@ -63,9 +68,11 @@ public final class ControlFrame {
         private final MultiPanelController panelController;
         /**
          * Constructs a data of control node.
+         * @param file properties file
          * @throws IOException If failed to open movies.
          */
-        ControlFrameData() throws IOException {
+        ControlFrameData(final File file) throws IOException {
+            super(file);
             List<ControllerFactory.Trigger> triggerList
                 = new LinkedList();
             StickTrigger stickTrigger = null;

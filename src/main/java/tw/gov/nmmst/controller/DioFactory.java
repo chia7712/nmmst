@@ -1,5 +1,7 @@
 package tw.gov.nmmst.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tw.gov.nmmst.NProperties;
 
 /**
@@ -7,6 +9,10 @@ import tw.gov.nmmst.NProperties;
  * communication with dio device.
  */
 public final class DioFactory {
+    /**
+     * Log.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(DioFactory.class);
     /**
      * Retrieves the dio controller.
      * @param properties NMMST properties
@@ -16,12 +22,17 @@ public final class DioFactory {
      * because it may does not exist the pci device in the test enviroment.
      */
     public static DioInterface getDefault(final NProperties properties) {
+        DioInterface rval;
         try {
-            return new DioBdaq(properties);
+            rval = new DioBdaq(properties);
+            LOG.info("real dio device");
         } catch (Exception e) {
-            return new DioInterface() {
+            LOG.info(e.getMessage());
+            rval = new DioInterface() {
             };
+            LOG.info("virtual dio device");
         }
+        return rval;
     }
     /**
      * Can't be instantiated with this ctor.

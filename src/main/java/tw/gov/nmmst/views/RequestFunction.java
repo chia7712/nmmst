@@ -9,8 +9,10 @@ public interface RequestFunction {
     /**
      * Handles with a request.
      * @param frameData The data is owned by a frame
-     * @param request The request
+     * @param previousReq The previous request
+     * @param currentReq The current request
      * @throws Exception If any error happens
      */
-    void work(FrameData frameData, Request request) throws Exception;
+    void work(FrameData frameData, Request previousReq,
+            Request currentReq) throws Exception;
 }

@@ -195,7 +195,7 @@ public class NProperties {
      * @see net.nmmst.controller.WheelTrigger
      */
     public static final long WHEEL_ENABLE_MIN_MICROTIME_PERIOD
-            = 5 * 1000 * 1000;
+            = 6 * 1000 * 1000;
     /**
      * The valid max value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
@@ -275,8 +275,17 @@ public class NProperties {
             .append("c")
             .append(DIVIDER_FIRST)
             .append("e")
-            .append(DIVIDER_FIRST)
             .toString();
+    /**
+     * The keyword value for staring the submarine.
+     */
+    private static final long MASTER_SUBMARINE_START
+            = (2 * 60 + 6) * 1000 * 1000;
+    /**
+     * The keyword value for ending the submarine.
+     */
+    private static final long MASTER_SUBMARINE_END
+            = (5 * 60 + 16) * 1000 * 1000;
     /**
      * Saving all properties by formating to java {@link Properties}.
      */
@@ -529,6 +538,12 @@ public class NProperties {
         setIfAbsent(
             NConstants.CONTROL_KEYBOARD,
             String.valueOf(CONTROL_KEYBOARD));
+        setIfAbsent(
+            NConstants.MASTER_SUBMARINE_START,
+            String.valueOf(MASTER_SUBMARINE_START));
+        setIfAbsent(
+            NConstants.MASTER_SUBMARINE_END,
+            String.valueOf(MASTER_SUBMARINE_END));
         save(file);
     }
     /**
