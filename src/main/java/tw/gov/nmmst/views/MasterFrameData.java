@@ -2,6 +2,7 @@ package tw.gov.nmmst.views;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -214,10 +215,11 @@ public class MasterFrameData implements FrameData {
                     functions.put(type, (data, previousReq, currentReq)
                         -> {
                         for (NodeInformation nodeInformation : videoNodes) {
-                            WolUtil.wakeup(
+                            WolUtil.wakeup(new InetSocketAddress(
+                                    selfInformation.getIP(), 0),
                                 NodeInformation.getBroadCast(
                                     data.getNodeInformation()),
-                                nodeInformation.getMac());
+                                    nodeInformation.getMac());
                         }
                         ProjectorUtil.enableAllMachine(properties, true);
                     });

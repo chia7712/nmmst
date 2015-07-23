@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -39,18 +40,26 @@ public final class WolUtil {
     }
     /**
      * Wakes the computer up by mac number.
+     * @param bindAddress Specified binding address
      * @param broadcast The broadcast address
      * @param macNumber Mac number
      * @return {@code true} if succeed
      */
-    public static boolean wakeup(final String broadcast,
-            final String macNumber) {
-        LOG.info("broadcase : " + broadcast + ", mac : " + macNumber);
+    public static boolean wakeup(final InetSocketAddress bindAddress,
+            final String broadcast, final String macNumber) {
+        if (bindAddress == null) {
+            LOG.info("bindAddress == no specified, broadcase : "
+                    + broadcast + ", mac : " + macNumber);
+        } else {
+            LOG.info("bindAddress = "
+                + bindAddress.getAddress().getHostAddress()
+                + ", broadcase : " + broadcast + ", mac : " + macNumber);
+        }
         byte[] bytes = generateMagicPacket(macNumber);
         if (bytes.length == 0) {
             return false;
         }
-        try (DatagramSocket socket = new DatagramSocket()) {
+        try (DatagramSocket socket = new DatagramSocket(bindAddress)) {
             InetAddress address = InetAddress.getByName(broadcast);
             socket.send(new DatagramPacket(bytes, bytes.length, address, PORT));
             return true;
@@ -58,6 +67,16 @@ public final class WolUtil {
             LOG.error(e.getMessage());
             return false;
         }
+    }
+    /**
+     * Wakes the computer up by mac number.
+     * @param broadcast The broadcast address
+     * @param macNumber Mac number
+     * @return {@code true} if succeed
+     */
+    public static boolean wakeup(final String broadcast,
+            final String macNumber) {
+        return wakeup(null, broadcast, macNumber);
     }
     /**
      * Converts mac string to bytes.
