@@ -46,7 +46,11 @@ public final class Sample {
      * @return Size of audio data
      */
     public long getHeapSize() {
-        return data.length;
+        if (data == null) {
+            return 0;
+        } else {
+            return data.length;
+        }
     }
     /**
      * Indicates whether end.

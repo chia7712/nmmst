@@ -35,6 +35,10 @@ public final class DioBdaq implements DioInterface {
      */
     private final long submarineEnd;
     /**
+     * The time for waiting the submarine to init.
+     */
+    private final long elapsedInit;
+    /**
      * Constructs a DioBdaq with pci 1735u and 1739u.
      * @param properties DioBdaq
      * @throws Exception If failed to control the dio
@@ -49,6 +53,8 @@ public final class DioBdaq implements DioInterface {
                     NConstants.MASTER_SUBMARINE_START);
             submarineEnd = properties.getLong(
                     NConstants.MASTER_SUBMARINE_END);
+            elapsedInit = properties.getLong(
+                    NConstants.ELAPSED_INIT_SUBMARINE);
         } catch (Exception | UnsatisfiedLinkError e) {
             LOG.error(e.getMessage());
             pci1735u.Cleanup();
@@ -126,7 +132,7 @@ public final class DioBdaq implements DioInterface {
         try {
             pci1739u.Write(0, (byte) 0xfb);
             grayDown();
-            TimeUnit.SECONDS.sleep(60);
+            TimeUnit.SECONDS.sleep(elapsedInit);
         } finally {
             pci1739u.Write(0, (byte) 0xff);
             grayStop();

@@ -143,7 +143,7 @@ public class NProperties {
                                 10004, 10005),
             new NodeInformation(NodeInformation.Location.RD,
                                 "192.168.100.4",
-                                "00-0B-AB-67-4E-70",
+                                "00-0B-AB-71-4E-BF",
                                 10006, 10007),
             new NodeInformation(NodeInformation.Location.CONTROLLER,
                                 "192.168.100.38",
@@ -263,6 +263,11 @@ public class NProperties {
      */
     private static final String PCI_1739U_NAME
             = "PCI-1739U,BID#15";
+    /**
+     * The default time for waiting the submarine to init.
+     */
+    private static final int ELAPSED_INIT_SUBMARINE
+            = 70;
     /**
      * The keyboard value for switching the panel on the control node.
      */
@@ -441,6 +446,9 @@ public class NProperties {
                 properties.clear();
             }
         }
+        setIfAbsent(
+            NConstants.ELAPSED_INIT_SUBMARINE,
+            String.valueOf(ELAPSED_INIT_SUBMARINE));
         setIfAbsent(
             NConstants.FRAME_WIDTH,
             String.valueOf(FRAME_WIDTH));

@@ -5,6 +5,11 @@ package tw.gov.nmmst;
  */
 public final class NConstants {
     /**
+     * The default time for waiting the submarine to init.
+     */
+    public static final String ELAPSED_INIT_SUBMARINE
+            = "elapsed.init.submarine";
+    /**
      * The default width of frame.
      */
     public static final String FRAME_WIDTH = "frame.width";
