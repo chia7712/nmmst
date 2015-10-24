@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import javax.sound.sampled.AudioFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 
@@ -23,8 +23,8 @@ public final class MovieInfo {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(MovieInfo.class);
+    private static final Log LOG
+            = LogFactory.getLog(MovieInfo.class);
     /**
      * Maintains the movie file. Key is the movie index.
      */

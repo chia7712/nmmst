@@ -5,6 +5,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.swing.JOptionPane;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.media.MovieInfo;
 import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.utils.RegisterUtil;
@@ -15,8 +19,6 @@ import tw.gov.nmmst.media.MovieInfo.PlayFlow;
 import tw.gov.nmmst.utils.RequestUtil.Request;
 import tw.gov.nmmst.utils.RequestUtil.RequestType;
 import tw.gov.nmmst.utils.SerialStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Start the flow to send the following command.
  * 1) Checks the buffer for all video nodes. If any node hava insufficient
@@ -29,8 +31,8 @@ public class StartFlow {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(StartFlow.class);
+    private static final Log LOG
+            = LogFactory.getLog(StartFlow.class);
     /**
      * Dio interface.
      */
@@ -117,11 +119,18 @@ public class StartFlow {
         }
         if (watcher.isBufferInsufficient()) {
             started.set(false);
+            LOG.info("No enough memory for nodes");
+            if (properties.getBoolean(NConstants.SHOW_WARN_WINDOWS)) {
+                JOptionPane.showMessageDialog(null,
+                    "影片還在準備中...請晚點再播放");
+            }
             return false;
         }
         if (!SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
                 new Request(RequestType.START))) {
             started.set(false);
+            SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
+                new Request(RequestType.STOP));
             return false;
         }
         if (service != null) {
@@ -142,7 +151,7 @@ public class StartFlow {
                         - (System.nanoTime() - startTime) / nanoToMicro);
                 }
             } catch (InterruptedException e) {
-                LOG.debug(e.getMessage());
+                LOG.debug(e);
             } finally {
                 started.set(false);
             }

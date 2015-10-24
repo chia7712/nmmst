@@ -11,8 +11,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Collection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * Utility methods helps for waking specified project up.
  */
@@ -20,8 +20,8 @@ public final class ProjectorUtil {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(ProjectorUtil.class);
+    private static final Log LOG
+            = LogFactory.getLog(ProjectorUtil.class);
     /**
      * TCP port.
      */

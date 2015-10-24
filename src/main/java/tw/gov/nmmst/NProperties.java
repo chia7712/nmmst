@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import javafx.util.Pair;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NodeInformation.Location;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Provides access to configuration parameters.
  */
@@ -33,16 +33,24 @@ public class NProperties {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(NProperties.class);
+    private static final Log LOG
+            = LogFactory.getLog(NProperties.class);
+    /**
+     * Show the warn windows to the user.
+     */
+    private static final boolean SHOW_WARN_WINDOWS = true;
+    /**
+     * The period to register fusion node.
+     */
+    private static final int SECOND_TIME_TO_REGISTER = 5;
     /**
      * The default width of frame.
      */
-    public static final int FRAME_WIDTH = -1;
+    private static final int FRAME_WIDTH = -1;
     /**
      * The default height of frame.
      */
-    public static final int FRAME_HEIGHT = -1;
+    private static final int FRAME_HEIGHT = -1;
     /**
      * The root directory for all videos.
      */
@@ -447,6 +455,12 @@ public class NProperties {
             }
         }
         setIfAbsent(
+            NConstants.SHOW_WARN_WINDOWS,
+            String.valueOf(SHOW_WARN_WINDOWS));
+        setIfAbsent(
+            NConstants.SECOND_TIME_TO_REGISTER,
+            String.valueOf(SECOND_TIME_TO_REGISTER));
+        setIfAbsent(
             NConstants.ELAPSED_INIT_SUBMARINE,
             String.valueOf(ELAPSED_INIT_SUBMARINE));
         setIfAbsent(
@@ -565,8 +579,8 @@ public class NProperties {
         }
         try (FileWriter writer = new FileWriter(file)) {
             properties.store(writer, null);
-        } catch (IOException ex) {
-            LOG.error(ex.getMessage());
+        } catch (IOException e) {
+            LOG.error(e);
         }
     }
     /**

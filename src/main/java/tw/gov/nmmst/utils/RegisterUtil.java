@@ -10,12 +10,12 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.media.BufferMetrics;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.threads.Taskable;
 import tw.gov.nmmst.threads.Timer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * This utility supports watcher and reporter for user and video node
  * respectively.
@@ -24,8 +24,8 @@ public final class RegisterUtil {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(RegisterUtil.class);
+    private static final Log LOG
+            = LogFactory.getLog(RegisterUtil.class);
     /**
      * This interface is used for doing something after the watcher had
      * received all node metrics.
@@ -150,7 +150,13 @@ public final class RegisterUtil {
                 final double lowerLimit) {
             final double ratio = (double) metrics.getFrameNumber()
                     / (double) metrics.getFrameCapacity();
-            return ratio <= lowerLimit;
+            boolean isLower = ratio <= lowerLimit;
+            if (isLower) {
+                LOG.warn(node.getIP() + " has lower buffer "
+                    + metrics.getFrameNumber() + "/"
+                    + metrics.getFrameCapacity());
+            }
+            return isLower;
         }
         @Override
         public boolean isBufferInsufficient(final NodeInformation node) {
@@ -165,8 +171,12 @@ public final class RegisterUtil {
 
         @Override
         public boolean isBufferInsufficient() {
+            checkNow();
             synchronized (nodeMetrics) {
                 if (nodeMetrics.size() != nodeInformations.size()) {
+                    LOG.warn("Not all nodes has the metrics : "
+                        + nodeMetrics.size()
+                        + "/" + nodeInformations.size());
                     return true;
                 }
                 return nodeMetrics.entrySet().stream().anyMatch((entry)
@@ -198,7 +208,7 @@ public final class RegisterUtil {
                         }
                     }
                 } catch (IOException | ClassNotFoundException e) {
-                    LOG.error(e.getMessage() + ":" + nodeInformation);
+                    LOG.error("Failed to operate " + nodeInformation, e);
                 }
             });
         }
@@ -241,8 +251,8 @@ public final class RegisterUtil {
         public void close() {
             try {
                 server.close();
-            } catch (IOException ex) {
-                LOG.error(ex.getMessage());
+            } catch (IOException e) {
+                LOG.error(e);
             }
         }
 
@@ -251,7 +261,7 @@ public final class RegisterUtil {
             try (SerialStream client = new SerialStream(server.accept())) {
                 client.write(new SerializedBufferMetrics(metrics));
             } catch (IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
             }
         }
     }

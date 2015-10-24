@@ -9,12 +9,12 @@ import java.net.ServerSocket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.imageio.ImageIO;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.processor.LinearProcessor;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.threads.Taskable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Utility medhods provide the queue for receiving the
  * request from remote nodes.
@@ -23,8 +23,8 @@ public final class RequestUtil {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(RequestUtil.class);
+    private static final Log LOG
+            = LogFactory.getLog(RequestUtil.class);
     /**
      * Creates the reporter for transfering the buffer metrics.
      * @param closer This closer to add closeable
@@ -73,20 +73,20 @@ public final class RequestUtil {
         public void work() {
             try (SerialStream stream = new SerialStream(server.accept())) {
                 Object obj = stream.read();
-                if (obj instanceof Request) {
+                if (obj != null && obj instanceof Request) {
                     requestQueue.put((Request) obj);
                 }
             } catch (IOException | ClassNotFoundException
                     | InterruptedException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
             }
         }
         @Override
         public void clear() {
             try {
                 server.close();
-            } catch (IOException ex) {
-                LOG.error(ex.getMessage());
+            } catch (IOException e) {
+                LOG.error(e);
             }
         }
     }
@@ -211,6 +211,9 @@ public final class RequestUtil {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write(image, "jpg", baos);
             imageData = baos.toByteArray();
+            if (imageData == null || imageData.length == 0) {
+                throw new RuntimeException("No found of image data");
+            }
             overlayX = factor.getOverlayX();
             overlayY = factor.getOverlayY();
             scaleMinX = factor.getScaleMinX();

@@ -7,17 +7,22 @@ import net.java.games.input.Controller;
 import net.java.games.input.ControllerEnvironment;
 import net.java.games.input.Event;
 import net.java.games.input.EventQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.threads.Taskable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Captures all control events and use specified trigger to handle
  * with the control events.
  */
 public final class ControllerFactory {
+       /**
+        * Log.
+        */
+    private static final Log LOG
+            = LogFactory.getLog(ControllerFactory.class);
     /**
      * Handles with the controller data.
      */
@@ -50,11 +55,6 @@ public final class ControllerFactory {
     * The base implementation for control event.
     */
    private static class BaseControlEvent implements Taskable {
-       /**
-        * Log.
-        */
-       private static final Logger LOG
-               = LoggerFactory.getLogger(BaseControlEvent.class);
        /**
         * Collects the controllers for polling data.
         */

@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.JPanel;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.controller.StickTrigger;
 import tw.gov.nmmst.utils.Painter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Used in the control node for displaing multi-panels.
  * The corresponding panel will be shown when
@@ -28,8 +28,8 @@ public class MultiPanelController implements KeyListener {
     /**
      * Log.
      */
-    private static final Logger LOG
-        = LoggerFactory.getLogger(MultiPanelController.class);
+    private static final Log LOG
+            = LogFactory.getLog(MultiPanelController.class);
     /**
      * Saves the multi-panels.
      */
@@ -107,8 +107,8 @@ public class MultiPanelController implements KeyListener {
                     }
                     cardLayout.show(mainPanel, keyPress);
                 }
-            } catch (InterruptedException ex) {
-                LOG.debug(ex.getMessage());
+            } catch (InterruptedException e) {
+                LOG.debug(e);
             }
         });
     }

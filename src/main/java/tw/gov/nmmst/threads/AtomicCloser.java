@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * Instantiate a closer with atomic method.
  */
@@ -15,8 +15,8 @@ public class AtomicCloser implements Closer {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(AtomicCloser.class);
+    private static final Log LOG
+            = LogFactory.getLog(AtomicCloser.class);
     /**
      * Indicates closable state.
      */
@@ -52,7 +52,7 @@ public class AtomicCloser implements Closer {
                     }
                 }
             } catch (InterruptedException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
             } finally {
                 task.clear();
             }

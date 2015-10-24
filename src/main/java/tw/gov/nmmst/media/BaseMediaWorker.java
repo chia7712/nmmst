@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.LineUnavailableException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.processor.FrameProcessor;
 import tw.gov.nmmst.threads.AtomicCloser;
 import tw.gov.nmmst.threads.Closer;
@@ -16,8 +18,6 @@ import tw.gov.nmmst.threads.Taskable;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.utils.Painter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Controls the audio and video output.
  * It uses the {@link net.nmmst.utils.BasePanel} as the video output
@@ -27,8 +27,8 @@ class BaseMediaWorker implements MediaWorker {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(BaseMediaWorker.class);
+    private static final Log LOG
+            = LogFactory.getLog(BaseMediaWorker.class);
     /**
      * Includes audio output, video output and decoder.
      */
@@ -106,7 +106,7 @@ class BaseMediaWorker implements MediaWorker {
                     working.set(false);
                     initializeMediaThreads();
                 } catch (InterruptedException e) {
-                    LOG.error(e.getMessage());
+                    LOG.error(e);
                 }
             }
             @Override
@@ -242,7 +242,7 @@ class BaseMediaWorker implements MediaWorker {
                 buffer.writeFrame(new Frame());
                 buffer.writeSample(new Sample());
             } catch (InterruptedException | IOException e) {
-                LOG.error(e.getMessage() + "MovieReader is interrupted");
+                LOG.error("MovieReader is interrupted", e);
             }
         }
     }
@@ -315,7 +315,7 @@ class BaseMediaWorker implements MediaWorker {
                     }
                 }
             } catch (InterruptedException e) {
-                LOG.debug(e.getMessage() + "Panel thread is interrupted");
+                LOG.debug("Panel thread is interrupted", e);
             }
         }
     }
@@ -364,9 +364,9 @@ class BaseMediaWorker implements MediaWorker {
                     spk.write(sample.getData());
                 }
             } catch (InterruptedException e) {
-                LOG.debug(e.getMessage() + "Speak thread is interrupted");
+                LOG.debug("Speak thread is interrupted", e);
             } catch (LineUnavailableException e) {
-                LOG.debug(e.getMessage());
+                LOG.debug(e);
             } finally {
                 if (spk != null) {
                     spk.close();

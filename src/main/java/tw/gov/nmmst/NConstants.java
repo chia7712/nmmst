@@ -5,6 +5,16 @@ package tw.gov.nmmst;
  */
 public final class NConstants {
     /**
+     * Show the warn windows to the user.
+     */
+    public static final String SHOW_WARN_WINDOWS
+        = "show.warn.windwos";
+    /**
+     * The period to register fusion node.
+     */
+    public static final String SECOND_TIME_TO_REGISTER
+        = "second.time.to.register";
+    /**
      * The default time for waiting the submarine to init.
      */
     public static final String ELAPSED_INIT_SUBMARINE

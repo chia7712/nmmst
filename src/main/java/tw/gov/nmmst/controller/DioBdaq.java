@@ -5,10 +5,10 @@ import java.util.concurrent.TimeUnit;
 import Automation.BDaq.DeviceInformation;
 import Automation.BDaq.InstantDoCtrl;
 import java.io.IOException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Controls the digital Input/Output.
  * The default corresponding device includes the PCI_1735U adn PCI_1739U.
@@ -17,7 +17,8 @@ public final class DioBdaq implements DioInterface {
     /**
      * Log.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(DioBdaq.class);
+    private static final Log LOG
+            = LogFactory.getLog(DioBdaq.class);
     /**
      * Dio 1735u.
      */
@@ -56,7 +57,7 @@ public final class DioBdaq implements DioInterface {
             elapsedInit = properties.getLong(
                     NConstants.ELAPSED_INIT_SUBMARINE);
         } catch (Exception | UnsatisfiedLinkError e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
             pci1735u.Cleanup();
             pci1739u.Cleanup();
             throw new Exception(e);

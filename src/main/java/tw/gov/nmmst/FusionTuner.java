@@ -25,14 +25,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.processor.LinearProcessor;
 import tw.gov.nmmst.processor.LinearProcessor.Factor;
 import tw.gov.nmmst.utils.Painter;
 import tw.gov.nmmst.utils.RequestUtil.FusionTestRequest;
 import tw.gov.nmmst.utils.SerialStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Tunes the fusion factor.
  */
@@ -40,8 +40,8 @@ public class FusionTuner extends JFrame implements WindowListener {
     /**
      * Log.
      */
-    private static final Logger LOG
-        = LoggerFactory.getLogger(FusionTuner.class);
+    private static final Log LOG
+            = LogFactory.getLog(FusionTuner.class);
     /**
      * Default font size.
      */
@@ -132,7 +132,7 @@ public class FusionTuner extends JFrame implements WindowListener {
                         properties);
                 }
             } catch (InterruptedException | IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
             }
         });
     }

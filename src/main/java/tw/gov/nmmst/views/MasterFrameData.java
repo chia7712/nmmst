@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
+import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.controller.DioFactory;
@@ -97,7 +98,9 @@ public class MasterFrameData implements FrameData {
         panelController = new PanelController(properties, this);
         dio = DioFactory.getDefault(properties);
         watcher = RegisterUtil.createWatcher(closer,
-            new BaseTimer(TimeUnit.SECONDS, 2), properties, panelController);
+            new BaseTimer(TimeUnit.SECONDS,
+                properties.getInteger(NConstants.SECOND_TIME_TO_REGISTER)),
+            properties, panelController);
         order = new MovieInfo(properties);
         flow = new StartFlow(properties, watcher, order, dio);
         videoNodes = NodeInformation.getVideoNodes(properties);
@@ -163,12 +166,12 @@ public class MasterFrameData implements FrameData {
                         int value = JOptionPane.showConfirmDialog(null,
                             INIT_HARDWARE_MESSAGE, null,
                             JOptionPane.YES_NO_OPTION);
-                        flow.stopMasterPlay();
-                        SerialStream.sendAll(
-                            NodeInformation.getVideoNodes(properties),
-                            new RequestUtil.Request(
-                                RequestUtil.RequestType.STOP));
                         if (value == JOptionPane.OK_OPTION) {
+                            flow.stopMasterPlay();
+                            SerialStream.sendAll(
+                                NodeInformation.getVideoNodes(properties),
+                                new RequestUtil.Request(
+                                    RequestUtil.RequestType.STOP));
                             dio.stoneGotoLeft();
                             dio.lightWork();
                             dio.initializeSubmarineAndGray();

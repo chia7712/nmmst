@@ -3,9 +3,9 @@ package tw.gov.nmmst.views;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import javax.swing.JFrame;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.utils.RequestUtil.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tw.gov.nmmst.threads.Taskable;
 /**
  * Inherits the methods of {@link java.awt.event.WindowListener}.
@@ -18,8 +18,8 @@ public final class BaseFrame
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(BaseFrame.class);
+    private static final Log LOG
+            = LogFactory.getLog(BaseFrame.class);
     /**
      * Frame data.
      */
@@ -48,7 +48,7 @@ public final class BaseFrame
                     }
                     LOG.info("request : " + request.getType() + " done");
                 } catch (Exception e) {
-                    LOG.error(e.getMessage());
+                    LOG.error(e);
                 } finally {
                     data.getQueue().clear();
                 }

@@ -1,7 +1,7 @@
 package tw.gov.nmmst.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NProperties;
 
 /**
@@ -12,7 +12,8 @@ public final class DioFactory {
     /**
      * Log.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(DioFactory.class);
+    private static final Log LOG
+            = LogFactory.getLog(DioFactory.class);
     /**
      * Retrieves the dio controller.
      * @param properties NMMST properties
@@ -27,7 +28,7 @@ public final class DioFactory {
             rval = new DioBdaq(properties);
             LOG.info("real dio device");
         } catch (Exception e) {
-            LOG.info(e.getMessage());
+            LOG.info(e);
             rval = new DioInterface() {
             };
             LOG.info("virtual dio device");

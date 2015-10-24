@@ -5,11 +5,18 @@ import java.io.File;
 import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 /**
  * The master node is used for sending main operation for all video nodes.
  */
 public final class MasterFrame {
+    /**
+     * Log.
+     */
+    private static final Log LOG
+            = LogFactory.getLog(MasterFrame.class);
     /**
      * Invokes a master frame.
      * @param args Properties path or no use
@@ -19,6 +26,11 @@ public final class MasterFrame {
         File file = null;
         if (args.length == 1) {
             file = new File(args[0]);
+        }
+        if (file == null) {
+            LOG.info("No found of configuration, use the default");
+        } else {
+            LOG.info("use the configuration : " + file.getPath());
         }
         MasterFrameData frameData = new MasterFrameData(file);
         final int width = frameData.getNProperties().getInteger(

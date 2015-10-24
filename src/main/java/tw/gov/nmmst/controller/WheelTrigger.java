@@ -11,6 +11,8 @@ import javafx.util.Pair;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import net.java.games.input.Controller.Type;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
@@ -18,8 +20,6 @@ import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.media.MediaWorker;
 import tw.gov.nmmst.utils.RequestUtil.SelectRequest;
 import tw.gov.nmmst.utils.SerialStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import tw.gov.nmmst.threads.Taskable;
 /**
  * A wheel trigger captures the wheel event and caluculate the change of wheel
@@ -45,8 +45,8 @@ public final class WheelTrigger implements ControllerFactory.Trigger {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(WheelTrigger.class);
+    private static final Log LOG
+            = LogFactory.getLog(WheelTrigger.class);
     /**
      * Detects the change of direction.
      */
@@ -118,7 +118,7 @@ public final class WheelTrigger implements ControllerFactory.Trigger {
                         lastIndex = req.get().getIndex();
                     }
                 } catch (InterruptedException | IOException e) {
-                    LOG.error(e.getMessage());
+                    LOG.error(e);
                 } finally {
                     trendQueue.clear();
                 }

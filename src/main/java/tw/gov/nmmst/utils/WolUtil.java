@@ -5,8 +5,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * Utility methods is able to wake all computers and projectors up.
  */
@@ -14,7 +14,8 @@ public final class WolUtil {
     /**
      * Log.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(WolUtil.class);
+    private static final Log LOG
+            = LogFactory.getLog(WolUtil.class);
     /**
      * WOL port.
      */
@@ -64,7 +65,7 @@ public final class WolUtil {
             socket.send(new DatagramPacket(bytes, bytes.length, address, PORT));
             return true;
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
             return false;
         }
     }
@@ -94,7 +95,7 @@ public final class WolUtil {
                 bytes[i] = (byte) Integer.parseInt(hex[i], 16);
             }
         } catch (NumberFormatException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
             return new byte[0];
         }
         return bytes;

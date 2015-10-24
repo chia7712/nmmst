@@ -10,6 +10,8 @@ import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.controller.ControllerFactory;
 import tw.gov.nmmst.controller.StickTrigger;
@@ -22,6 +24,11 @@ import tw.gov.nmmst.utils.RegisterUtil;
  */
 public final class ControlFrame {
     /**
+     * Log.
+     */
+    private static final Log LOG
+            = LogFactory.getLog(ControlFrame.class);
+    /**
      * Invokes a control frame.
      * @param args Properties path or no use
      * @throws IOException If failed to open movie
@@ -30,6 +37,11 @@ public final class ControlFrame {
         File file = null;
         if (args.length == 1) {
             file = new File(args[0]);
+        }
+        if (file == null) {
+            LOG.info("No found of configuration, use the default");
+        } else {
+            LOG.info("use the configuration : " + file.getPath());
         }
         ControlFrameData frameData = new ControlFrameData(file);
         final int width = frameData.getNProperties().getInteger(

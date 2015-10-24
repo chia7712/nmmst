@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,8 +18,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * Transfer the serial object to nodes.
  * @see net.nmmst.request.Request
@@ -28,8 +29,8 @@ public class SerialStream implements Closeable {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(SerialStream.class);
+    private static final Log LOG
+            = LogFactory.getLog(SerialStream.class);
     /**
      * Waitting time for sending request.
      */
@@ -94,10 +95,12 @@ public class SerialStream implements Closeable {
         List<SerialStream> handlers = new ArrayList(nodeInformations.size());
         for (NodeInformation playerInfo : nodeInformations) {
             try {
-                handlers.add(new SerialStream(new Socket(
-                        playerInfo.getIP(), playerInfo.getRequestPort())));
+                SerialStream stream = new SerialStream(new Socket(
+                        playerInfo.getIP(), playerInfo.getRequestPort()));
+                stream.openOutputStream();
+                handlers.add(stream);
             } catch (IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
                 handlers.stream()
                         .filter((handler) -> (handler != null))
                         .forEach((handler) -> {
@@ -106,7 +109,7 @@ public class SerialStream implements Closeable {
                 throw e;
             }
         }
-        return innerSend(request, handlers);
+        return internalSend(request, handlers);
     }
     /**
      * Sends message to all nodes. This method will be blocked until
@@ -125,10 +128,12 @@ public class SerialStream implements Closeable {
         List<SerialStream> handlers = new ArrayList(nodeInformations.size());
         for (NodeInformation playerInfo : nodeInformations) {
             try {
-                handlers.add(new SerialStream(new Socket(
-                        playerInfo.getIP(), port)));
+                SerialStream stream = new SerialStream(new Socket(
+                        playerInfo.getIP(), playerInfo.getRequestPort()));
+                stream.openOutputStream();
+                handlers.add(stream);
             } catch (IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
                 handlers.stream()
                         .filter((handler) -> (handler != null))
                         .forEach((handler) -> {
@@ -137,7 +142,7 @@ public class SerialStream implements Closeable {
                 throw e;
             }
         }
-        return innerSend(serial, handlers);
+        return internalSend(serial, handlers);
     }
     /**
      * Sends the serial object to all nodes.
@@ -148,7 +153,7 @@ public class SerialStream implements Closeable {
      * @return {@code true} if succeed
      * @throws InterruptedException Anyone brokes this medhod
      */
-    private static boolean innerSend(final Serializable serial,
+    private static boolean internalSend(final Serializable serial,
             final List<SerialStream> handlers) throws InterruptedException {
         ExecutorService service
                 = Executors.newFixedThreadPool(handlers.size());
@@ -161,7 +166,7 @@ public class SerialStream implements Closeable {
                     latch.await();
                     handler.write(serial);
                 } catch (IOException | InterruptedException e) {
-                    LOG.error(e.getMessage());
+                    LOG.error(e);
                 } finally {
                     handler.close();
                 }
@@ -172,10 +177,13 @@ public class SerialStream implements Closeable {
     }
     /**
      * Constructs a serial stream for existed socket.
-     * @param socket The remote socket
+     * @param socket socket
+     * @exception SocketException if there is an error
+     * in the underlying protocol, such as a TCP error.
      */
-    public SerialStream(final Socket socket) {
+    public SerialStream(final Socket socket) throws SocketException {
         client = socket;
+        client.setTcpNoDelay(true);
     }
     /**
      * Constructs a serial stream for specified address and port.
@@ -188,6 +196,26 @@ public class SerialStream implements Closeable {
     public SerialStream(final String address, final int port)
             throws UnknownHostException, IOException {
         this(new Socket(address, port));
+    }
+    /**
+     * Creates an ObjectInputStream that reads from the specified InputStream.
+     * @throws IOException Any of the usual Input/Output
+     * related exceptions
+     */
+    public final void openInputStream() throws IOException {
+        if (input == null) {
+            input = new ObjectInputStream(client.getInputStream());
+        }
+    }
+    /**
+     * Creates an ObjectOutputStream that writes to the specified OutputStream.
+     * @throws IOException Any of the usual Input/Output
+     * related exceptions
+     */
+    public final void openOutputStream() throws IOException {
+        if (output == null) {
+            output = new ObjectOutputStream(client.getOutputStream());
+        }
     }
     /**
      * Returns the local IP address string in textual presentation.
@@ -212,9 +240,7 @@ public class SerialStream implements Closeable {
      * related exceptions
      */
     public final Object read() throws ClassNotFoundException, IOException {
-        if (input == null) {
-            input = new ObjectInputStream(client.getInputStream());
-        }
+        openInputStream();
         return input.readObject();
     }
     /**
@@ -224,9 +250,7 @@ public class SerialStream implements Closeable {
      * related exceptions
      */
     public final void write(final Serializable serial) throws IOException {
-        if (output == null) {
-            output = new ObjectOutputStream(client.getOutputStream());
-        }
+        openOutputStream();
         output.writeObject(serial);
     }
     @Override
@@ -234,7 +258,7 @@ public class SerialStream implements Closeable {
         try {
             client.close();
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
         }
     }
 }

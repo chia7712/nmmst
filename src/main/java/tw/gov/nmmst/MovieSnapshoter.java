@@ -22,11 +22,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.media.Frame;
 import tw.gov.nmmst.media.MovieStream;
 import tw.gov.nmmst.media.Sample;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
  * Captures the frame of movie.
  */
@@ -34,8 +34,8 @@ public class MovieSnapshoter extends JFrame implements WindowListener {
     /**
      * Log.
      */
-    private static final Logger LOG
-            = LoggerFactory.getLogger(MovieSnapshoter.class);
+    private static final Log LOG
+            = LogFactory.getLog(MovieSnapshoter.class);
     /**
      * Total number of movies.
      */
@@ -131,7 +131,7 @@ public class MovieSnapshoter extends JFrame implements WindowListener {
                     btn.setEnabled(true);
                 }
             } catch (InterruptedException | IOException e) {
-                LOG.error(e.getMessage());
+                LOG.error(e);
             }
         });
     }
@@ -152,7 +152,7 @@ public class MovieSnapshoter extends JFrame implements WindowListener {
         try {
             ImageIO.write(image, ".jpg", f);
         } catch (IOException e) {
-            LOG.error(e.getMessage());
+            LOG.error(e);
         }
     }
     /**

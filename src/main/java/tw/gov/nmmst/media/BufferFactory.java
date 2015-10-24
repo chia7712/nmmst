@@ -124,7 +124,7 @@ public final class BufferFactory {
         @Override
         public void setPause(final boolean value) {
             pause.set(value);
-            if (!pause.get()) {
+            if (!value) {
                 synchronized (pause) {
                     pause.notifyAll();
                 }

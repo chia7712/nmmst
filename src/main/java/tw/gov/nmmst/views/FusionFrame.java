@@ -8,6 +8,8 @@ import java.io.IOException;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.media.MediaWorker;
 import tw.gov.nmmst.processor.ProcessorFactory;
@@ -22,6 +24,11 @@ import tw.gov.nmmst.utils.RequestUtil.Request;
  */
 public final class FusionFrame {
     /**
+     * Log.
+     */
+    private static final Log LOG
+            = LogFactory.getLog(FusionFrame.class);
+    /**
      * Invokes a fusion frame.
      * @param args Properties path or no use
      * @throws IOException If failed to open movie
@@ -30,6 +37,11 @@ public final class FusionFrame {
         File file = null;
         if (args.length == 1) {
             file = new File(args[0]);
+        }
+        if (file == null) {
+            LOG.info("No found of configuration, use the default");
+        } else {
+            LOG.info("use the configuration : " + file.getPath());
         }
         FusionFrameData frameData = new FusionFrameData(file);
         final int width = frameData.getNProperties().getInteger(
