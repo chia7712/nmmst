@@ -56,28 +56,6 @@
     </dependencies>
     <build>
         <plugins>
-            <plugin> 
-                <groupId>org.apache.maven.plugins</groupId>  
-                <artifactId>maven-jar-plugin</artifactId>  
-                <version>2.5</version>
-                <executions>
-                    <execution>
-                        <id>ControlFrame</id>
-                        <goals><goal>jar</goal></goals>
-                        <phase>package</phase>
-                        <configuration>  
-                            <archive>  
-                              <manifest>  
-                                <addClasspath>true</addClasspath>  
-                                <classpathPrefix>lib/</classpathPrefix>
-                                <mainClass>tw.gov.nmmst.views.ControlFrame</mainClass>  
-                              </manifest>
-                            </archive>  
-                            <finalName>ControlFrame</finalName>
-                        </configuration>                     
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
                <artifactId>maven-dependency-plugin</artifactId>
