@@ -72,9 +72,15 @@ public final class RequestUtil {
         @Override
         public void work() {
             try (SerialStream stream = new SerialStream(server.accept())) {
-                Object obj = stream.read();
-                if (obj != null && obj instanceof Request) {
-                    requestQueue.put((Request) obj);
+                while (true) {
+                    Object obj = stream.read();
+                    if (obj != null && obj instanceof Request) {
+                        Request request = (Request) obj;
+                        if (!request.isWarmUp()) {
+                            requestQueue.put((Request) obj);
+                            break;
+                        }
+                    }
                 }
             } catch (IOException | ClassNotFoundException
                     | InterruptedException e) {
@@ -153,17 +159,41 @@ public final class RequestUtil {
          */
         private final RequestType type;
         /**
+         * Is warm up.
+         */
+        private final boolean isWramUp;
+        /**
          * Constructs a request with specified type.
          * @param requestType Request type
          */
         public Request(final RequestType requestType) {
             type = requestType;
+            isWramUp = false;
+        }
+        /**
+         * Construct a empty request for warming up network.
+         */
+        private Request() {
+            type = null;
+            isWramUp = true;
         }
         /**
          * @return Request type
          */
         public final RequestType getType() {
             return type;
+        }
+        /**
+         * @return Warm up
+         */
+        public final boolean isWarmUp() {
+            return isWramUp;
+        }
+        /**
+         * @return A warm up request
+         */
+        public final Request toWarmUp() {
+            return new Request();
         }
     }
     /**

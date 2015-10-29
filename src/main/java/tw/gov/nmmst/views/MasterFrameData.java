@@ -123,7 +123,7 @@ public class MasterFrameData implements FrameData {
                         SerialStream.sendAll(
                             NodeInformation.getVideoNodes(properties),
                             new RequestUtil.Request(
-                                RequestUtil.RequestType.STOP));
+                                RequestUtil.RequestType.STOP), false);
                         dio.lightOff();
                     });
                     break;
@@ -135,7 +135,7 @@ public class MasterFrameData implements FrameData {
                                     select.getIndex())) {
                                 SerialStream.sendAll(
                                     videoNodes,
-                                    select);
+                                    select, true);
                                 data.setNextFlow(select.getIndex());
                             }
                         }
@@ -148,7 +148,7 @@ public class MasterFrameData implements FrameData {
                         }
                         SerialStream.sendAll(
                             videoNodes,
-                            new RequestUtil.Request(type));
+                            new RequestUtil.Request(type), false);
                     });
                     break;
                 case SHUTDOWN:
@@ -156,7 +156,7 @@ public class MasterFrameData implements FrameData {
                         -> {
                             SerialStream.sendAll(
                                 videoNodes,
-                                new RequestUtil.Request(type));
+                                new RequestUtil.Request(type), false);
                             ProjectorUtil.enableAllMachine(properties, false);
                         });
                     break;
@@ -171,7 +171,7 @@ public class MasterFrameData implements FrameData {
                             SerialStream.sendAll(
                                 NodeInformation.getVideoNodes(properties),
                                 new RequestUtil.Request(
-                                    RequestUtil.RequestType.STOP));
+                                    RequestUtil.RequestType.STOP), false);
                             dio.stoneGotoLeft();
                             dio.lightWork();
                             dio.initializeSubmarineAndGray();

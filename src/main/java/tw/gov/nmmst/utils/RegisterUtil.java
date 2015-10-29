@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.media.BufferMetrics;
@@ -115,7 +116,7 @@ public final class RegisterUtil {
         /**
          * Triggers it after checking all nodes.
          */
-        private final Notifiable notifier;
+        private final Optional<Notifiable> notifier;
         /**
          * Instantiates a {@link Watcher}.
          * @param properties NProperties
@@ -126,7 +127,7 @@ public final class RegisterUtil {
             nodeInformations = NodeInformation.getVideoNodes(properties);
             lowerLimit = properties.getDouble(
                     NConstants.FRAME_BUFFER_LOWERLIMIT);
-            notifier = notifiable;
+            notifier = Optional.of(notifiable);
         }
         @Override
         public void work() {
@@ -188,9 +189,14 @@ public final class RegisterUtil {
 
         @Override
         public void checkNow() {
+            Map<NodeInformation, BufferMetrics> tmp
+                = new HashMap();
             synchronized (nodeMetrics) {
                 nodeMetrics.clear();
+                tmp.clear();
+                tmp.putAll(nodeMetrics);
             }
+            notifier.ifPresent(n -> n.notify(tmp));
             nodeInformations.stream().forEach((nodeInformation) -> {
                 try (SerialStream client = new SerialStream(new Socket(
                         nodeInformation.getIP(),
@@ -203,12 +209,15 @@ public final class RegisterUtil {
                         synchronized (nodeMetrics) {
                             nodeMetrics.put(nodeInformation, state);
                         }
-                        if (notifier != null) {
-                            notifier.notify(nodeMetrics);
-                        }
                     }
                 } catch (IOException | ClassNotFoundException e) {
                     LOG.error("Failed to operate " + nodeInformation, e);
+                } finally {
+                    synchronized (nodeMetrics) {
+                        tmp.clear();
+                        tmp.putAll(nodeMetrics);
+                    }
+                    notifier.ifPresent(n -> n.notify(tmp));
                 }
             });
         }

@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import tw.gov.nmmst.utils.RequestUtil.Request;
 /**
  * Transfer the serial object to nodes.
  * @see net.nmmst.request.Request
@@ -35,6 +36,10 @@ public class SerialStream implements Closeable {
      * Waitting time for sending request.
      */
     private static final int WAITTING_TIME = 5;
+    /**
+     * The number to warm up.
+     */
+    public static final int WARM_UP_NUMBER = 3;
     /**
      * The socket to send message.
      */
@@ -53,44 +58,28 @@ public class SerialStream implements Closeable {
      * @param nodeInformation The node to send to
      * @param request The object to transfer
      * @param properties NProperties
-     * @return {@code true} if no error happen, {@code false} otherwise
      * @throws InterruptedException If this method is broke
      * @throws IOException If failed to transfer object
      */
-    public static boolean send(final NodeInformation nodeInformation,
-            final RequestUtil.Request request, final NProperties properties)
+    public static void send(final NodeInformation nodeInformation,
+            final Request request, final NProperties properties)
             throws InterruptedException, IOException {
-        return sendAll(Arrays.asList(nodeInformation),
-                request,
-                nodeInformation.getRequestPort());
+        sendAll(Arrays.asList(nodeInformation),
+                request, false);
     }
-    /**
-     * Sends message to the node. This method will be blocked until
-     * accomplish transfer process.
-     * @param nodeInformation The node to send to
-     * @param serial The object to transfer
-     * @param port The destination port
-     * @return {@code true} if no error happen, {@code false} otherwise
-     * @throws InterruptedException If this method is broke
-     * @throws IOException If failed to transfer object
-     */
-    public static boolean send(final NodeInformation nodeInformation,
-            final Serializable serial, final int port)
-            throws InterruptedException, IOException {
-        return sendAll(Arrays.asList(nodeInformation), serial, port);
-    }
+
     /**
      * Sends message to all nodes. This method will be blocked until
      * accomplish all transfer process.
      * @param nodeInformations The nodes to send to
      * @param request The object to transfer
-     * @return {@code true} if no error happen, {@code false} otherwise
+     * @param needWarmUp Send warm up package to remote node
      * @throws InterruptedException If this method is broke
      * @throws IOException If failed to transfer object
      */
-    public static boolean sendAll(
+    public static void sendAll(
             final Collection<NodeInformation> nodeInformations,
-            final RequestUtil.Request request)
+            final Request request, final boolean needWarmUp)
             throws InterruptedException, IOException {
         List<SerialStream> handlers = new ArrayList(nodeInformations.size());
         for (NodeInformation playerInfo : nodeInformations) {
@@ -109,62 +98,35 @@ public class SerialStream implements Closeable {
                 throw e;
             }
         }
-        return internalSend(request, handlers);
-    }
-    /**
-     * Sends message to all nodes. This method will be blocked until
-     * accomplish all transfer process.
-     * @param nodeInformations The nodes to send to
-     * @param serial The object to transfer
-     * @param port The destination port
-     * @return {@code true} if no error happen, {@code false} otherwise
-     * @throws InterruptedException If this method is broke
-     * @throws IOException If failed to transfer object
-     */
-    public static boolean sendAll(
-            final Collection<NodeInformation> nodeInformations,
-            final Serializable serial, final int port)
-            throws InterruptedException, IOException {
-        List<SerialStream> handlers = new ArrayList(nodeInformations.size());
-        for (NodeInformation playerInfo : nodeInformations) {
-            try {
-                SerialStream stream = new SerialStream(new Socket(
-                        playerInfo.getIP(), playerInfo.getRequestPort()));
-                stream.openOutputStream();
-                handlers.add(stream);
-            } catch (IOException e) {
-                LOG.error(e);
-                handlers.stream()
-                        .filter((handler) -> (handler != null))
-                        .forEach((handler) -> {
-                    handler.close();
-                });
-                throw e;
-            }
-        }
-        return internalSend(serial, handlers);
+        internalSend(request, handlers, needWarmUp);
     }
     /**
      * Sends the serial object to all nodes.
      * This method will be blocked until all nodes receive
      * the object or timeout.
-     * @param serial The object to send
+     * @param request The object to send
      * @param handlers The connected remote nodes
-     * @return {@code true} if succeed
+     * @param needWarmUp Send warm up package to remote node
      * @throws InterruptedException Anyone brokes this medhod
      */
-    private static boolean internalSend(final Serializable serial,
-            final List<SerialStream> handlers) throws InterruptedException {
+    private static void internalSend(final Request request,
+            final List<SerialStream> handlers, final boolean needWarmUp)
+            throws InterruptedException {
         ExecutorService service
                 = Executors.newFixedThreadPool(handlers.size());
         final CountDownLatch latch
                 = new CountDownLatch(handlers.size());
         handlers.forEach(handler -> {
             service.execute(() -> {
-                latch.countDown();
                 try {
+                    if (needWarmUp) {
+                        for (int i = 0; i != WARM_UP_NUMBER; ++i) {
+                            handler.write(request.toWarmUp());
+                        }
+                    }
+                    latch.countDown();
                     latch.await();
-                    handler.write(serial);
+                    handler.write(request);
                 } catch (IOException | InterruptedException e) {
                     LOG.error(e);
                 } finally {
@@ -173,7 +135,10 @@ public class SerialStream implements Closeable {
             });
         });
         service.shutdown();
-        return service.awaitTermination(WAITTING_TIME, TimeUnit.SECONDS);
+        if (!service.awaitTermination(WAITTING_TIME, TimeUnit.SECONDS)) {
+            throw new InterruptedException("Request timeout of "
+                + WAITTING_TIME + " seconds");
+        }
     }
     /**
      * Constructs a serial stream for existed socket.

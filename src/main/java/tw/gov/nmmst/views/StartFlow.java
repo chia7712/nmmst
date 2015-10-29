@@ -107,15 +107,13 @@ public class StartFlow {
     }
     /**
      * Starts this flow.
-     * @return {@code true} if all condition are pass.
-     * Otherwise it returns {@code false}
      * @throws InterruptedException If this flow is broke
      * @throws IOException If failed to send request to any video nodes
      */
-    public final boolean invokeStartThread()
+    public final void invokeStartThread()
             throws IOException, InterruptedException {
         if (!started.compareAndSet(false, true)) {
-            return false;
+            return;
         }
         if (watcher.isBufferInsufficient()) {
             started.set(false);
@@ -124,14 +122,7 @@ public class StartFlow {
                 JOptionPane.showMessageDialog(null,
                     "影片還在準備中...請晚點再播放");
             }
-            return false;
-        }
-        if (!SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
-                new Request(RequestType.START))) {
-            started.set(false);
-            SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
-                new Request(RequestType.STOP));
-            return false;
+            return;
         }
         if (service != null) {
             service.shutdownNow();
@@ -139,6 +130,8 @@ public class StartFlow {
         service = Executors.newSingleThreadExecutor();
         service.execute(() -> {
             try {
+                SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
+                        new Request(RequestType.START), true);
                 final int nanoToMicro = 1000;
                 flow = info.createPlayFlow();
                 while (flow.hasNext()) {
@@ -152,10 +145,11 @@ public class StartFlow {
                 }
             } catch (InterruptedException e) {
                 LOG.debug(e);
+            } catch (IOException e) {
+                LOG.error(e);
             } finally {
                 started.set(false);
             }
         });
-        return true;
     }
 }

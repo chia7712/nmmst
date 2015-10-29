@@ -38,15 +38,13 @@ public class FusionOp {
                         nodeInformation.getMac());
             }
         } else if (cmd.equalsIgnoreCase("play")) {
-            if (!SerialStream.sendAll(videoNodes,
-                    new RequestUtil.Request(RequestUtil.RequestType.START))) {
-                throw new RuntimeException("Failed to send all request");
-            }
+            SerialStream.sendAll(videoNodes,
+                    new RequestUtil.Request(RequestUtil.RequestType.START),
+                    true);
         } else if (cmd.equalsIgnoreCase("stop")) {
-            if (!SerialStream.sendAll(videoNodes,
-                    new RequestUtil.Request(RequestUtil.RequestType.STOP))) {
-                throw new RuntimeException("Failed to send all request");
-            }
+            SerialStream.sendAll(videoNodes,
+                    new RequestUtil.Request(RequestUtil.RequestType.STOP),
+                    false);
         } else if (cmd.equalsIgnoreCase("wakeupP")) {
             ProjectorUtil.enableAllMachine(properties, true);
         } else if (cmd.equalsIgnoreCase("sleepP")) {
