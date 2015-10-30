@@ -1,5 +1,6 @@
 package tw.gov.nmmst.controller;
 
+import java.util.Optional;
 import net.java.games.input.Component;
 import org.junit.Test;
 import tw.gov.nmmst.media.BasePanel;
@@ -88,11 +89,11 @@ public class TestWheelTrigger {
             this.currentIndex = currentIndex;
         }
         @Override
-        public Frame readFrame() throws InterruptedException {
+        public Optional<Frame> readFrame() throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
         @Override
-        public Sample readSample() throws InterruptedException {
+        public Optional<Sample> readSample() throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
         @Override
@@ -162,6 +163,11 @@ public class TestWheelTrigger {
         }
         @Override
         public long getLastDuration() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public void writeEof() throws InterruptedException {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }

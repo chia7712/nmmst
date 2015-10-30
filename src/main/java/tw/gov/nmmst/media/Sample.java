@@ -5,6 +5,11 @@ package tw.gov.nmmst.media;
  */
 public final class Sample {
     /**
+     * Empty sample.
+     */
+    public static final Sample EMPTY_SAMPLE
+        = null;
+    /**
      * A byte array of audio.
      */
     private final byte[]  data;
@@ -12,13 +17,6 @@ public final class Sample {
      * The attribute of this audio.
      */
     private final MovieAttribute attribute;
-    /**
-     * Constructs a sample with end flag.
-     */
-    public Sample() {
-        data = null;
-        attribute = null;
-    }
     /**
      * Constructs a sample by specified attribute and audio data.
      * @param movieAttribute The movie attribute
@@ -28,6 +26,9 @@ public final class Sample {
             final byte[] audioData) {
         attribute = movieAttribute;
         data = audioData;
+        if (data == null || data.length == 0) {
+            throw new RuntimeException("No found of sample data");
+        }
     }
     /**
      * @see MovieStream
@@ -46,17 +47,6 @@ public final class Sample {
      * @return Size of audio data
      */
     public long getHeapSize() {
-        if (data == null) {
-            return 0;
-        } else {
-            return data.length;
-        }
-    }
-    /**
-     * Indicates whether end.
-     * @return {@code true} if end of movie
-     */
-    public boolean isEnd() {
-        return data == null;
+        return data.length;
     }
 }

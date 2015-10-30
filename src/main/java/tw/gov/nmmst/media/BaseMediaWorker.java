@@ -103,6 +103,7 @@ class BaseMediaWorker implements MediaWorker {
                     processor.flatMap(p -> p.playOver(initImage))
                             .ifPresent(image -> panel.write(image));
                     buffer.setPause(true);
+                    buffer.clear();
                     working.set(false);
                     initializeMediaThreads();
                 } catch (InterruptedException e) {
@@ -134,7 +135,6 @@ class BaseMediaWorker implements MediaWorker {
         if (working.compareAndSet(true, false)) {
             curCloser.close();
             service.shutdownNow();
-            buffer.clear();
         }
     }
     /**
@@ -239,8 +239,7 @@ class BaseMediaWorker implements MediaWorker {
                         }
                     }
                 }
-                buffer.writeFrame(new Frame());
-                buffer.writeSample(new Sample());
+                buffer.writeEof();
             } catch (InterruptedException | IOException e) {
                 LOG.error("MovieReader is interrupted", e);
             }
@@ -292,10 +291,11 @@ class BaseMediaWorker implements MediaWorker {
                 MovieAttribute attribute = null;
                 int previousIndex = -1;
                 while (!closer.isClosed() && !Thread.interrupted()) {
-                    Frame frame = buffer.readFrame();
-                    if (frame.isEnd()) {
+                    Optional<Frame> frameOpt = buffer.readFrame();
+                    if (!frameOpt.isPresent()) {
                         break;
                     }
+                    Frame frame = frameOpt.get();
                     if (attribute == null
                             || frame.getMovieAttribute().getIndex()
                                != attribute.getIndex()) {
@@ -346,10 +346,11 @@ class BaseMediaWorker implements MediaWorker {
             Speaker spk = null;
             try {
                 while (!Thread.interrupted() && !closer.isClosed()) {
-                    Sample sample = buffer.readSample();
-                    if (sample.isEnd()) {
+                    Optional<Sample> sampleOpt = buffer.readSample();
+                    if (!sampleOpt.isPresent()) {
                         break;
                     }
+                    Sample sample = sampleOpt.get();
                     if (spk == null) {
                         spk = new Speaker(sample.getMovieAttribute()
                                 .getAudioFormat());

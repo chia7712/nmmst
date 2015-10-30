@@ -27,15 +27,6 @@ public final class Frame {
      */
     private final long imageSize;
     /**
-     * Constructs a frame with end flag.
-     */
-    public Frame() {
-        imageSize = 0;
-        time = 0;
-        attribute = null;
-        image = null;
-    }
-    /**
      * Constructs a frame for specified move attribute, timestamp and image.
      * @param movieAttribute The attribute of {@link MovieStream}
      * @param timestamp The micro timestamp
@@ -75,12 +66,5 @@ public final class Frame {
      */
     public long getTimestamp() {
         return time;
-    }
-    /**
-     * Indicates whether end.
-     * @return {@code true} if end of movie
-     */
-    public boolean isEnd() {
-        return image == null;
     }
 }

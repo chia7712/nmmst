@@ -118,6 +118,7 @@ public class SerialStream implements Closeable {
                 = new CountDownLatch(handlers.size());
         handlers.forEach(handler -> {
             service.execute(() -> {
+                boolean hasDown = false;
                 try {
                     if (needWarmUp) {
                         for (int i = 0; i != WARM_UP_NUMBER; ++i) {
@@ -125,11 +126,15 @@ public class SerialStream implements Closeable {
                         }
                     }
                     latch.countDown();
+                    hasDown = true;
                     latch.await();
                     handler.write(request);
                 } catch (IOException | InterruptedException e) {
                     LOG.error(e);
                 } finally {
+                    if (!hasDown) {
+                        latch.countDown();
+                    }
                     handler.close();
                 }
             });
@@ -217,6 +222,7 @@ public class SerialStream implements Closeable {
     public final void write(final Serializable serial) throws IOException {
         openOutputStream();
         output.writeObject(serial);
+        output.flush();
     }
     @Override
     public final void close() {

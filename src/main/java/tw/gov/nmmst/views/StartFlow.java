@@ -130,10 +130,10 @@ public class StartFlow {
         service = Executors.newSingleThreadExecutor();
         service.execute(() -> {
             try {
+                flow = info.createPlayFlow();
                 SerialStream.sendAll(NodeInformation.getVideoNodes(properties),
                         new Request(RequestType.START), true);
                 final int nanoToMicro = 1000;
-                flow = info.createPlayFlow();
                 while (flow.hasNext()) {
                     MovieAttribute attribute = flow.next();
                     final long startTime = System.nanoTime();

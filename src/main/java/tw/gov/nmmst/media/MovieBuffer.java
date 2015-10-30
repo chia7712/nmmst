@@ -1,5 +1,7 @@
 package tw.gov.nmmst.media;
 
+import java.util.Optional;
+
 /**
  * Buffers the {@link Sample} and the {@link Frame}.
   */
@@ -10,14 +12,19 @@ public interface MovieBuffer extends BufferMetrics {
      * @return The frame from the head of this queue
      * @throws InterruptedException If interrupted while waiting
      */
-    Frame readFrame() throws InterruptedException;
+    Optional<Frame> readFrame() throws InterruptedException;
     /**
      * Retrieves and removes the head of this queue, waiting if necessary
      * until an sample becomes available.
      * @return The sample from the head of this queue
      * @throws InterruptedException If interrupted while waiting
      */
-    Sample readSample() throws InterruptedException;
+    Optional<Sample> readSample() throws InterruptedException;
+    /**
+     * Write a flag to indicate EOF.
+     * @throws InterruptedException If interrupted while waiting
+     */
+    void writeEof() throws InterruptedException;
     /**
      * Inserts the specified frame into this queue, waiting if necessary
      * for space to become available.

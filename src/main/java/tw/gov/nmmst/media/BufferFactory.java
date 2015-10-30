@@ -1,5 +1,6 @@
 package tw.gov.nmmst.media;
 
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,7 +32,7 @@ public final class BufferFactory {
         /**
          * Buffers the samples.
          */
-        private final BlockingQueue<Sample> samples
+        private final BlockingQueue<Optional<Sample>> samples
                 = new LinkedBlockingQueue();
         /**
          * Indicates the pause status.
@@ -44,7 +45,7 @@ public final class BufferFactory {
         /**
          * Buffers the frames.
          */
-        private final BlockingQueue<Frame> frameQueue;
+        private final BlockingQueue<Optional<Frame>> frameQueue;
         /**
          * The max limit of frame buffer.
          */
@@ -89,37 +90,39 @@ public final class BufferFactory {
             return bePaused;
         }
         @Override
-        public Frame readFrame() throws InterruptedException {
+        public Optional<Frame> readFrame() throws InterruptedException {
             if (waitForPause()) {
                 hadPause.set(true);
             }
-            Frame frame = frameQueue.take();
-            heapSize.addAndGet(-frame.getHeapSize());
-            if (!frame.isEnd()) {
-                currentFrame.set(frame);
-            }
+            Optional<Frame> frame = frameQueue.take();
+            frame.ifPresent(f -> {
+                heapSize.addAndGet(-f.getHeapSize());
+                currentFrame.set(f);
+            });
             return frame;
         }
         @Override
-        public Sample readSample() throws InterruptedException {
+        public Optional<Sample> readSample() throws InterruptedException {
             waitForPause();
-            Sample sample = samples.take();
-            heapSize.addAndGet(-sample.getHeapSize());
+            Optional<Sample> sample = samples.take();
+            sample.ifPresent(s -> heapSize.addAndGet(-s.getHeapSize()));
             return sample;
         }
         @Override
         public void writeFrame(final Frame frame) throws InterruptedException {
-            heapSize.addAndGet(frame.getHeapSize());
-            frameQueue.put(frame);
-            if (!frame.isEnd()) {
-                lastFrame.set(frame);
-            }
+            Optional<Frame> frameOpt = Optional.ofNullable(frame);
+            frameOpt.ifPresent(f -> {
+                heapSize.addAndGet(f.getHeapSize());
+                lastFrame.set(f);
+            });
+            frameQueue.put(frameOpt);
         }
         @Override
         public void writeSample(final Sample sample)
                 throws InterruptedException {
-            heapSize.addAndGet(sample.getHeapSize());
-            samples.put(sample);
+            Optional<Sample> sampleOpt = Optional.ofNullable(sample);
+            sampleOpt.ifPresent(s -> heapSize.addAndGet(s.getHeapSize()));
+            samples.put(sampleOpt);
         }
         @Override
         public void setPause(final boolean value) {
@@ -215,6 +218,12 @@ public final class BufferFactory {
                 return frame.getMovieAttribute().getDuration();
             }
             return 0;
+        }
+
+        @Override
+        public void writeEof() throws InterruptedException {
+            writeFrame(null);
+            writeSample(null);
         }
     }
     /**
