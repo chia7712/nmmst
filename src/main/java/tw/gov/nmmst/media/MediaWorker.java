@@ -13,29 +13,29 @@ import tw.gov.nmmst.NProperties;
  */
 public interface MediaWorker {
     /**
-     * Instantiates the media work.
-     * @param properties NProperties
-     * @param closer Closer to set for closing the media worker
-     * @return MediaWorker
-     * @throws IOException If failed to open media file
+     * Trigger the action in the flow end.
      */
-    static MediaWorker createMediaWorker(
-            final NProperties properties, final Closer closer)
-            throws IOException {
-        return new BaseMediaWorker(properties, closer, null);
+    @FunctionalInterface
+    public interface Trigger {
+        /**
+         * Trigger something.
+         */
+        void endFlow();
     }
     /**
      * Instantiates the media work.
      * @param properties NProperties
      * @param closer Closer to set for closing the media worker
      * @param frameProcessor FrameProcessor
+     * @param trigger Trigger
      * @return MediaWorker
      * @throws IOException If failed to open media file
      */
     static MediaWorker createMediaWorker(
             final NProperties properties, final Closer closer,
-            final FrameProcessor frameProcessor)throws IOException {
-        return new BaseMediaWorker(properties, closer, frameProcessor);
+            final FrameProcessor frameProcessor,
+            final Trigger trigger)throws IOException {
+        return new BaseMediaWorker(properties, closer, frameProcessor, trigger);
     }
     /**
      * Sets the movie index fo specified order.

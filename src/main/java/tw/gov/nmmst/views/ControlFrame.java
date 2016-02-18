@@ -3,22 +3,28 @@ package tw.gov.nmmst.views;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
+import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.controller.ControllerFactory;
 import tw.gov.nmmst.controller.StickTrigger;
 import tw.gov.nmmst.controller.WheelTrigger;
 import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.media.MediaWorker;
 import tw.gov.nmmst.utils.RegisterUtil;
+import tw.gov.nmmst.utils.RequestUtil;
+import tw.gov.nmmst.utils.SerialStream;
 /**
  * The control node plays the movies and interacts with user.
  */
@@ -83,17 +89,34 @@ public final class ControlFrame {
          * @param file properties file
          * @throws IOException If failed to open movies.
          */
+        @SuppressWarnings("checkstyle:anoninnerlength")
         ControlFrameData(final File file) throws IOException {
             super(file);
             List<ControllerFactory.Trigger> triggerList
                 = new LinkedList();
-            StickTrigger stickTrigger = null;
-            if (getNProperties().getBoolean(NConstants.STICK_ENABLE)) {
-                stickTrigger = new StickTrigger(getNProperties());
+            StickTrigger stickTrigger = createStickTrigger(getNProperties());
+            if (stickTrigger != null) {
                 triggerList.add(stickTrigger);
             }
             media = MediaWorker.createMediaWorker(
-                getNProperties(), getCloser(), stickTrigger);
+                getNProperties(), getCloser(), stickTrigger, () -> {
+                    Optional<NodeInformation> node
+                        = NodeInformation.getMasterNode(getNProperties());
+                    try {
+                        if (node.isPresent() && stickTrigger != null) {
+                            List<BufferedImage> images
+                                = stickTrigger.cloneSnapshot();
+                            if (images.isEmpty()) {
+                                return;
+                            }
+                            SerialStream.send(node.get(),
+                            new RequestUtil.SetImageRequest(images),
+                            getNProperties());
+                        }
+                    } catch (IOException | InterruptedException e) {
+                        LOG.error(e);
+                    }
+                });
             if (getNProperties().getBoolean(NConstants.WHEEL_ENABLE)) {
                 triggerList.add(new WheelTrigger(
                     getNProperties(), getCloser(), media));
@@ -107,6 +130,16 @@ public final class ControlFrame {
                     stickTrigger);
             RegisterUtil.invokeReporter(getCloser(),
                     getNodeInformation(), media.getMovieBuffer());
+        }
+        /**
+         * @param pro The app properties
+         * @return A stick trigger or null
+         */
+        private static StickTrigger createStickTrigger(final NProperties pro) {
+            if (pro.getBoolean(NConstants.STICK_ENABLE)) {
+                return new StickTrigger(pro);
+            }
+            return null;
         }
         /**
          * Retrieves the key listener whihc is come from {@link StickTrigger}

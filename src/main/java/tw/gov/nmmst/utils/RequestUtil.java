@@ -6,6 +6,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.imageio.ImageIO;
@@ -126,6 +129,10 @@ public final class RequestUtil {
          */
         FUSION_TEST,
         /**
+         * SET_IMAGE request.
+         */
+        SET_IMAGE,
+        /**
          * PARTY_1 request.
          */
         PARTY_1,
@@ -194,6 +201,45 @@ public final class RequestUtil {
          */
         public final Request toWarmUp() {
             return new Request();
+        }
+    }
+    /**
+     * Sets the background in the fusion green.
+     * Does we should set the limit of image number??
+     */
+    public static class SetImageRequest extends Request {
+        /**
+         * The bytes array of image data.
+         */
+        private final List<byte[]> imageData = new LinkedList();
+        /**
+         * Constructs a request for executing fusion test.
+         * @param images The image is sent to fusion nodes
+         * @throws java.io.IOException Failed to seralize image
+         */
+        public SetImageRequest(final List<BufferedImage> images)
+            throws IOException {
+            super(RequestType.SET_IMAGE);
+            if (images.isEmpty()) {
+                throw new RuntimeException("No found of image data");
+            }
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            for (BufferedImage image : images) {
+                ImageIO.write(image, "jpg", baos);
+                imageData.add(baos.toByteArray());
+            }
+        }
+        /**
+         * @return The image
+         * @throws IOException If failed to convert bytes array
+         * to image
+         */
+        public final List<BufferedImage> getImage() throws IOException {
+            List<BufferedImage> images = new ArrayList(imageData.size());
+            for (byte[] data : imageData) {
+                images.add(ImageIO.read(new ByteArrayInputStream(data)));
+            }
+            return images;
         }
     }
     /**

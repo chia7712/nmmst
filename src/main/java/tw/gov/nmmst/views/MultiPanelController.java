@@ -101,8 +101,9 @@ public class MultiPanelController implements KeyListener {
                         JPanel panel = panelList.get(snapshotPanelIndex);
                         if (panel.getClass() == SnapshotPanel.class
                            && stickTrigger != null) {
-                            ((SnapshotPanel) panel).addImages(
-                                    stickTrigger.cloneSnapshot());
+                            List<BufferedImage> images
+                                = stickTrigger.cloneSnapshot();
+                            ((SnapshotPanel) panel).addImages(images);
                         }
                     }
                     cardLayout.show(mainPanel, keyPress);

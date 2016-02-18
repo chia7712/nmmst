@@ -1,15 +1,22 @@
 package tw.gov.nmmst.views;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.NodeInformation;
@@ -25,12 +32,17 @@ import tw.gov.nmmst.utils.ProjectorUtil;
 import tw.gov.nmmst.utils.RegisterUtil;
 import tw.gov.nmmst.utils.RequestUtil;
 import tw.gov.nmmst.utils.RequestUtil.SelectRequest;
+import tw.gov.nmmst.utils.RequestUtil.SetImageRequest;
 import tw.gov.nmmst.utils.SerialStream;
 import tw.gov.nmmst.utils.WolUtil;
 /**
  * The data of master frame.
  */
 public class MasterFrameData implements FrameData {
+    /**
+     * Log.
+     */
+    private static final Log LOG = LogFactory.getLog(MasterFrameData.class);
     /**
      * Message for resetting the hardware.
      */
@@ -82,10 +94,41 @@ public class MasterFrameData implements FrameData {
     private final Map<RequestUtil.RequestType, RequestFunction> functions
             = new TreeMap();
     /**
+     * The snapshot from control node.
+     * A fucking game for the dead man.
+     */
+    private final List<BufferedImage> snapshots = new LinkedList();
+    /**
+     * Defalut snapshots.
+     */
+    private final List<BufferedImage> defaultSnapshots
+            = loadDefaultSnapshots(new File("D:\\片尾圖片"));
+    /**
+     * Loads the default snapshots.
+     * The snapshots may be fucking ugly, so we dont have to resize it.
+     * @param dir The snapshot to locate
+     * @return An array of snapshots
+     */
+    private static List<BufferedImage> loadDefaultSnapshots(final File dir) {
+        List<BufferedImage> rval = new LinkedList();
+        for (File f : dir.listFiles()) {
+            try {
+                rval.add(ImageIO.read(f));
+            } catch (IOException e) {
+                LOG.error("Failed to load default snapshot", e);
+            }
+        }
+        if (rval.isEmpty()) {
+            LOG.error("No found of default snapshots");
+        }
+        return rval;
+    }
+    /**
      * Constructs a data of master frame.
      * @param file The initial properties
      * @throws IOException If failed to open movie
      */
+    @SuppressWarnings("checkstyle:methodlength")
     public MasterFrameData(final File file) throws IOException {
         if (file == null) {
             properties = new NProperties();
@@ -105,7 +148,6 @@ public class MasterFrameData implements FrameData {
         flow = new StartFlow(properties, watcher, order, dio);
         videoNodes = NodeInformation.getVideoNodes(properties);
         Arrays.asList(RequestUtil.RequestType.values())
-              .stream()
               .forEach(type -> {
             switch (type) {
                 case START:
@@ -113,7 +155,34 @@ public class MasterFrameData implements FrameData {
                         if (flow.isStart()) {
                             JOptionPane.showMessageDialog(null, "正在播放");
                         } else {
-                            flow.invokeStartThread();
+                            synchronized (snapshots) {
+                                snapshots.clear();
+                            }
+                            flow.invokeStartThread(() -> {
+                                final int nodeNumber = 4;
+                                if (defaultSnapshots.isEmpty()) {
+                                    LOG.error("No default snapshots!!!");
+                                    return;
+                                }
+                                List<BufferedImage> images
+                                    = new ArrayList(nodeNumber);
+                                for (int i = 0; i != nodeNumber; ++i) {
+                                    int index = (int) (
+                                    Math.random() * defaultSnapshots.size());
+                                    images.add(defaultSnapshots.get(index));
+                                }
+                                try {
+                                    SerialStream.sendAll(
+                                    NodeInformation.getFusionVideoNodes(
+                                        properties),
+                                    new RequestUtil.SetImageRequest(images),
+                                    false);
+                                } catch (InterruptedException | IOException e) {
+                                    LOG.error(e);
+                                } finally {
+                                    LOG.info("send " + nodeNumber + " images");
+                                }
+                            });
                         }
                     });
                     break;
@@ -211,7 +280,6 @@ public class MasterFrameData implements FrameData {
                             dio.stoneGotoRight();
                             dio.lightParty2();
                         }
-
                     });
                     break;
                 case WOL:
@@ -225,6 +293,20 @@ public class MasterFrameData implements FrameData {
                                     nodeInformation.getMac());
                         }
                         ProjectorUtil.enableAllMachine(properties, true);
+                    });
+                    break;
+                case SET_IMAGE:
+                    functions.put(type, (data, previousReq, currentReq)
+                        -> {
+                        if (currentReq.getClass() == SetImageRequest.class) {
+                            List<BufferedImage> images
+                                = ((SetImageRequest) currentReq).getImage();
+                            synchronized (snapshots) {
+                                snapshots.clear();
+                                snapshots.addAll(images);
+                            }
+                            LOG.info("Receive the images:" + snapshots.size());
+                        }
                     });
                     break;
                 default:

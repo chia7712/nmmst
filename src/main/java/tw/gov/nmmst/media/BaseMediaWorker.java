@@ -71,15 +71,20 @@ class BaseMediaWorker implements MediaWorker {
      */
     private AtomicCloser curCloser;
     /**
+     * To trigger when the video is end.
+     */
+    private final Trigger trigger;
+    /**
      * Constructs a media worker for specified properties,
      * closer and frame processor.
      * @param properties NProperties
      * @param closer Closer
      * @param frameProcessor FrameProcessor
+     * @param endTrigger Trigger
      * @throws IOException If failed to create movie info
      */
     public BaseMediaWorker(final NProperties properties, final Closer closer,
-            final FrameProcessor frameProcessor
+            final FrameProcessor frameProcessor, final Trigger endTrigger
             ) throws IOException {
         movieInfo = new MovieInfo(properties);
         buffer = BufferFactory.createMovieBuffer(properties);
@@ -89,6 +94,7 @@ class BaseMediaWorker implements MediaWorker {
             properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
             properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
             Color.BLACK);
+        trigger = endTrigger;
         panel = new BasePanel(initImage, BasePanel.Mode.FILL);
         closer.invokeNewThread(new Taskable() {
             @Override
@@ -147,8 +153,8 @@ class BaseMediaWorker implements MediaWorker {
             reader = new MovieReader(
                     curCloser, buffer, movieInfo, processor);
             service.execute(reader);
-            service.execute(new PanelThread(
-                    curCloser, buffer, panel, processor));
+            service.execute(new PanelThread(curCloser, buffer, panel,
+                processor, trigger));
             service.execute(new SpeakerThread(curCloser, buffer));
             processor.ifPresent(p -> p.init());
             service.shutdown();
@@ -270,20 +276,27 @@ class BaseMediaWorker implements MediaWorker {
          */
         private final Optional<FrameProcessor> processor;
         /**
+         * Trigger in the video end.
+         */
+        private final Optional<Trigger> trigger;
+        /**
          * Constructs a thread for drawing the frame.
          * @param atomicCloser Closer
          * @param movieBuffer Movie buffer
          * @param basePanel Image output
          * @param frameProcessor Frame/Image processor
+         * @param endTrigger The end trigger
          */
         PanelThread(final AtomicCloser atomicCloser,
                 final MovieBuffer movieBuffer,
                 final BasePanel basePanel,
-                final Optional<FrameProcessor> frameProcessor) {
+                final Optional<FrameProcessor> frameProcessor,
+                final Trigger endTrigger) {
             closer = atomicCloser;
             processor = frameProcessor;
             buffer = movieBuffer;
             panel = basePanel;
+            trigger = Optional.ofNullable(endTrigger);
         }
         @Override
         public void run() {
@@ -293,6 +306,7 @@ class BaseMediaWorker implements MediaWorker {
                 while (!closer.isClosed() && !Thread.interrupted()) {
                     Optional<Frame> frameOpt = buffer.readFrame();
                     if (!frameOpt.isPresent()) {
+                        trigger.ifPresent(v -> v.endFlow());
                         break;
                     }
                     Frame frame = frameOpt.get();

@@ -70,9 +70,14 @@ public final class DioBdaq implements DioInterface {
         TimeUnit.MILLISECONDS.sleep(600);
         pci1739u.Write(0, (byte) 0xff);
         TimeUnit.MILLISECONDS.sleep(600);
+        //submarine forward
+        pci1739u.Write(0, (byte) 0xfd);
+        TimeUnit.SECONDS.sleep(5);
+        pci1739u.Write(0, (byte) 0xff);
+        TimeUnit.MILLISECONDS.sleep(600);
         //submarine down and forward
         pci1739u.Write(0, (byte) 0xed);
-        TimeUnit.SECONDS.sleep(20);
+        TimeUnit.SECONDS.sleep(15);
         pci1739u.Write(0, (byte) 0xff);
         TimeUnit.MILLISECONDS.sleep(600);
         //submarine up and forward
@@ -91,15 +96,6 @@ public final class DioBdaq implements DioInterface {
         pci1735u.Write(0, (byte) 0x05);
         TimeUnit.SECONDS.sleep(35);
         pci1735u.Write(0, (byte) 0x00);
-    }
-    /**
-     * None.
-     * @throws InterruptedException error
-     */
-    void submarineGotoBack() throws InterruptedException {
-        pci1739u.Write(0, (byte) 0xfb);
-        TimeUnit.SECONDS.sleep(40);
-        pci1739u.Write(0, (byte) 0xff);
     }
     /**
      * None.

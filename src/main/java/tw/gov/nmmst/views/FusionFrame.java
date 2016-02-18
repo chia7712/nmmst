@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -19,6 +20,7 @@ import tw.gov.nmmst.utils.RegisterUtil;
 import tw.gov.nmmst.utils.RequestUtil;
 import tw.gov.nmmst.utils.RequestUtil.FusionTestRequest;
 import tw.gov.nmmst.utils.RequestUtil.Request;
+import tw.gov.nmmst.utils.RequestUtil.SetImageRequest;
 /**
  * The fusion node plays the movies with fusing the image edge.
  */
@@ -82,14 +84,14 @@ public final class FusionFrame {
             media = MediaWorker.createMediaWorker(
                 getNProperties(), getCloser(),
                 ProcessorFactory.createFrameProcessor(
-                        getNodeInformation().getLocation()));
+                        getNodeInformation().getLocation()), null);
             RegisterUtil.invokeReporter(getCloser(),
                     getNodeInformation(), media.getMovieBuffer());
             getFunctions().put(RequestUtil.RequestType.FUSION_TEST,
                 (FrameData data, Request previousReq, Request currentReq)
                 -> {
                     if (currentReq.getClass() == FusionTestRequest.class) {
-                        RequestUtil.FusionTestRequest fusionReq
+                        FusionTestRequest fusionReq
                                 = (RequestUtil.FusionTestRequest) currentReq;
                         BufferedImage image = fusionReq.getImage();
                         LinearProcessor processor
@@ -98,6 +100,24 @@ public final class FusionFrame {
                                 fusionReq.getFactor());
                         processor.process(image);
                         data.getMainPanel().write(image);
+                    }
+                });
+            getFunctions().put(RequestUtil.RequestType.SET_IMAGE,
+                (FrameData data, Request previousReq, Request currentReq)
+                -> {
+                    if (currentReq.getClass() == SetImageRequest.class) {
+                        SetImageRequest fusionReq
+                                = (SetImageRequest) currentReq;
+                        List<BufferedImage> images = fusionReq.getImage();
+                        if (images.isEmpty()) {
+                            return;
+                        }
+                        int index
+                            = getNodeInformation().getLocation().ordinal();
+                        if (index >= images.size()) {
+                            index = 0;
+                        }
+                        data.getMainPanel().write(images.get(index));
                     }
                 });
         }

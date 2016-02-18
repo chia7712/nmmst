@@ -29,6 +29,16 @@ import tw.gov.nmmst.utils.SerialStream;
  */
 public class StartFlow {
     /**
+     * Trigger the action in the flow end.
+     */
+    @FunctionalInterface
+    public interface Trigger {
+        /**
+         * Trigger something.
+         */
+        void endFlow();
+    }
+    /**
      * Log.
      */
     private static final Log LOG
@@ -107,10 +117,11 @@ public class StartFlow {
     }
     /**
      * Starts this flow.
+     * @param trigger To trigger the end
      * @throws InterruptedException If this flow is broke
      * @throws IOException If failed to send request to any video nodes
      */
-    public final void invokeStartThread()
+    public final void invokeStartThread(final Trigger trigger)
             throws IOException, InterruptedException {
         if (!started.compareAndSet(false, true)) {
             return;
@@ -149,6 +160,9 @@ public class StartFlow {
                 LOG.error(e);
             } finally {
                 started.set(false);
+                if (trigger != null) {
+                    trigger.endFlow();
+                }
             }
         });
     }
