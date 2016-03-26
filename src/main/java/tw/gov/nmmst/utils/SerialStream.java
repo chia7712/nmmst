@@ -57,12 +57,11 @@ public class SerialStream implements Closeable {
      * accomplish all transfer process.
      * @param nodeInformation The node to send to
      * @param request The object to transfer
-     * @param properties NProperties
      * @throws InterruptedException If this method is broke
      * @throws IOException If failed to transfer object
      */
     public static void send(final NodeInformation nodeInformation,
-            final Request request, final NProperties properties)
+            final Request request)
             throws InterruptedException, IOException {
         sendAll(Arrays.asList(nodeInformation),
                 request, false);
@@ -81,7 +80,7 @@ public class SerialStream implements Closeable {
             final Collection<NodeInformation> nodeInformations,
             final Request request, final boolean needWarmUp)
             throws InterruptedException, IOException {
-        List<SerialStream> handlers = new ArrayList(nodeInformations.size());
+        List<SerialStream> handlers = new ArrayList<>(nodeInformations.size());
         for (NodeInformation playerInfo : nodeInformations) {
             try {
                 SerialStream stream = new SerialStream(new Socket(

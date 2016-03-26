@@ -91,7 +91,7 @@ public class PanelController implements RegisterUtil.Notifiable {
      * All components are to set listener.
      */
     private final List<Component> componentList
-            = new LinkedList();
+            = new LinkedList<>();
     /**
      * Displays the node metrics.
      */

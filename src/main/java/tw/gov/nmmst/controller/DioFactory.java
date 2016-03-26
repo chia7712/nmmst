@@ -2,6 +2,7 @@ package tw.gov.nmmst.controller;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 
 /**
@@ -23,6 +24,10 @@ public final class DioFactory {
      * because it may does not exist the pci device in the test enviroment.
      */
     public static DioInterface getDefault(final NProperties properties) {
+        if (!properties.getBoolean(NConstants.DIO_ENABLE)) {
+            LOG.info("virtual dio device");
+            return new DioInterface() { };
+        }
         DioInterface rval;
         try {
             rval = new DioBdaq(properties);

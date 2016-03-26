@@ -122,7 +122,7 @@ public final class RegisterUtil {
          * @param properties NProperties
          * @param notifiable Notifiable
          */
-        public WatcherImpl(final NProperties properties,
+        WatcherImpl(final NProperties properties,
                 final Notifiable notifiable) {
             nodeInformations = NodeInformation.getVideoNodes(properties);
             lowerLimit = properties.getDouble(
@@ -249,7 +249,7 @@ public final class RegisterUtil {
          * @param bufferMetrics BufferMetrics
          * @throws IOException If failed to establish a server socket
          */
-        public Reporter(final NodeInformation info,
+        Reporter(final NodeInformation info,
                 final BufferMetrics bufferMetrics)throws IOException {
             server = new ServerSocket(info.getRegisterPort());
             metrics = bufferMetrics;
@@ -328,7 +328,7 @@ public final class RegisterUtil {
          * Constructs a serialized {@link BufferMetrics}.
          * @param metrics BufferMetrics
          */
-        public SerializedBufferMetrics(final BufferMetrics metrics) {
+        SerializedBufferMetrics(final BufferMetrics metrics) {
             frameNumber = metrics.getFrameNumber();
             sampleNumber = metrics.getSampleNumber();
             frameCapacity = metrics.getFrameCapacity();

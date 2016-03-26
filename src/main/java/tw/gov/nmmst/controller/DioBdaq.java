@@ -64,12 +64,19 @@ public final class DioBdaq implements DioInterface {
         }
     }
     @Override
+    public void triggerSunmarineLight() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0x9f);
+        TimeUnit.MILLISECONDS.sleep(1000);
+        pci1739u.Write(0, (byte) 0xff);
+        TimeUnit.MILLISECONDS.sleep(800);
+    }
+    @Override
     public void submarineGotoEnd() throws InterruptedException {
         //submarine light on
         pci1739u.Write(0, (byte) 0x9f);
-        TimeUnit.MILLISECONDS.sleep(600);
+        TimeUnit.MILLISECONDS.sleep(1000);
         pci1739u.Write(0, (byte) 0xff);
-        TimeUnit.MILLISECONDS.sleep(600);
+        TimeUnit.MILLISECONDS.sleep(800);
         //submarine forward
         pci1739u.Write(0, (byte) 0xfd);
         TimeUnit.SECONDS.sleep(5);
@@ -101,10 +108,15 @@ public final class DioBdaq implements DioInterface {
      * None.
      * @throws InterruptedException error
      */
+    void submarineGotoBack() throws InterruptedException {
+        pci1739u.Write(0, (byte) 0xfb);
+    }
+    /**
+     * None.
+     * @throws InterruptedException error
+     */
     void submarineGotoForware() throws InterruptedException {
         pci1739u.Write(0, (byte) 0xfd);
-        TimeUnit.SECONDS.sleep(40);
-        pci1739u.Write(0, (byte) 0xff);
     }
      /**
      * None.
@@ -112,8 +124,6 @@ public final class DioBdaq implements DioInterface {
      */
     void submarineGotoDown() throws InterruptedException {
         pci1739u.Write(0, (byte) 0xef);
-        TimeUnit.SECONDS.sleep(40);
-        pci1739u.Write(0, (byte) 0xff);
     }
      /**
      * None.
@@ -121,19 +131,14 @@ public final class DioBdaq implements DioInterface {
      */
     void submarineGotoUp() throws InterruptedException {
         pci1739u.Write(0, (byte) 0xf7);
-        TimeUnit.SECONDS.sleep(40);
-        pci1739u.Write(0, (byte) 0xff);
     }
     @Override
-    public void initializeSubmarineAndGray() throws InterruptedException {
+    public void initializeSubmarine() throws InterruptedException {
         try {
-            pci1739u.Write(0, (byte) 0xfb);
-            grayDown();
+            submarineGotoBack();
             TimeUnit.SECONDS.sleep(elapsedInit);
-        } finally {
             pci1739u.Write(0, (byte) 0xff);
-            grayStop();
-            TimeUnit.MILLISECONDS.sleep(600);
+        } finally {
             //submarine light off
             pci1739u.Write(0, (byte) 0x9f);
             TimeUnit.MILLISECONDS.sleep(600);
@@ -200,12 +205,12 @@ public final class DioBdaq implements DioInterface {
                 pci1739u.Write(1, (byte) 0xFF);
                 break;
             case 1://PCI-1739U CN1 13 two-movie
-                pci1739u.Write(1, (byte) 0xDF);
+                pci1739u.Write(1, (byte) 0xBF);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 pci1739u.Write(1, (byte) 0xFF);
                 break;
             case 2://PCI-1739U CN1 14 three-movie
-                pci1739u.Write(1, (byte) 0xBF);
+                pci1739u.Write(1, (byte) 0xDF);
                 TimeUnit.MILLISECONDS.sleep(sleepTime);
                 pci1739u.Write(1, (byte) 0xFF);
                 break;

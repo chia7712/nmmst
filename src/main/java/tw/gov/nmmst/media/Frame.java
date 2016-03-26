@@ -28,17 +28,17 @@ public final class Frame {
     private final long imageSize;
     /**
      * Constructs a frame for specified move attribute, timestamp and image.
-     * @param movieAttribute The attribute of {@link MovieStream}
-     * @param timestamp The micro timestamp
-     * @param bufferedImage Image
+     * @param attribute The attribute of {@link MovieStream}
+     * @param time The micro timestamp
+     * @param image Image
      */
-    public Frame(final MovieAttribute movieAttribute,
-            final long timestamp, final BufferedImage bufferedImage) {
-        attribute = movieAttribute;
-        time = timestamp;
-        image = bufferedImage;
+    public Frame(final MovieAttribute attribute,
+            final long time, final BufferedImage image) {
+        this.attribute = attribute;
+        this.time = time;
+        this.image = image;
         DataBuffer buff = image.getRaster().getDataBuffer();
-        imageSize = buff.getSize()
+        this.imageSize = buff.getSize()
                     * DataBuffer.getDataTypeSize(buff.getDataType())
                     / BIT_TO_BYTES;
     }

@@ -2,23 +2,42 @@ package tw.gov.nmmst.controller;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javafx.util.Pair;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.processor.FrameProcessor;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
+import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.utils.Painter;
+import tw.gov.nmmst.utils.RequestUtil;
+import tw.gov.nmmst.utils.SerialStream;
 /**
  * Draws the snapshots before printing frame on the panel.
  */
 public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
+    /**
+     * Log.
+     */
+    private static final Log LOG = LogFactory.getLog(StickTrigger.class);
+    /**
+     * The period to refresh the selected string.
+     * Default value is one second.
+     */
+    private static final long REFRESH_PERIOD = 1000;
     /**
      * Supplies three modes for displaying the current snapshot.
      */
@@ -39,7 +58,7 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
     /**
      * The captured snapshots.
      */
-    private final List<BufferedImage> snapshots = new LinkedList();
+    private final List<BufferedImage> snapshots;
     /**
      * Detects the vertical direction.
      */
@@ -73,11 +92,17 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
      * Press flag.
      */
     private final AtomicBoolean pressed = new AtomicBoolean();
+    
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    
+    private final BlockingQueue<Object> outsideNotify = new ArrayBlockingQueue<>(1);
+    private final BlockingQueue<Object> insideNotify = new ArrayBlockingQueue<>(1);
     /**
      * Constructs a strick trigger with specified properties.
      * @param properties NProperties
+     * @param closer Close the errand
      */
-    public StickTrigger(final NProperties properties) {
+    public StickTrigger(final NProperties properties, final Closer closer) {
         final double stickMinValue
                 = properties.getDouble(NConstants.STICK_MIN_VALUE);
         final double stickMaxValue
@@ -87,38 +112,77 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
         final double stickMaxInitValue
                 = properties.getDouble(NConstants.STICK_MAX_INIT_VALUE);
         verticalDetector = new DirectionDetector(
-                new Pair(stickMinValue, stickMaxValue),
-                new Pair(stickMinInitValue, stickMaxInitValue));
+                new Pair<>(stickMinValue, stickMaxValue),
+                new Pair<>(stickMinInitValue, stickMaxInitValue));
         horizontalDetector = new DirectionDetector(
-                new Pair(stickMinValue, stickMaxValue),
-                new Pair(stickMinInitValue, stickMaxInitValue));
+                new Pair<>(stickMinValue, stickMaxValue),
+                new Pair<>(stickMinInitValue, stickMaxInitValue));
         stickPressValue = properties.getDouble(NConstants.STICK_PRESS_VALUE);
         snapshotScale = properties.getDouble(NConstants.SNAPSHOT_SCALE);
         snapshotLimit = (int) Math.pow(Math.pow(snapshotScale, -1), 2);
+        LOG.info("The snapshot limit is " + snapshotLimit);
+        snapshots = new ArrayList<>(snapshotLimit);
+        closer.invokeNewThread(() -> {
+            try {
+                insideNotify.take();
+                sendSnapshot(properties, cloneSnapshot());
+            } catch (InterruptedException e) {
+                LOG.debug(e);
+            }
+        });
+    }
+    public final void waitForChange() throws InterruptedException {
+        outsideNotify.take();
     }
     /**
      * Clones the current snapshots.
      * @return A list of snapshots
      */
     public final List<BufferedImage> cloneSnapshot() {
-        return new ArrayList(snapshots);
+        lock.readLock().lock();
+        try {
+            return new ArrayList<>(snapshots);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
     @Override
     public final void init() {
-        snapshots.clear();
+        lock.writeLock().lock();
+        try {
+            snapshots.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
     @Override
     public final Optional<BufferedImage> prePrintPanel(
             final BufferedImage image) {
-        if (pressed.compareAndSet(true, false)
-                && snapshots.size() < snapshotLimit) {
-            snapshots.add(Painter.process(image, Painter.getCopyPainter()));
-            snapshotIndex.set(snapshots.size() - 1);
+        if (pressed.compareAndSet(true, false)) {
+            lock.writeLock().lock();
+            try {
+                if (snapshots.size() >= snapshotLimit && !snapshots.isEmpty()) {
+                    snapshots.remove(0);
+                }
+                snapshots.add(Painter.process(image, Painter.getCopyPainter()));
+                snapshotIndex.set(snapshots.size() - 1);
+                Object obj = new Object();
+                outsideNotify.offer(obj);
+                insideNotify.offer(obj);
+            } finally {
+                lock.writeLock().unlock();
+            }
         }
-        if (snapshots.isEmpty()) {
-            return Optional.of(image);
+        BufferedImage snapshot;
+        lock.readLock().lock();
+        try {
+            if (snapshots.isEmpty()) {
+                return Optional.of(image);
+            }
+            snapshot = snapshots.get(snapshotIndex.get() % snapshots.size());
+        } finally {
+            lock.readLock().unlock();
         }
-        BufferedImage snapshot = snapshots.get(snapshotIndex.get());
         switch (SnapshotMode.values()[modeIndex.get()]) {
             case FULL:
                 return Optional.of(snapshot);
@@ -126,10 +190,8 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
                 Graphics2D g = (Graphics2D) image.getGraphics();
                 g.drawImage(
                     snapshot,
-                    Math.max(0, image.getWidth()
-                        - (int) ((double) image.getWidth() * snapshotScale)),
-                    Math.max(0, image.getHeight()
-                        - (int) ((double) image.getHeight() * snapshotScale)),
+                    Math.max(0, image.getWidth() - (int) ((double) snapshot.getWidth() * snapshotScale)),
+                    Math.max(0, image.getHeight() - (int) ((double) snapshot.getHeight() * snapshotScale)),
                     image.getWidth(),
                     image.getHeight(),
                     0,
@@ -148,13 +210,14 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
         if (component.getName().contains("X")) {
             switch (horizontalDetector.detect(component.getPollData())) {
                 case LARGER:
-                    snapshotIndex.accumulateAndGet(snapshotIndex.get() + 1,
-                        (int a, int b) -> {
-                        if (b >= snapshots.size()) {
-                            return a;
-                        }
-                        return b;
-                    });
+                    snapshotIndex.incrementAndGet();
+//                    snapshotIndex.accumulateAndGet(snapshotIndex.get() + 1,
+//                        (int a, int b) -> {
+//                            if (b >= snapshots.size()) {
+//                                return a;
+//                            }
+//                            return b;
+//                    });
                     break;
                 case SMALLER:
                     snapshotIndex.accumulateAndGet(snapshotIndex.get() - 1,
@@ -196,5 +259,25 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
     @Override
     public final Controller.Type getType() {
         return Controller.Type.STICK;
+    }
+    /**
+     * Sends the snapshot request to master node.
+     * @param properties System properties
+     * @param images Stick image
+     */
+    private static void sendSnapshot(final NProperties properties,
+        final List<BufferedImage> images) {
+        if (images.isEmpty()) {
+            return;
+        }
+        Optional<NodeInformation> node = NodeInformation.getMasterNode(properties);
+        try {
+            if (node.isPresent()) {
+                SerialStream.send(node.get(),
+                    new RequestUtil.SetImageRequest(images));
+            }
+        } catch (IOException | InterruptedException e) {
+            LOG.error(e);
+        }
     }
 }

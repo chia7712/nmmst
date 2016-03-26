@@ -73,20 +73,17 @@ public class StartFlow {
     private ExecutorService service;
     /**
      * Constructs the start flow by specified movie order and dio.
-     * @param nproperties NProperties
-     * @param registerWatcher Watches the buffer status for all video nodes
-     * @param movieInfo MovieInfo
-     * @param dioInterface DioInterface
+     * @param properties NProperties
+     * @param watcher Watches the buffer status for all video nodes
+     * @param info MovieInfo
+     * @param dio DioInterface
      */
-    public StartFlow(
-            final NProperties nproperties,
-            final RegisterUtil.Watcher registerWatcher,
-            final MovieInfo movieInfo,
-            final DioInterface dioInterface) {
-        properties = nproperties;
-        watcher = registerWatcher;
-        info = movieInfo;
-        dio = dioInterface;
+    public StartFlow(final NProperties properties, final RegisterUtil.Watcher watcher,
+            final MovieInfo info, final DioInterface dio) {
+        this.properties = properties;
+        this.watcher = watcher;
+        this.info = info;
+        this.dio = dio;
     }
     /**
      * Synchronously stop all action.
@@ -123,6 +120,9 @@ public class StartFlow {
      */
     public final void invokeStartThread(final Trigger trigger)
             throws IOException, InterruptedException {
+        //The fucking man make me to do this
+        final long cutTime = 144 * 1000 * 1000;
+        final int specifiedIndex = 6;
         if (!started.compareAndSet(false, true)) {
             return;
         }
@@ -150,9 +150,18 @@ public class StartFlow {
                     final long startTime = System.nanoTime();
                     dio.light(attribute.getIndex());
                     LOG.info("dio index = " + attribute.getIndex());
-                    TimeUnit.MICROSECONDS.sleep(
-                    attribute.getDuration()
-                        - (System.nanoTime() - startTime) / nanoToMicro);
+                    long sleepTime = attribute.getDuration()
+                            - (System.nanoTime() - startTime)
+                            / nanoToMicro;
+                    if (attribute.getIndex() == specifiedIndex) {
+                        sleepTime -= cutTime;
+                        LOG.info("Reach the specified index, set the "
+                            + "sleep time to " + sleepTime + "microseconds");
+                    }
+                    TimeUnit.MICROSECONDS.sleep(sleepTime);
+                }
+                if (trigger != null) {
+                    trigger.endFlow();
                 }
             } catch (InterruptedException e) {
                 LOG.debug(e);
@@ -160,9 +169,6 @@ public class StartFlow {
                 LOG.error(e);
             } finally {
                 started.set(false);
-                if (trigger != null) {
-                    trigger.endFlow();
-                }
             }
         });
     }

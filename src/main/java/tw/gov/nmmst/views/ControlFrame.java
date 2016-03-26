@@ -3,12 +3,10 @@ package tw.gov.nmmst.views;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
@@ -16,24 +14,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
-import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.controller.ControllerFactory;
 import tw.gov.nmmst.controller.StickTrigger;
 import tw.gov.nmmst.controller.WheelTrigger;
 import tw.gov.nmmst.media.BasePanel;
+import tw.gov.nmmst.media.BufferFactory;
+import tw.gov.nmmst.media.BufferMetrics;
 import tw.gov.nmmst.media.MediaWorker;
+import tw.gov.nmmst.media.MovieBuffer;
+import tw.gov.nmmst.media.MovieInfo;
+import tw.gov.nmmst.processor.FrameProcessor;
+import tw.gov.nmmst.threads.Closer;
+import tw.gov.nmmst.utils.Painter;
 import tw.gov.nmmst.utils.RegisterUtil;
-import tw.gov.nmmst.utils.RequestUtil;
-import tw.gov.nmmst.utils.SerialStream;
 /**
  * The control node plays the movies and interacts with user.
  */
 public final class ControlFrame {
-    /**
-     * Log.
-     */
-    private static final Log LOG
-            = LogFactory.getLog(ControlFrame.class);
+    private static final Log LOG = LogFactory.getLog(ControlFrame.class);
     /**
      * Invokes a control frame.
      * @param args Properties path or no use
@@ -45,7 +43,8 @@ public final class ControlFrame {
             file = new File(args[0]);
         }
         if (file == null) {
-            LOG.info("No found of configuration, use the default");
+            file = new File(ControlFrame.class.getName());
+            LOG.info("No found of configuration, use the default and save the default properties in " + file.getAbsolutePath());
         } else {
             LOG.info("use the configuration : " + file.getPath());
         }
@@ -89,38 +88,32 @@ public final class ControlFrame {
          * @param file properties file
          * @throws IOException If failed to open movies.
          */
-        @SuppressWarnings("checkstyle:anoninnerlength")
         ControlFrameData(final File file) throws IOException {
             super(file);
-            List<ControllerFactory.Trigger> triggerList
-                = new LinkedList();
-            StickTrigger stickTrigger = createStickTrigger(getNProperties());
+            MovieBuffer buffer = BufferFactory.createMovieBuffer(getNProperties());
+            List<ControllerFactory.Trigger> triggerList = new LinkedList<>();
+            List<FrameProcessor> processorList = new LinkedList<>();
+            StickTrigger stickTrigger = createStickTrigger(getNProperties(), getCloser());
             if (stickTrigger != null) {
+                processorList.add(stickTrigger);
                 triggerList.add(stickTrigger);
             }
-            media = MediaWorker.createMediaWorker(
-                getNProperties(), getCloser(), stickTrigger, () -> {
-                    Optional<NodeInformation> node
-                        = NodeInformation.getMasterNode(getNProperties());
-                    try {
-                        if (node.isPresent() && stickTrigger != null) {
-                            List<BufferedImage> images
-                                = stickTrigger.cloneSnapshot();
-                            if (images.isEmpty()) {
-                                return;
-                            }
-                            SerialStream.send(node.get(),
-                            new RequestUtil.SetImageRequest(images),
-                            getNProperties());
-                        }
-                    } catch (IOException | InterruptedException e) {
-                        LOG.error(e);
-                    }
-                });
-            if (getNProperties().getBoolean(NConstants.WHEEL_ENABLE)) {
-                triggerList.add(new WheelTrigger(
-                    getNProperties(), getCloser(), media));
+            WheelTrigger wheelTrigger = createWheelTrigger(getNProperties(), getCloser(), buffer);
+            if (wheelTrigger != null) {
+                processorList.add(wheelTrigger);
+                triggerList.add(wheelTrigger);
             }
+            media = MediaWorker.newBuilder()
+                .setBasePanel(new BasePanel(BasePanel.Mode.FILL))
+                .setBufferedImage(Painter.getStringImage("Coming Soon",
+                    getNProperties().getInteger(NConstants.GENERATED_IMAGE_WIDTH),
+                    getNProperties().getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
+                    getNProperties().getInteger(NConstants.GENERATED_FONT_SIZE)))
+                .setCloser(getCloser())
+                .setFrameProcessor(FrameProcessor.valueOf(processorList))
+                .setMovieBuffer(buffer)
+                .setMovieInfo(new MovieInfo(getNProperties()))
+                .build();
             ControllerFactory.invokeTriggers(
                 getNProperties(),
                 getCloser(),
@@ -132,12 +125,27 @@ public final class ControlFrame {
                     getNodeInformation(), media.getMovieBuffer());
         }
         /**
-         * @param pro The app properties
+         * @param property The app properties
+         * @param closer Close the errand thread
+         * @param buffer Save the current frame
          * @return A stick trigger or null
          */
-        private static StickTrigger createStickTrigger(final NProperties pro) {
-            if (pro.getBoolean(NConstants.STICK_ENABLE)) {
-                return new StickTrigger(pro);
+        private static WheelTrigger createWheelTrigger(final NProperties property,
+            final Closer closer, final BufferMetrics buffer) {
+            if (property.getBoolean(NConstants.WHEEL_ENABLE)) {
+                return new WheelTrigger(property, closer, buffer);
+            }
+            return null;
+        }
+        /**
+         * @param property The app properties
+         * @param closer Close the errand thread
+         * @return A stick trigger or null
+         */
+        private static StickTrigger createStickTrigger(final NProperties property,
+            final Closer closer) {
+            if (property.getBoolean(NConstants.STICK_ENABLE)) {
+                return new StickTrigger(property, closer);
             }
             return null;
         }

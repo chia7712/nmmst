@@ -69,7 +69,7 @@ public final class BufferFactory {
          * @param properties NProperties provides the limit of
          * buffer.
          */
-        public BaseBuffer(final NProperties properties) {
+        BaseBuffer(final NProperties properties) {
             frameBufferLimit = properties.getInteger(
                 NConstants.FRAME_QUEUE_SIZE);
             frameQueue = new ArrayBlockingQueue(frameBufferLimit);

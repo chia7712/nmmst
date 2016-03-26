@@ -6,6 +6,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.stream.Stream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import tw.gov.nmmst.threads.AtomicCloser;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.NodeInformation;
@@ -21,6 +24,7 @@ import tw.gov.nmmst.utils.WindowsUtil;
  * {@link Request} queue and {@link RequestFunction}.
  */
 public abstract class VideoData implements FrameData {
+    private static final Log LOG = LogFactory.getLog(VideoData.class);
     /**
      * NProperties.
      */
@@ -41,7 +45,7 @@ public abstract class VideoData implements FrameData {
      * Request functions.
      */
     private final Map<RequestUtil.RequestType, RequestFunction> functions
-            = new TreeMap();
+            = new TreeMap<>();
     /**
      * Constructs a data of base frame.
      * @throws IOException If failed to open movies
@@ -55,52 +59,32 @@ public abstract class VideoData implements FrameData {
      * @throws IOException If failed to open movies
      */
     public VideoData(final File file) throws IOException {
-        if (file == null) {
-            properties = new NProperties();
-        } else {
-            properties = new NProperties(file);
-        }
-        selfInformation
-            = NodeInformation.getNodeInformationByAddress(properties);
-        requestQueue
-            = RequestUtil.createRemoteQueue(selfInformation, closer);
-        Arrays.asList(RequestType.values()).stream().forEach(type -> {
-            switch (type) {
-                case START:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> data.getMediaWorker().setPause(false));
-                    break;
-                case STOP:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> data.getMediaWorker().stopAsync());
-                    break;
-                case PAUSE:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> data.getMediaWorker().setPause(true));
-                    break;
-                case SELECT:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> {
-                            if (currentReq.getClass() == SelectRequest.class) {
-                                SelectRequest select
-                                    = (SelectRequest) currentReq;
-                                data.getMediaWorker().setNextFlow(
-                                    select.getIndex());
-                            }
-                        });
-                    break;
-                case REBOOT:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> WindowsUtil.reboot());
-                    break;
-                case SHUTDOWN:
-                    functions.put(type, (data, previousReq, currentReq)
-                        -> WindowsUtil.shutdown());
-                    break;
-                default:
-                    break;
-            }
-        });
+        properties = new NProperties(file);
+        selfInformation = NodeInformation.getNodeInformationByAddress(properties);
+        requestQueue = RequestUtil.createRemoteQueue(selfInformation, closer);
+        functions.put(RequestType.START, (data, previousReq, currentReq)
+            -> {
+                data.getMediaWorker().getPanel().unlockImage();
+                data.getMediaWorker().setPause(false);
+            });
+        functions.put(RequestType.STOP, (data, previousReq, currentReq)
+            -> data.getMediaWorker().stopAsync());
+        functions.put(RequestType.PAUSE, (data, previousReq, currentReq)
+            -> data.getMediaWorker().setPause(true));
+        functions.put(RequestType.SELECT, (data, previousReq, currentReq)
+            -> {
+                if (currentReq.getClass() == SelectRequest.class) {
+                    SelectRequest select
+                        = (SelectRequest) currentReq;
+                    data.getMediaWorker().setNextFlow(
+                        select.getIndex());
+                    LOG.info("set next index:" + select.getIndex());
+                }
+            });
+        functions.put(RequestType.REBOOT, (data, previousReq, currentReq)
+            -> WindowsUtil.reboot());
+        functions.put(RequestType.SHUTDOWN, (data, previousReq, currentReq)
+            -> WindowsUtil.shutdown());     
     }
     @Override
     public final Map<RequestUtil.RequestType, RequestFunction> getFunctions() {

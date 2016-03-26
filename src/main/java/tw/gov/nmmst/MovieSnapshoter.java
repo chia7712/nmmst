@@ -1,5 +1,6 @@
 package tw.gov.nmmst;
 
+import tw.gov.nmmst.app.FusionTuner;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.WindowEvent;

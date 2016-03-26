@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.sound.sampled.AudioFormat;
+import tw.gov.nmmst.utils.Painter;
 /**
  * Decodes the audio and video from a movie file.
  * @see Frame
@@ -97,7 +98,7 @@ public final class MovieStream implements MovieAttribute, Closeable {
      */
     private static Map<Integer, IStreamCoder> newOpenedCoders(
             final IContainer container) throws IOException {
-        Map<Integer, IStreamCoder> openedCoders = new HashMap();
+        Map<Integer, IStreamCoder> openedCoders = new HashMap<>();
         for (int indexStream = 0;
                 indexStream != container.getNumStreams();
                 ++indexStream) {
@@ -145,14 +146,14 @@ public final class MovieStream implements MovieAttribute, Closeable {
     /**
      * Constructs a movie stream for local file and specified index.
      * The index should be unique.
-     * @param movieFile The local file
-     * @param movieIndex Movie index
+     * @param file The local file
+     * @param index Movie index
      * @throws IOException If failed to open movie file
      */
-    public MovieStream(final File movieFile,
-            final int movieIndex) throws IOException {
-        index = movieIndex;
-        file = movieFile;
+    public MovieStream(final File file,
+            final int index) throws IOException {
+        this.index = index;
+        this.file = file;
         container = newIContainer(file.getAbsolutePath());
         openedCoders = newOpenedCoders(container);
         if (openedCoders.get(0).getCodecType()
@@ -194,13 +195,13 @@ public final class MovieStream implements MovieAttribute, Closeable {
     /**
      * Constructs a movie stream for local file and specified index.
      * The index should be unique.
-     * @param moviePath The path of local file
-     * @param movieIndex Movie index
+     * @param path The path of local file
+     * @param index Movie index
      * @throws IOException If failed to open movie file
      */
-    public MovieStream(final String moviePath,
-            final int movieIndex) throws IOException {
-        this(new File(moviePath), movieIndex);
+    public MovieStream(final String path,
+            final int index) throws IOException {
+        this(new File(path), index);
     }
     @Override
     public long getDuration() {
@@ -233,12 +234,16 @@ public final class MovieStream implements MovieAttribute, Closeable {
                 return Type.EOF;
         }
     }
+    public Optional<Frame> getFrame() {
+        return getFrame(-1);
+    }
     /**
+     * @param scale
      * @return If the {@link Frame} is decoded successfully,
      * a optional which maintains a frame will return. Otherwise,
      * a empty optional will return
      */
-    public Optional<Frame> getFrame() {
+    public Optional<Frame> getFrame(final double scale) {
         int offset = 0;
         while (offset < packet.getSize()) {
             int bytesDecoded = openedCoders.get(videoStreamIndex)
@@ -246,11 +251,16 @@ public final class MovieStream implements MovieAttribute, Closeable {
             if (bytesDecoded >= 0) {
                 offset += bytesDecoded;
                 if (picture.isComplete()) {
-                    return Optional.of(new Frame(this,
+                    BufferedImage image = converter.toImage(picture);
+                    if (scale > 0) {
+                        image = Painter.resizeImage(image, scale);
+                    }
+                    return Optional.of(new Frame(
+                            this,
                             (long) (picture.getTimeStamp()
-                                    * picture.getTimeBase().getDouble()
-                                    * TIME_SCALE),
-                            converter.toImage(picture)));
+                                * picture.getTimeBase().getDouble()
+                                * TIME_SCALE),
+                            image));
                 }
             }
             return Optional.empty();

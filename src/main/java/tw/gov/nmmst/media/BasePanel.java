@@ -2,11 +2,20 @@ package tw.gov.nmmst.media;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JPanel;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 /**
  * Support three mode for showing the image on the panel.
  */
 public class BasePanel extends JPanel {
+    private static final Log LOG = LogFactory.getLog(BasePanel.class);
+    /**
+     * Serial id.
+     */
+    private static final long serialVersionUID = 1L;
     /**
      * Indicates how to paint specified image on the panel.
      */
@@ -33,25 +42,36 @@ public class BasePanel extends JPanel {
      */
     private Mode mode = Mode.FULL_SCREEN;
     /**
+     * Locks the current image.
+     */
+    private final AtomicBoolean lockImage = new AtomicBoolean(false);
+    /**
      * Constructs a empty panel.
      */
     public BasePanel() {
     }
     /**
      * Constructs a panel with initial image.
-     * @param writeImage The image to draw
+     * @param mode The mode indicates the appearance for drawing image
      */
-    public BasePanel(final BufferedImage writeImage) {
-        image = writeImage;
+    public BasePanel(final Mode mode) {
+        this(null, mode);
+    }
+    /**
+     * Constructs a panel with initial image.
+     * @param image The image to draw
+     */
+    public BasePanel(final BufferedImage image) {
+        this(image, null);
     }
     /**
      * Constructs a panel with initial image and mode.
-     * @param writeImage The image to draw
-     * @param newMode The mode indicates the appearance for drawing image
+     * @param image The image to draw
+     * @param mode The mode indicates the appearance for drawing image
      */
-    public BasePanel(final BufferedImage writeImage, final Mode newMode) {
-        image = writeImage;
-        mode = newMode;
+    public BasePanel(final BufferedImage image, final Mode mode) {
+        this.image = image;
+        this.mode = mode == null ? Mode.FULL_SCREEN : mode;
     }
     /**
      * Sets a new mode for this panel.
@@ -66,7 +86,24 @@ public class BasePanel extends JPanel {
      * @param writeImage The image to draw
      */
     public final void write(final BufferedImage writeImage) {
+        if (writeImage != null && !lockImage.get()) {
+            image = writeImage;
+            repaint();
+        }
+    }
+    /**
+     * Unlocks the image.
+     */
+    public final void unlockImage() {
+        lockImage.set(false);
+    }
+    /**
+     * Draws a new image right now and lock the current image.
+     * @param writeImage The image to draw
+     */
+    public final void writeAndLock(final BufferedImage writeImage) {
         if (image != null) {
+            lockImage.set(true);
             image = writeImage;
             repaint();
         }
@@ -75,8 +112,17 @@ public class BasePanel extends JPanel {
      * Cleans the panle right now.
      */
     public final void clearImage() {
-        image = null;
-        repaint();
+        if (!lockImage.get()) {
+            image = null;
+            repaint();
+        }
+
+    }
+    /**
+     * @return The current image to write
+     */
+    public final Optional<BufferedImage> getCurrentImage() {
+        return Optional.ofNullable(image);
     }
     @Override
     public final void paintComponent(final Graphics g) {
@@ -95,8 +141,8 @@ public class BasePanel extends JPanel {
                                 (double) getHeight() / (double) height);
                         finalW = (int) (width * minScale);
                         finalH = (int) (height * minScale);
-                        xAxis = (int) ((getWidth() - finalW) / 2);
-                        yAxis = (int) ((getHeight() - finalH) / 2);
+                        xAxis = (getWidth() - finalW) / 2;
+                        yAxis = (getHeight() - finalH) / 2;
                         break;
                     case FILL:
                         finalW = getWidth();

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javafx.util.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,11 +31,20 @@ public class NProperties {
             pro.save(new File(NProperties.class.getName()));
         }
     }
+    private static final int SEND_SNAPSHOTS_SECOND_PERIOD = 10;
     /**
-     * Log.
+     * The root directory for all videos.
      */
-    private static final Log LOG
-            = LogFactory.getLog(NProperties.class);
+    private static final String MOVIE_ROOT_PATH = "D://海科影片";
+    /**
+     * The root directory for all videos.
+     */
+    private static final String HIGHLIGHT_ROOT_PATH = "D://trailer";
+    /**
+     *  LOG.
+     */
+    private static final Log LOG = LogFactory.getLog(NProperties.class);
+    private static final boolean DIO_ENABLE = true;
     /**
      * Show the warn windows to the user.
      */
@@ -51,10 +61,7 @@ public class NProperties {
      * The default height of frame.
      */
     private static final int FRAME_HEIGHT = -1;
-    /**
-     * The root directory for all videos.
-     */
-    private static final String MOVIE_ROOT_PATH = "D://海科影片";
+
     /**
      * The root directory for all images.
      */
@@ -120,17 +127,29 @@ public class NProperties {
      * The selectable movie index and it's selected index.
      */
     private static final Map<Integer, Pair<Integer, Integer>> MOVIE_SELECT
-        = new TreeMap();
+        = new TreeMap<>();
     static {
         final int firstIndex = 0;
         final int secondIndex = 1;
         for (int index = 0; index != SELECTABLE_IDNEX.length
             && index != SELECTED_INDEX.length; ++index) {
             MOVIE_SELECT.put(SELECTABLE_IDNEX[index],
-                    new Pair(SELECTED_INDEX[index][firstIndex],
+                    new Pair<>(SELECTED_INDEX[index][firstIndex],
                              SELECTED_INDEX[index][secondIndex]));
         }
     }
+    private static final List<String> HIGHLIGHT_DESCRIPTION 
+        =  Arrays.asList(
+            "繞過前進",
+            "原地等待",
+            "繞過熱泉",
+            "穿過熱泉");
+    private static final List<File> HIGHLIGHT_PATH
+        =  Arrays.asList(
+            new File(HIGHLIGHT_ROOT_PATH, "2A.mpg"),
+            new File(HIGHLIGHT_ROOT_PATH, "3B.mpg"),
+            new File(HIGHLIGHT_ROOT_PATH, "5A.mpg"),
+            new File(HIGHLIGHT_ROOT_PATH, "6B.mpg"));
     /**
      * The node information includes fusion nodes, control node, master node
      * and projectors.
@@ -181,7 +200,7 @@ public class NProperties {
      * The max size for buffering decoded frame.
      * @see net.nmmst.media.BufferFactory
      */
-    private static final int FRAME_QUEUE_SIZE = 100;
+    private static final int FRAME_QUEUE_SIZE = 85;
     /**
      * The lower limit of frame buffer for starting play.
      * @see net.nmmst.media.BufferFactory
@@ -197,33 +216,33 @@ public class NProperties {
      * @see net.nmmst.controller.WheelTrigger
      */
     private static final long WHEEL_ENABLE_MAX_MICROTIME_PERIOD
-            = 10 * 1000 * 1000;
+        = 13 * 1000 * 1000;
     /**
      * The min microtime for selecting the direction from control node.
      * @see net.nmmst.controller.WheelTrigger
      */
     public static final long WHEEL_ENABLE_MIN_MICROTIME_PERIOD
-            = 6 * 1000 * 1000;
+        = 4 * 1000 * 1000;
     /**
      * The valid max value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
      */
-    private static final double WHEEL_MAX_VALUE = 0.9f;
+    private static final double WHEEL_MAX_VALUE = 0.6f;
     /**
      * The valid min value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
      */
-    private static final double WHEEL_MIN_VALUE = -0.9f;
+    private static final double WHEEL_MIN_VALUE = -0.6f;
     /**
      * The valid max value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
      */
-    private static final double WHEEL_MAX_INIT_VALUE = 0.1;
+    private static final double WHEEL_MAX_INIT_VALUE = 0.2;
     /**
      * The valid min value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
      */
-    private static final double WHEEL_MIN_INIT_VALUE = -0.1;
+    private static final double WHEEL_MIN_INIT_VALUE = -0.2;
     /**
      * Indicates whether we enable the stick trigger.
      */
@@ -264,13 +283,11 @@ public class NProperties {
     /**
      * The default name of PCI 1735u.
      */
-    private static final String PCI_1735U_NAME
-            = "PCI-1735U,BID#0";
+    private static final String PCI_1735U_NAME = "PCI-1735U,BID#0";
     /**
      * The default name of PCI 1739u.
      */
-    private static final String PCI_1739U_NAME
-            = "PCI-1739U,BID#15";
+    private static final String PCI_1739U_NAME = "PCI-1739U,BID#15";
     /**
      * The default time for waiting the submarine to init.
      */
@@ -390,9 +407,8 @@ public class NProperties {
      * or RuntimeException if this properties contains no mapping for the key.
      */
     public final List<Integer> getIntegers(final String key) {
-        List<Integer> rval = new LinkedList();
-        getStrings(key).stream()
-                       .forEach(value -> rval.add(Integer.valueOf(value)));
+        List<Integer> rval = new LinkedList<>();
+        getStrings(key).stream().forEach(value -> rval.add(Integer.valueOf(value)));
         return rval;
     }
     /**
@@ -447,7 +463,7 @@ public class NProperties {
      * @param file The proeperties file
      */
     private void init(final File file) {
-        if (file.exists()) {
+        if (file != null && file.exists()) {
             try (FileReader reader = new FileReader(file)) {
                 properties.load(reader);
             } catch (IOException e) {
@@ -566,6 +582,14 @@ public class NProperties {
         setIfAbsent(
             NConstants.MASTER_SUBMARINE_END,
             String.valueOf(MASTER_SUBMARINE_END));
+        setIfAbsent(NConstants.DIO_ENABLE,
+            String.valueOf(DIO_ENABLE));
+        setIfAbsent(NConstants.SEND_SNAPSHOTS_SECOND_PERIOD,
+            String.valueOf(SEND_SNAPSHOTS_SECOND_PERIOD));
+        setIfAbsent(NConstants.HIGHLIGHT_PATH,
+            moviesToString(HIGHLIGHT_PATH));
+        setIfAbsent(NConstants.HIGHLIGHT_DESCRIPTION,
+            stringsToString(HIGHLIGHT_DESCRIPTION));
         save(file);
     }
     /**
@@ -573,8 +597,8 @@ public class NProperties {
      * @param file The file
      */
     private void save(final File file) {
-        if (file.exists()
-            && !file.delete()) {
+        if (file == null || (file.exists()
+            && !file.delete())) {
             return;
         }
         try (FileWriter writer = new FileWriter(file)) {
@@ -607,7 +631,7 @@ public class NProperties {
      * @return A list of {@link NodeInformation}.
      */
     public static List<NodeInformation> stringToNodes(final String str) {
-        List<NodeInformation> nodes = new LinkedList();
+        List<NodeInformation> nodes = new LinkedList<>();
         final int locationIndex = 0;
         final int ipIndex = 1;
         final int macIndex = 2;
@@ -639,17 +663,28 @@ public class NProperties {
     }
     /**
      * Converts a list of {@link File} to a {@code string}.
+     * @param strings A list of String to convert
+     * @return A {@code string} is created by a list of {@link File}
+     */
+    public static String stringsToString(
+            final List<String> strings) {
+        StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
+        strings.stream().forEach((s) -> {
+            builder.append(s)
+                    .append(DIVIDER_FIRST);
+        });
+        return builder.toString();
+    }
+    /**
+     * Converts a list of {@link File} to a {@code string}.
      * @param movieList A list of {@link File}  to convert
      * @return A {@code string} is created by a list of {@link File}
      */
     public static String moviesToString(
             final List<File> movieList) {
-        StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
-        movieList.stream().forEach((file) -> {
-            builder.append(file.getAbsolutePath())
-                    .append(DIVIDER_FIRST);
-        });
-        return builder.toString();
+        return stringsToString(movieList.stream()
+                .map(v -> v.getAbsolutePath())
+                .collect(Collectors.toList()));
     }
     /**
      * Converts the play order to a list of {@code String}.
@@ -671,17 +706,37 @@ public class NProperties {
      * @param str A map of selectable movie index and selected movie index
      * @return A map of selectable movie index and selected movie index
      */
-    public static Map<Integer, Pair<Integer, Integer>> stringToSelectable(
+    public static Map<Integer, Pair<String, String>> stringToSelectableTrailer(
         final String str) {
-        Map<Integer, Pair<Integer, Integer>> selectable
-            = new TreeMap();
+        Map<Integer, Pair<String, String>> selectable
+            = new TreeMap<>();
         final int movieIndex = 0;
         final int leftIndex = 1;
         final int rightIndex = 2;
         for (String s : str.split(DIVIDER_FIRST)) {
             String[] args = s.split(DIVIDER_SECOND);
             selectable.put(Integer.valueOf(args[movieIndex]),
-                new Pair(Integer.valueOf(args[leftIndex]),
+                new Pair<>(args[leftIndex], args[rightIndex]));
+        }
+        return selectable;
+    }
+    /**
+     * Converts a {@code String} to a map of selectable movie index
+     * and selected movie index.
+     * @param str A map of selectable movie index and selected movie index
+     * @return A map of selectable movie index and selected movie index
+     */
+    public static Map<Integer, Pair<Integer, Integer>> stringToSelectable(
+        final String str) {
+        Map<Integer, Pair<Integer, Integer>> selectable
+            = new TreeMap<>();
+        final int movieIndex = 0;
+        final int leftIndex = 1;
+        final int rightIndex = 2;
+        for (String s : str.split(DIVIDER_FIRST)) {
+            String[] args = s.split(DIVIDER_SECOND);
+            selectable.put(Integer.valueOf(args[movieIndex]),
+                new Pair<>(Integer.valueOf(args[leftIndex]),
                          Integer.valueOf(args[rightIndex])));
         }
         return selectable;
@@ -693,6 +748,24 @@ public class NProperties {
      */
     public static String selectableToString(
             final Map<Integer, Pair<Integer, Integer>> movieSelectable) {
+        StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
+        movieSelectable.entrySet().stream().forEach(entry -> {
+            builder.append(entry.getKey())
+                   .append(DIVIDER_SECOND)
+                   .append(entry.getValue().getKey())
+                   .append(DIVIDER_SECOND)
+                   .append(entry.getValue().getValue())
+                   .append(DIVIDER_FIRST);
+        });
+        return builder.toString();
+    }
+    /**
+     * Converts a list of play order to a {@code string}.
+     * @param movieSelectable A list of play order to convert
+     * @return A {@code string} is created by a list of play order
+     */
+    public static String selectableStringToString(
+            final Map<Integer, Pair<String, String>> movieSelectable) {
         StringBuilder builder = new StringBuilder(DEFAULT_BUILD_LENGTH);
         movieSelectable.entrySet().stream().forEach(entry -> {
             builder.append(entry.getKey())

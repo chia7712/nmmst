@@ -1,5 +1,0 @@
-@ECHO OFF
-IF NOT EXIST D:\\PlayerFrame2.jar GOTO SKIP01
-move D:\\PlayerFrame2.jar D:\\PlayerFrame.jar
-:SKIP01
-java -jar -XX:+UseG1GC -server -Xms512M -Xmx1024M D:\\PlayerFrame.jar

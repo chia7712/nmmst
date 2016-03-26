@@ -4,6 +4,8 @@ package tw.gov.nmmst;
  * The configuration constants.
  */
 public final class NConstants {
+    public static final String SEND_SNAPSHOTS_SECOND_PERIOD = "send.snapshot.second.period";
+    public static final String DIO_ENABLE = "dio.enable";
     /**
      * Show the warn windows to the user.
      */
@@ -27,6 +29,8 @@ public final class NConstants {
      * The default height of frame.
      */
     public static final String FRAME_HEIGHT = "frame.height";
+    public static final String HIGHLIGHT_DESCRIPTION = "highlight.description";
+    public static final String HIGHLIGHT_PATH = "highlight.path";
     /**
      * The default path of movie.
      */

@@ -18,11 +18,10 @@ import tw.gov.nmmst.threads.Taskable;
  * with the control events.
  */
 public final class ControllerFactory {
-       /**
-        * Log.
-        */
-    private static final Log LOG
-            = LogFactory.getLog(ControllerFactory.class);
+    /**
+     *
+     */
+    private static final Log LOG  = LogFactory.getLog(ControllerFactory.class);
     /**
      * Handles with the controller data.
      */
@@ -58,21 +57,21 @@ public final class ControllerFactory {
        /**
         * Collects the controllers for polling data.
         */
-       private final List<Controller> controllers = new LinkedList();
+       private final List<Controller> controllers = new LinkedList<>();
        /**
         * Collects the triggers for handlering with data.
         */
        private final List<ControllerFactory.Trigger> triggers
-            = new LinkedList();
+            = new LinkedList<>();
        /**
         * Constructs a control event for monitoring I/O.
         * @param triggerList A list of triggers
         */
-       public BaseControlEvent(
-            final List<ControllerFactory.Trigger> triggerList) {
+       BaseControlEvent(final List<ControllerFactory.Trigger> triggerList) {
            triggers.addAll(triggerList);
            for (Controller controller : ControllerEnvironment
                    .getDefaultEnvironment().getControllers()) {
+               LOG.info("controller:" + controller);
                for (ControllerFactory.Trigger trigger : triggers) {
                    if (controller.getType() == trigger.getType()) {
                        LOG.info("use device : "
@@ -84,6 +83,8 @@ public final class ControllerFactory {
                    }
                }
            }
+           LOG.info("Total triggers:" + triggers.size());
+           LOG.info("Total controller:" + controllers.size());
        }
        @Override
        public void work() {

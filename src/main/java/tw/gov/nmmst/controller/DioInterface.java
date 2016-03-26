@@ -48,7 +48,7 @@ public interface DioInterface extends Closeable {
      * Falls the gray screen and moves the submarine to initial position.
      * @throws InterruptedException If this method is breaked
      */
-    default void initializeSubmarineAndGray() throws InterruptedException {
+    default void initializeSubmarine() throws InterruptedException {
     }
     /**
      * Moves the submarine to end position.
@@ -67,6 +67,9 @@ public interface DioInterface extends Closeable {
      * @throws InterruptedException If this method is breaked
      */
     default void stoneGotoLeft() throws InterruptedException {
+    }
+    default void triggerSunmarineLight() throws InterruptedException {
+        
     }
     @Override
     default void close() throws IOException {

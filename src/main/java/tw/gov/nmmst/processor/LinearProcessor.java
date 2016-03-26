@@ -345,7 +345,7 @@ public class LinearProcessor implements FrameProcessor {
          * @param x2 second x coordinate
          * @param y2 second y coordinate
          */
-        public LinearEquationInTwo(final double x1, final double y1,
+        LinearEquationInTwo(final double x1, final double y1,
             final double x2, final double y2) {
             if (x1 == x2 && y1 == y2) {
                 throw new IllegalArgumentException();

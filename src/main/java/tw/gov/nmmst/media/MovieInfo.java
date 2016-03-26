@@ -213,7 +213,7 @@ public final class MovieInfo {
          * Constructs a clone for a movie atrribute.
          * @param attribute The movie attribute to clone
          */
-        public MovieAttributeClone(final MovieAttribute attribute) {
+        MovieAttributeClone(final MovieAttribute attribute) {
             file = attribute.getFile().getAbsoluteFile();
             index = attribute.getIndex();
             duration = attribute.getDuration();

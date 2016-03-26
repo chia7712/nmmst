@@ -1,5 +1,6 @@
 package tw.gov.nmmst.views;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +28,7 @@ import tw.gov.nmmst.media.MovieInfo;
 import tw.gov.nmmst.threads.AtomicCloser;
 import tw.gov.nmmst.threads.BaseTimer;
 import tw.gov.nmmst.threads.Closer;
+import tw.gov.nmmst.utils.Painter;
 import tw.gov.nmmst.utils.ProjectorUtil;
 import tw.gov.nmmst.utils.RegisterUtil;
 import tw.gov.nmmst.utils.RequestUtil;
@@ -92,51 +93,79 @@ public class MasterFrameData implements FrameData {
      * Request functions.
      */
     private final Map<RequestUtil.RequestType, RequestFunction> functions
-            = new TreeMap();
+            = new TreeMap<>();
     /**
      * The snapshot from control node.
      * A fucking game for the dead man.
      */
-    private final List<BufferedImage> snapshots = new LinkedList();
+    private final List<BufferedImage> snapshots = new LinkedList<>();
     /**
-     * Defalut snapshots.
+     * Default snapshot.
      */
-    private final List<BufferedImage> defaultSnapshots
-            = loadDefaultSnapshots(new File("D:\\片尾圖片"));
+    private final BufferedImage defaultSnapshot;
     /**
-     * Loads the default snapshots.
-     * The snapshots may be fucking ugly, so we dont have to resize it.
-     * @param dir The snapshot to locate
-     * @return An array of snapshots
+     * The end snapshot.
      */
-    private static List<BufferedImage> loadDefaultSnapshots(final File dir) {
-        List<BufferedImage> rval = new LinkedList();
-        for (File f : dir.listFiles()) {
-            try {
-                rval.add(ImageIO.read(f));
-            } catch (IOException e) {
-                LOG.error("Failed to load default snapshot", e);
+    private final BufferedImage endSnapshot;
+    /**
+     * Send the trailer snapshots to all fusion node.
+     * @param properties The system proeprties
+     * @param snapshots The snapsthos to send
+     * @param defaultSnapshot default snapshost to send
+     * @param finalSnapshot The final snapshot to send
+     */
+    private static void sendTrailerSnapshot(final NProperties properties,
+        final List<BufferedImage> snapshots,
+        final BufferedImage defaultSnapshot,
+        final BufferedImage finalSnapshot) {
+        final int nodeNumber = 4;
+        final long sleepSecondTime= properties.getInteger(
+            NConstants.SEND_SNAPSHOTS_SECOND_PERIOD);
+        List<List<BufferedImage>> imageGroup = new LinkedList<>();
+        while (!snapshots.isEmpty()) {
+            List<BufferedImage> images = new ArrayList<>(nodeNumber);
+            for (int i = 0; i != nodeNumber; ++i) {
+                if (snapshots.isEmpty()) {
+                    images.add(defaultSnapshot);
+                } else {
+                    images.add(snapshots.remove(0));
+                }
             }
+            imageGroup.add(images);
         }
-        if (rval.isEmpty()) {
-            LOG.error("No found of default snapshots");
+        LOG.info("total images: " + snapshots.size());
+        try {
+            for (List<BufferedImage> images: imageGroup) {
+                SerialStream.sendAll(
+                    NodeInformation.getFusionVideoNodes(
+                        properties),
+                    new RequestUtil.SetImageRequest(images),
+                    false);
+                TimeUnit.SECONDS.sleep(sleepSecondTime);
+            }
+            SerialStream.sendAll(NodeInformation.getFusionVideoNodes(properties),
+                new RequestUtil.Request(RequestUtil.RequestType.UNLOCK_IMAGE), true);
+        } catch (InterruptedException | IOException e) {
+            LOG.error("Failed to send snapshots to fusing node", e);
         }
-        return rval;
     }
     /**
-     * Constructs a data of master frame.
-     * @param file The initial properties
-     * @throws IOException If failed to open movie
+     * Synchronizes the copy for snapshots.
+     * @return A copy array of snapshots
      */
-    @SuppressWarnings("checkstyle:methodlength")
-    public MasterFrameData(final File file) throws IOException {
-        if (file == null) {
-            properties = new NProperties();
-        } else {
-            properties = new NProperties(file);
+    private List<BufferedImage> copySnapshots() {
+        synchronized (snapshots) {
+            return new ArrayList<>(snapshots);
         }
-        selfInformation = NodeInformation.getNodeInformationByAddress(
-            properties);
+    }
+    /**
+     * Constructs a master's data.
+     * @param file The input optional.
+     * @throws IOException If failed to read optional from file
+     */
+    public MasterFrameData(final File file) throws IOException {
+        properties = new NProperties(file);
+        selfInformation = NodeInformation.getNodeInformationByAddress(properties);
         requestQueue = RequestUtil.createRemoteQueue(selfInformation, closer);
         panelController = new PanelController(properties, this);
         dio = DioFactory.getDefault(properties);
@@ -147,8 +176,15 @@ public class MasterFrameData implements FrameData {
         order = new MovieInfo(properties);
         flow = new StartFlow(properties, watcher, order, dio);
         videoNodes = NodeInformation.getVideoNodes(properties);
-        Arrays.asList(RequestUtil.RequestType.values())
-              .forEach(type -> {
+        defaultSnapshot = Painter.getFillColor(
+            properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
+            properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
+            Color.BLACK);
+        endSnapshot = Painter.getStringImage("The End",
+            properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
+            properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
+            properties.getInteger(NConstants.GENERATED_FONT_SIZE));
+        Arrays.asList(RequestUtil.RequestType.values()).forEach(type -> {
             switch (type) {
                 case START:
                     functions.put(type, (data, previousReq, currentReq)-> {
@@ -159,29 +195,8 @@ public class MasterFrameData implements FrameData {
                                 snapshots.clear();
                             }
                             flow.invokeStartThread(() -> {
-                                final int nodeNumber = 4;
-                                if (defaultSnapshots.isEmpty()) {
-                                    LOG.error("No default snapshots!!!");
-                                    return;
-                                }
-                                List<BufferedImage> images
-                                    = new ArrayList(nodeNumber);
-                                for (int i = 0; i != nodeNumber; ++i) {
-                                    int index = (int) (
-                                    Math.random() * defaultSnapshots.size());
-                                    images.add(defaultSnapshots.get(index));
-                                }
-                                try {
-                                    SerialStream.sendAll(
-                                    NodeInformation.getFusionVideoNodes(
-                                        properties),
-                                    new RequestUtil.SetImageRequest(images),
-                                    false);
-                                } catch (InterruptedException | IOException e) {
-                                    LOG.error(e);
-                                } finally {
-                                    LOG.info("send " + nodeNumber + " images");
-                                }
+                                sendTrailerSnapshot(properties, copySnapshots(),
+                                    defaultSnapshot, endSnapshot);
                             });
                         }
                     });
@@ -215,16 +230,14 @@ public class MasterFrameData implements FrameData {
                         if (flow.isStart()) {
                             dio.lightOff();
                         }
-                        SerialStream.sendAll(
-                            videoNodes,
+                        SerialStream.sendAll(videoNodes,
                             new RequestUtil.Request(type), false);
                     });
                     break;
                 case SHUTDOWN:
                     functions.put(type, (data, previousReq, currentReq)
                         -> {
-                            SerialStream.sendAll(
-                                videoNodes,
+                            SerialStream.sendAll(videoNodes,
                                 new RequestUtil.Request(type), false);
                             ProjectorUtil.enableAllMachine(properties, false);
                         });
@@ -241,9 +254,8 @@ public class MasterFrameData implements FrameData {
                                 NodeInformation.getVideoNodes(properties),
                                 new RequestUtil.Request(
                                     RequestUtil.RequestType.STOP), false);
-                            dio.stoneGotoLeft();
                             dio.lightWork();
-                            dio.initializeSubmarineAndGray();
+                            dio.initializeSubmarine();
                             JOptionPane.showMessageDialog(null, "準備完成");
                         }
                     });
@@ -251,11 +263,7 @@ public class MasterFrameData implements FrameData {
                 case LIGHT_OFF:
                     functions.put(type, (data, previousReq, currentReq)
                         -> {
-                        if (flow.isStart()) {
-                            JOptionPane.showMessageDialog(null, "正在播放");
-                        } else {
-                            dio.lightOff();
-                        }
+                        dio.triggerSunmarineLight();
                     });
                     break;
                 case PARTY_1:
@@ -264,8 +272,6 @@ public class MasterFrameData implements FrameData {
                         if (flow.isStart()) {
                             JOptionPane.showMessageDialog(null, "正在播放");
                         } else {
-                            dio.grayUptoEnd();
-                            dio.stoneGotoRight();
                             dio.lightParty1();
                         }
                     });
@@ -276,8 +282,6 @@ public class MasterFrameData implements FrameData {
                         if (flow.isStart()) {
                             JOptionPane.showMessageDialog(null, "正在播放");
                         } else {
-                            dio.grayUptoEnd();
-                            dio.stoneGotoRight();
                             dio.lightParty2();
                         }
                     });

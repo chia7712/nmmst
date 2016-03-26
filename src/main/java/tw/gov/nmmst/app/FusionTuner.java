@@ -1,4 +1,4 @@
-package tw.gov.nmmst;
+package tw.gov.nmmst.app;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -27,6 +27,8 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.processor.LinearProcessor;
 import tw.gov.nmmst.processor.LinearProcessor.Factor;
@@ -128,8 +130,7 @@ public class FusionTuner extends JFrame implements WindowListener {
                         = queue.take();
                     SerialStream.send(
                         pair.getKey(),
-                        new FusionTestRequest(INIT_IMAGE, pair.getValue()),
-                        properties);
+                        new FusionTestRequest(INIT_IMAGE, pair.getValue()));
                 }
             } catch (InterruptedException | IOException e) {
                 LOG.error(e);
@@ -202,7 +203,7 @@ public class FusionTuner extends JFrame implements WindowListener {
          * The labels and text fields.
          */
         private final List<Pair<JLabel, JTextField>> components
-            = new LinkedList();
+            = new LinkedList<>();
         /**
          * A address field to set.
          */

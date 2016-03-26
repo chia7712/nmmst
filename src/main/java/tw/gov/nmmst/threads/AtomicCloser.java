@@ -30,7 +30,7 @@ public class AtomicCloser implements Closer {
      * {@link net.nmmst.threads.Taskable#close()} when closing this closer.
      */
     private final List<Taskable> tasks
-            = Collections.synchronizedList(new LinkedList());
+            = Collections.synchronizedList(new LinkedList<>());
     @Override
     public final <T extends Taskable> T invokeNewThread(final T task) {
         return invokeNewThread(task, null);

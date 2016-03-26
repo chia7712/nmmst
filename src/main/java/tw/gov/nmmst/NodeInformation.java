@@ -257,12 +257,21 @@ public class NodeInformation implements Comparable<NodeInformation> {
      */
     public static Collection<NodeInformation> getFusionVideoNodes(
         final NProperties properties) {
-        Set<Location> locations = new TreeSet();
+        Set<Location> locations = new TreeSet<>();
         locations.add(Location.LU);
         locations.add(Location.RU);
         locations.add(Location.LD);
         locations.add(Location.RD);
         return get(properties, locations);
+    }
+    /**
+     * Retrieves the controller information.
+     * @param properties NProperties
+     * @return The controller information
+     */
+    public static Optional<NodeInformation> getContorllerNode(
+            final NProperties properties) {
+        return get(properties, Location.CONTROLLER);
     }
     /**
      * Retrieves the master information.
@@ -281,13 +290,14 @@ public class NodeInformation implements Comparable<NodeInformation> {
      */
     public static Collection<NodeInformation> getVideoNodes(
             final NProperties properties) {
-        Set<NodeInformation> locations = new TreeSet();
+        Set<NodeInformation> locations = new TreeSet<>();
         getFusionVideoNodes(properties).stream().forEach((node) -> {
             locations.add(node);
         });
         get(properties, Location.CONTROLLER).ifPresent(locations::add);
         return locations;
     }
+    
     /**
      * Retrieves all project informations.
      * @param properties NProperties
@@ -295,7 +305,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
      */
     public static Collection<NodeInformation> getProjectors(
             final NProperties properties) {
-        Set<Location> locations = new TreeSet();
+        Set<Location> locations = new TreeSet<>();
         locations.add(Location.LU_P);
         locations.add(Location.RU_P);
         locations.add(Location.LD_P);
@@ -313,7 +323,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
         List<NodeInformation> nodeInformations
             = NProperties.stringToNodes(properties.getString(
                     NConstants.NODE_INFORMATION));
-        Set<NodeInformation> rval = new TreeSet();
+        Set<NodeInformation> rval = new TreeSet<>();
         for (NodeInformation nodeInformation : nodeInformations) {
             for (Location location : locations) {
                 if (location == nodeInformation.getLocation()) {
@@ -330,7 +340,7 @@ public class NodeInformation implements Comparable<NodeInformation> {
      * @param location The locations to select the node information
      * @return The node information
      */
-    private static Optional<NodeInformation> get(final NProperties properties,
+    public static Optional<NodeInformation> get(final NProperties properties,
             final Location location) {
         List<NodeInformation> nodeInformations
             = NProperties.stringToNodes(properties.getString(

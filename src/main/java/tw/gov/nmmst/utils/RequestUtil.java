@@ -38,8 +38,7 @@ public final class RequestUtil {
     public static BlockingQueue<Request> createRemoteQueue(
             final NodeInformation nodeInformation,
             final Closer closer) throws IOException {
-        return closer.invokeNewThread(new RemoteRequestQueue(nodeInformation),
-                null).get();
+        return closer.invokeNewThread(new RemoteRequestQueue(nodeInformation)).get();
     }
     /**
      * Receives the request from master node.
@@ -48,8 +47,7 @@ public final class RequestUtil {
         /**
          * Buffers the request.
          */
-        private final BlockingQueue<Request> requestQueue
-                = new LinkedBlockingQueue();
+        private final BlockingQueue<Request> requestQueue = new LinkedBlockingQueue<>();
         /**
          * The server to receive the request.
          */
@@ -60,8 +58,7 @@ public final class RequestUtil {
          * @param nodeInformation Node information
          * @throws IOException If failed to establish server socket
          */
-        RemoteRequestQueue(final NodeInformation nodeInformation)
-                throws IOException {
+        RemoteRequestQueue(final NodeInformation nodeInformation) throws IOException {
             server = new ServerSocket(nodeInformation.getRequestPort());
             LOG.info(server.getLocalSocketAddress()
             + ":" + server.getLocalPort());
@@ -155,7 +152,8 @@ public final class RequestUtil {
         /**
          * WOL request.
          */
-        WOL
+        WOL,
+        UNLOCK_IMAGE
     }
     /**
      * Base request for encapsulating the {@link RequestType}.
@@ -211,7 +209,7 @@ public final class RequestUtil {
         /**
          * The bytes array of image data.
          */
-        private final List<byte[]> imageData = new LinkedList();
+        private final List<byte[]> imageData = new LinkedList<>();
         /**
          * Constructs a request for executing fusion test.
          * @param images The image is sent to fusion nodes
@@ -221,10 +219,11 @@ public final class RequestUtil {
             throws IOException {
             super(RequestType.SET_IMAGE);
             if (images.isEmpty()) {
-                throw new RuntimeException("No found of image data");
+                LOG.error("No found of image data");
             }
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            
             for (BufferedImage image : images) {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(image, "jpg", baos);
                 imageData.add(baos.toByteArray());
             }
@@ -235,7 +234,7 @@ public final class RequestUtil {
          * to image
          */
         public final List<BufferedImage> getImage() throws IOException {
-            List<BufferedImage> images = new ArrayList(imageData.size());
+            List<BufferedImage> images = new ArrayList<>(imageData.size());
             for (byte[] data : imageData) {
                 images.add(ImageIO.read(new ByteArrayInputStream(data)));
             }

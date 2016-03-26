@@ -1,6 +1,5 @@
 package tw.gov.nmmst.media;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Optional;
@@ -15,13 +14,13 @@ import tw.gov.nmmst.processor.FrameProcessor;
 import tw.gov.nmmst.threads.AtomicCloser;
 import tw.gov.nmmst.threads.Closer;
 import tw.gov.nmmst.threads.Taskable;
-import tw.gov.nmmst.NConstants;
-import tw.gov.nmmst.NProperties;
-import tw.gov.nmmst.utils.Painter;
 /**
  * Controls the audio and video output.
  * It uses the {@link net.nmmst.utils.BasePanel} as the video output
  * and {@link net.nmmst.player.Speaker} as the audio output.
+ * It used a block queue to save the
+ *  decored frame and audio. It accept a trigger to invoke some action
+ *  on the different phase.
  */
 class BaseMediaWorker implements MediaWorker {
     /**
@@ -40,7 +39,7 @@ class BaseMediaWorker implements MediaWorker {
     /**
      * Frame processor.
      */
-    private final Optional<FrameProcessor> processor;
+    private final FrameProcessor processor;
     /**
      * Image output.
      */
@@ -71,31 +70,24 @@ class BaseMediaWorker implements MediaWorker {
      */
     private AtomicCloser curCloser;
     /**
-     * To trigger when the video is end.
+     * Constructs a base media worker.
+     * @param movieInfo The movie to play
+     * @param buffer Saves the frame and audio
+     * @param closer Control the errand
+     * @param processor Process the decoded frame
+     * @param panel The panel to draw the frame
+     * @param initImage The initial image drawed on the panel
      */
-    private final Trigger trigger;
-    /**
-     * Constructs a media worker for specified properties,
-     * closer and frame processor.
-     * @param properties NProperties
-     * @param closer Closer
-     * @param frameProcessor FrameProcessor
-     * @param endTrigger Trigger
-     * @throws IOException If failed to create movie info
-     */
-    public BaseMediaWorker(final NProperties properties, final Closer closer,
-            final FrameProcessor frameProcessor, final Trigger endTrigger
-            ) throws IOException {
-        movieInfo = new MovieInfo(properties);
-        buffer = BufferFactory.createMovieBuffer(properties);
-        processor = Optional.ofNullable(frameProcessor);
-        buffer.setPause(true);
-        initImage = Painter.getFillColor(
-            properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
-            properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
-            Color.BLACK);
-        trigger = endTrigger;
-        panel = new BasePanel(initImage, BasePanel.Mode.FILL);
+    BaseMediaWorker(final MovieInfo movieInfo, final MovieBuffer buffer,
+        final Closer closer, final FrameProcessor processor,
+        final BasePanel panel, final BufferedImage initImage) {
+        this.movieInfo = movieInfo;
+        this.buffer = buffer;
+        this.processor = processor;
+        this.buffer.setPause(true);
+        this.initImage = initImage;
+        this.panel = panel;
+        this.panel.write(initImage);
         closer.invokeNewThread(new Taskable() {
             @Override
             public void init() {
@@ -106,8 +98,8 @@ class BaseMediaWorker implements MediaWorker {
                 try {
                     service.awaitTermination(Long.MAX_VALUE,
                             TimeUnit.DAYS);
-                    processor.flatMap(p -> p.playOver(initImage))
-                            .ifPresent(image -> panel.write(image));
+                    processor.playOver(initImage)
+                            .ifPresent(image -> panel.writeAndLock(image));
                     buffer.setPause(true);
                     buffer.clear();
                     working.set(false);
@@ -120,7 +112,7 @@ class BaseMediaWorker implements MediaWorker {
             public void clear() {
                 stopAsync();
             }
-        }, null);
+        });
     }
     @Override
     public void setNextFlow(final int movieIndex) {
@@ -154,9 +146,9 @@ class BaseMediaWorker implements MediaWorker {
                     curCloser, buffer, movieInfo, processor);
             service.execute(reader);
             service.execute(new PanelThread(curCloser, buffer, panel,
-                processor, trigger));
+                processor));
             service.execute(new SpeakerThread(curCloser, buffer));
-            processor.ifPresent(p -> p.init());
+            processor.init();
             service.shutdown();
         }
     }
@@ -176,7 +168,7 @@ class BaseMediaWorker implements MediaWorker {
         /**
          * This processor modify the frame after decode the frame.
          */
-        private final Optional<FrameProcessor> processor;
+        private final FrameProcessor processor;
         /**
          * A closer is used to close this thread.
          */
@@ -187,19 +179,19 @@ class BaseMediaWorker implements MediaWorker {
         private final MovieInfo.PlayFlow playFlow;
         /**
          * Constructs a reader for decoding a list of media.
-         * @param atomicCloser Close
-         * @param movieBuffer Movie buffer
+         * @param closer Close
+         * @param buffer Movie buffer
          * @param movieInfo Movie info provides the play order
-         * @param frameProcessor Frame processor
+         * @param processor Frame processor
          */
-        MovieReader(final AtomicCloser atomicCloser,
-                final MovieBuffer movieBuffer,
+        MovieReader(final AtomicCloser closer,
+                final MovieBuffer buffer,
                 final MovieInfo movieInfo,
-                final Optional<FrameProcessor> frameProcessor) {
-            closer = atomicCloser;
-            buffer = movieBuffer;
-            processor = frameProcessor;
-            playFlow = movieInfo.createPlayFlow();
+                final FrameProcessor processor) {
+            this.closer = closer;
+            this.buffer = buffer;
+            this.processor = processor;
+            this.playFlow = movieInfo.createPlayFlow();
         }
         /**
          * Sets the next movie index.
@@ -223,10 +215,8 @@ class BaseMediaWorker implements MediaWorker {
                             MovieStream.Type type = stream.readNextType();
                             switch (type) {
                                 case VIDEO:
-                                    Optional<Frame> frame
-                                        = stream.getFrame()
-                                            .flatMap(f -> processor.flatMap(
-                                              p -> p.postDecodeFrame(f)));
+                                    Optional<Frame> frame = stream.getFrame()
+                                            .flatMap(f -> processor.postDecodeFrame(f));
                                     if (frame.isPresent()) {
                                         buffer.writeFrame(frame.get());
                                     }
@@ -274,29 +264,22 @@ class BaseMediaWorker implements MediaWorker {
         /**
          * A frame/image processor.
          */
-        private final Optional<FrameProcessor> processor;
-        /**
-         * Trigger in the video end.
-         */
-        private final Optional<Trigger> trigger;
+        private final FrameProcessor processor;
         /**
          * Constructs a thread for drawing the frame.
-         * @param atomicCloser Closer
-         * @param movieBuffer Movie buffer
-         * @param basePanel Image output
-         * @param frameProcessor Frame/Image processor
-         * @param endTrigger The end trigger
+         * @param closer Closer
+         * @param buffer Movie buffer
+         * @param panel Image output
+         * @param processor Frame/Image processor
          */
-        PanelThread(final AtomicCloser atomicCloser,
-                final MovieBuffer movieBuffer,
-                final BasePanel basePanel,
-                final Optional<FrameProcessor> frameProcessor,
-                final Trigger endTrigger) {
-            closer = atomicCloser;
-            processor = frameProcessor;
-            buffer = movieBuffer;
-            panel = basePanel;
-            trigger = Optional.ofNullable(endTrigger);
+        PanelThread(final AtomicCloser closer,
+                final MovieBuffer buffer,
+                final BasePanel panel,
+                final FrameProcessor processor) {
+            this.closer = closer;
+            this.processor = processor;
+            this.buffer = buffer;
+            this.panel = panel;
         }
         @Override
         public void run() {
@@ -306,7 +289,6 @@ class BaseMediaWorker implements MediaWorker {
                 while (!closer.isClosed() && !Thread.interrupted()) {
                     Optional<Frame> frameOpt = buffer.readFrame();
                     if (!frameOpt.isPresent()) {
-                        trigger.ifPresent(v -> v.endFlow());
                         break;
                     }
                     Frame frame = frameOpt.get();
@@ -320,7 +302,7 @@ class BaseMediaWorker implements MediaWorker {
                         sleeper.reset();
                     }
                     sleeper.sleepByTimeStamp(frame.getTimestamp());
-                    processor.flatMap(p -> p.prePrintPanel(frame.getImage()))
+                    processor.prePrintPanel(frame.getImage())
                              .ifPresent(image -> panel.write(image));
                     int currentIndex = frame.getMovieAttribute().getIndex();
                     if (currentIndex != previousIndex) {

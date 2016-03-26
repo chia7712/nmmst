@@ -1,3 +1,5 @@
 target/*
 nb-configuration.xml
 tw.gov.nmmst.NProperties
+.idea
+nmmst.iml

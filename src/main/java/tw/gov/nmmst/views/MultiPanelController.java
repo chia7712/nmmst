@@ -13,10 +13,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.JPanel;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import tw.gov.nmmst.threads.Closer;
-import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
+import tw.gov.nmmst.threads.Closer;
+import tw.gov.nmmst.media.BasePanel;
 import tw.gov.nmmst.controller.StickTrigger;
 import tw.gov.nmmst.utils.Painter;
 /**
@@ -57,8 +57,7 @@ public class MultiPanelController implements KeyListener {
     /**
      * Queues the request about swiching the panel.
      */
-    private final BlockingQueue<String> keyQueue
-            = new LinkedBlockingQueue();
+    private final BlockingQueue<String> keyQueue = new LinkedBlockingQueue<>();
     /**
      * Constructs a multi-panel controller with the stric trigger which provides
      * the snapshot images captured by user.
@@ -81,31 +80,32 @@ public class MultiPanelController implements KeyListener {
                 BasePanel.Mode.FILL);
         snapshotPanel = new SnapshotPanel(properties);
         keyList = properties.getStrings(NConstants.CONTROL_KEYBOARD);
-        final List<JPanel> panelList = new LinkedList();
+        final List<JPanel> panelList = new LinkedList<>();
         panelList.add(dashboardPanel);
         panelList.add(videoPanel);
         panelList.add(snapshotPanel);
-        final int snapshotPanelIndex = panelList.size() - 1;
         panelList.add(stopPanel);
         mainPanel.setLayout(cardLayout);
         for (int index = 0; index != keyList.size()
                 && index != panelList.size(); ++index) {
             mainPanel.add(panelList.get(index), keyList.get(index));
         }
+        if (stickTrigger != null) {
+            closer.invokeNewThread(() -> {
+                try {
+                    stickTrigger.waitForChange();
+                    snapshotPanel.addImages(stickTrigger.cloneSnapshot());
+                } catch (InterruptedException e) {
+                    LOG.debug(e);
+                }
+            });
+        }
+
         closer.invokeNewThread(() -> {
             try {
                 String keyPress = keyQueue.take();
                 if (keyList.stream().anyMatch(
                     key -> key.compareToIgnoreCase(keyPress) == 0)) {
-                    if (keyPress.equals(keyList.get(snapshotPanelIndex))) {
-                        JPanel panel = panelList.get(snapshotPanelIndex);
-                        if (panel.getClass() == SnapshotPanel.class
-                           && stickTrigger != null) {
-                            List<BufferedImage> images
-                                = stickTrigger.cloneSnapshot();
-                            ((SnapshotPanel) panel).addImages(images);
-                        }
-                    }
                     cardLayout.show(mainPanel, keyPress);
                 }
             } catch (InterruptedException e) {
@@ -149,16 +149,18 @@ public class MultiPanelController implements KeyListener {
         /**
          * The panels draw the snpahost image.
          */
-        private final List<BasePanel> currentPanel = new LinkedList();
+        private final List<BasePanel> currentPanel = new LinkedList<>();
         /**
          * Constructs a snapshot panel with default row number and
          * column number from the {@link NProperties}.
          * @param properties NProperties
          */
         SnapshotPanel(final NProperties properties) {
-            columnNumber = (int) Math.pow(properties.getDouble(
-                    NConstants.SNAPSHOT_SCALE), -1);
+            columnNumber = Math.max((int) Math.pow(properties.getDouble(
+                    NConstants.SNAPSHOT_SCALE), -1), 1);
             rowNnumber = columnNumber;
+            LOG.info("columnNumber:" + columnNumber);
+            LOG.info("rowNnumber:" + rowNnumber);
             initImage = Painter.getFillColor(
                 properties.getInteger(NConstants.GENERATED_IMAGE_WIDTH),
                 properties.getInteger(NConstants.GENERATED_IMAGE_HEIGHT),
@@ -174,21 +176,17 @@ public class MultiPanelController implements KeyListener {
         }
         /**
          * Adds the images.
+         * If the image number is less than panel number, the remaining
+         * panel will be draw with init image.
          * @param images The images
          */
         void addImages(final List<BufferedImage> images) {
             synchronized (currentPanel) {
-                for (int x = 0; x != columnNumber; ++x) {
-                    for (int y = 0; y != rowNnumber; ++y) {
-                        final int index = x * columnNumber + y;
-                        if (index >= currentPanel.size()) {
-                            return;
-                        }
-                        if (index >= images.size()) {
-                            currentPanel.get(index).write(initImage);
-                        } else {
-                            currentPanel.get(index).write(images.get(index));
-                        }
+                for (int index = 0; index != currentPanel.size(); ++index) {
+                    if (index >= images.size()) {
+                        currentPanel.get(index).write(initImage);
+                    } else {
+                        currentPanel.get(index).write(images.get(index));
                     }
                 }
             }
