@@ -97,6 +97,8 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
     
     private final BlockingQueue<Object> outsideNotify = new ArrayBlockingQueue<>(1);
     private final BlockingQueue<Object> insideNotify = new ArrayBlockingQueue<>(1);
+    private final boolean enableScalable;
+    private final boolean enableSelectable;
     /**
      * Constructs a strick trigger with specified properties.
      * @param properties NProperties
@@ -111,6 +113,8 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
                 = properties.getDouble(NConstants.STICK_MIN_INIT_VALUE);
         final double stickMaxInitValue
                 = properties.getDouble(NConstants.STICK_MAX_INIT_VALUE);
+        enableScalable = properties.getBoolean(NConstants.ENABLE_SCALABLE_SNAPSHOT);
+        enableSelectable = properties.getBoolean(NConstants.ENABLE_SELECTABLE_SNAPSHOT);
         verticalDetector = new DirectionDetector(
                 new Pair<>(stickMinValue, stickMaxValue),
                 new Pair<>(stickMinInitValue, stickMaxInitValue));
@@ -179,11 +183,21 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
             if (snapshots.isEmpty()) {
                 return Optional.of(image);
             }
-            snapshot = snapshots.get(snapshotIndex.get() % snapshots.size());
+            if (enableSelectable) {
+                snapshot = snapshots.get(snapshotIndex.get() % snapshots.size());
+            } else {
+                snapshot = snapshots.get(snapshots.size() - 1);
+            }
         } finally {
             lock.readLock().unlock();
         }
-        switch (SnapshotMode.values()[modeIndex.get()]) {
+        SnapshotMode currentMode;
+        if (enableScalable) {
+            currentMode = SnapshotMode.values()[modeIndex.get()];
+        } else {
+            currentMode = SnapshotMode.NORMAL;
+        }
+        switch (currentMode) {
             case FULL:
                 return Optional.of(snapshot);
             case NORMAL:
@@ -211,13 +225,6 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
             switch (horizontalDetector.detect(component.getPollData())) {
                 case LARGER:
                     snapshotIndex.incrementAndGet();
-//                    snapshotIndex.accumulateAndGet(snapshotIndex.get() + 1,
-//                        (int a, int b) -> {
-//                            if (b >= snapshots.size()) {
-//                                return a;
-//                            }
-//                            return b;
-//                    });
                     break;
                 case SMALLER:
                     snapshotIndex.accumulateAndGet(snapshotIndex.get() - 1,

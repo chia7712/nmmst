@@ -170,6 +170,12 @@ public final class NConstants {
      */
     public static final String STICK_MAX_INIT_VALUE = "stick.max.init.value";
     /**
+     * Enables the scalable snapshot.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String ENABLE_SCALABLE_SNAPSHOT = "enable.scalable.snapshot";
+    public static final String ENABLE_SELECTABLE_SNAPSHOT = "enable.selectable.snapshot";
+    /**
      * The valid init min value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */

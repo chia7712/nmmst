@@ -223,6 +223,8 @@ public class NProperties {
      */
     public static final long WHEEL_ENABLE_MIN_MICROTIME_PERIOD
         = 4 * 1000 * 1000;
+    private static final boolean ENABLE_SCALABLE_SNAPSHOT = false;
+    private static final boolean ENABLE_SELECTABLE_SNAPSHOT = true;
     /**
      * The valid max value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
@@ -590,6 +592,10 @@ public class NProperties {
             moviesToString(HIGHLIGHT_PATH));
         setIfAbsent(NConstants.HIGHLIGHT_DESCRIPTION,
             stringsToString(HIGHLIGHT_DESCRIPTION));
+        setIfAbsent(NConstants.ENABLE_SCALABLE_SNAPSHOT,
+            String.valueOf(ENABLE_SCALABLE_SNAPSHOT));
+        setIfAbsent(NConstants.ENABLE_SELECTABLE_SNAPSHOT,
+            String.valueOf(ENABLE_SELECTABLE_SNAPSHOT));
         save(file);
     }
     /**
