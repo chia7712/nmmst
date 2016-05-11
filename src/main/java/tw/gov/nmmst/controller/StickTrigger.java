@@ -2,16 +2,27 @@ package tw.gov.nmmst.controller;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiConsumer;
 import javafx.util.Pair;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
@@ -22,6 +33,7 @@ import tw.gov.nmmst.NConstants;
 import tw.gov.nmmst.NProperties;
 import tw.gov.nmmst.NodeInformation;
 import tw.gov.nmmst.threads.Closer;
+import tw.gov.nmmst.threads.Taskable;
 import tw.gov.nmmst.utils.Painter;
 import tw.gov.nmmst.utils.RequestUtil;
 import tw.gov.nmmst.utils.SerialStream;
@@ -33,11 +45,6 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
      * Log.
      */
     private static final Log LOG = LogFactory.getLog(StickTrigger.class);
-    /**
-     * The period to refresh the selected string.
-     * Default value is one second.
-     */
-    private static final long REFRESH_PERIOD = 1000;
     /**
      * Supplies three modes for displaying the current snapshot.
      */
@@ -80,15 +87,6 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
      */
     private final double snapshotScale;
     /**
-     * The index of current snapshot.
-     */
-    private final AtomicInteger snapshotIndex = new AtomicInteger();
-    /**
-     * The index of current mode.
-     */
-    private final AtomicInteger modeIndex
-            = new AtomicInteger(SnapshotMode.NORMAL.ordinal());
-    /**
      * Press flag.
      */
     private final AtomicBoolean pressed = new AtomicBoolean();
@@ -97,35 +95,42 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
     
     private final BlockingQueue<Object> outsideNotify = new ArrayBlockingQueue<>(1);
     private final BlockingQueue<Object> insideNotify = new ArrayBlockingQueue<>(1);
+    private final CircularNumber horizontalIndex = new CircularNumber();
+    private final CircularNumber verticalIndex = new CircularNumber(SnapshotMode.NORMAL.ordinal());
     private final boolean enableScalable;
     private final boolean enableSelectable;
+    private final ArgumentFileRunnable verticalFile;
+
     /**
      * Constructs a strick trigger with specified properties.
      * @param properties NProperties
      * @param closer Close the errand
      */
     public StickTrigger(final NProperties properties, final Closer closer) {
-        final double stickMinValue
-                = properties.getDouble(NConstants.STICK_MIN_VALUE);
-        final double stickMaxValue
-                = properties.getDouble(NConstants.STICK_MAX_VALUE);
-        final double stickMinInitValue
-                = properties.getDouble(NConstants.STICK_MIN_INIT_VALUE);
-        final double stickMaxInitValue
-                = properties.getDouble(NConstants.STICK_MAX_INIT_VALUE);
         enableScalable = properties.getBoolean(NConstants.ENABLE_SCALABLE_SNAPSHOT);
         enableSelectable = properties.getBoolean(NConstants.ENABLE_SELECTABLE_SNAPSHOT);
         verticalDetector = new DirectionDetector(
-                new Pair<>(stickMinValue, stickMaxValue),
-                new Pair<>(stickMinInitValue, stickMaxInitValue));
+                new Pair<>(properties.getDouble(NConstants.STICK_VERTICAL_MIN_VALUE),
+                        properties.getDouble(NConstants.STICK_VERTICAL_MAX_VALUE)),
+                new Pair<>(properties.getDouble(NConstants.STICK_VERTICAL_MIN_INIT_VALUE),
+                        properties.getDouble(NConstants.STICK_VERTICAL_MAX_INIT_VALUE)),
+                properties.getInteger(NConstants.STICK_VERTICAL_SAMPLE));
         horizontalDetector = new DirectionDetector(
-                new Pair<>(stickMinValue, stickMaxValue),
-                new Pair<>(stickMinInitValue, stickMaxInitValue));
+                new Pair<>(properties.getDouble(NConstants.STICK_HORIZONTAL_MIN_VALUE),
+                        properties.getDouble(NConstants.STICK_HORIZONTAL_MAX_VALUE)),
+                new Pair<>(properties.getDouble(NConstants.STICK_HORIZONTAL_MIN_INIT_VALUE),
+                        properties.getDouble(NConstants.STICK_HORIZONTAL_MAX_INIT_VALUE)),
+                properties.getInteger(NConstants.STICK_HORIZONTAL_SAMPLE));
+        verticalFile = create(verticalDetector);
         stickPressValue = properties.getDouble(NConstants.STICK_PRESS_VALUE);
         snapshotScale = properties.getDouble(NConstants.SNAPSHOT_SCALE);
         snapshotLimit = (int) Math.pow(Math.pow(snapshotScale, -1), 2);
         LOG.info("The snapshot limit is " + snapshotLimit);
         snapshots = new ArrayList<>(snapshotLimit);
+        if (verticalFile != null) {
+            closer.invokeNewThread(verticalFile);
+        }
+
         closer.invokeNewThread(() -> {
             try {
                 insideNotify.take();
@@ -134,6 +139,25 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
                 LOG.debug(e);
             }
         });
+    }
+    private static ArgumentFileRunnable create(DirectionDetector dd) {
+        try {
+            LOG.info("Reconfigurable on D:, key, vp");
+            return new ArgumentFileRunnable(Paths.get("D:\\"), "key", new File("D:\\vp"), (k ,v) -> {
+                if (k.equalsIgnoreCase(NConstants.STICK_VERTICAL_MIN_VALUE)) {
+                    dd.setMinValue(v);
+                } else if (k.equalsIgnoreCase(NConstants.STICK_VERTICAL_MAX_VALUE)) {
+                    dd.setMaxValue(v);
+                } else if (k.equalsIgnoreCase(NConstants.STICK_VERTICAL_MIN_INIT_VALUE)) {
+                    dd.setMinInitValue(v);
+                } else if (k.equalsIgnoreCase(NConstants.STICK_VERTICAL_MAX_INIT_VALUE)) {
+                    dd.setMaxInitValue(v);
+                }
+            });
+        } catch (IOException e) {
+            LOG.error(e);
+            return null;
+        }
     }
     public final void waitForChange() throws InterruptedException {
         outsideNotify.take();
@@ -169,7 +193,7 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
                     snapshots.remove(0);
                 }
                 snapshots.add(Painter.process(image, Painter.getCopyPainter()));
-                snapshotIndex.set(snapshots.size() - 1);
+                horizontalIndex.set(snapshots.size() - 1);
                 Object obj = new Object();
                 outsideNotify.offer(obj);
                 insideNotify.offer(obj);
@@ -184,7 +208,7 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
                 return Optional.of(image);
             }
             if (enableSelectable) {
-                snapshot = snapshots.get(snapshotIndex.get() % snapshots.size());
+                snapshot = snapshots.get(horizontalIndex.get(snapshots.size()));
             } else {
                 snapshot = snapshots.get(snapshots.size() - 1);
             }
@@ -193,7 +217,7 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
         }
         SnapshotMode currentMode;
         if (enableScalable) {
-            currentMode = SnapshotMode.values()[modeIndex.get()];
+            currentMode = SnapshotMode.values()[verticalIndex.get(SnapshotMode.values().length)];
         } else {
             currentMode = SnapshotMode.NORMAL;
         }
@@ -221,46 +245,30 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
     }
     @Override
     public final void triggerOff(final Component component) {
-        if (component.getName().contains("X")) {
-            switch (horizontalDetector.detect(component.getPollData())) {
+        final float data = component.getPollData();
+        final String name = component.getName();
+        if (name.contains("X")) {
+            switch (horizontalDetector.detect(data)) {
                 case LARGER:
-                    snapshotIndex.incrementAndGet();
+                    horizontalIndex.next();
                     break;
                 case SMALLER:
-                    snapshotIndex.accumulateAndGet(snapshotIndex.get() - 1,
-                        (int a, int b) -> {
-                        if (b < 0) {
-                            return a;
-                        }
-                        return b;
-                    });
+                    horizontalIndex.back();
                     break;
                 default:
             }
-        } else if (component.getName().contains("Y")) {
-            switch (verticalDetector.detect(component.getPollData())) {
+        } else if (name.contains("Y")) {
+            switch (verticalDetector.detect(data)) {
                 case LARGER:
-                    modeIndex.accumulateAndGet(modeIndex.get() + 1,
-                        (int a, int b) -> {
-                        if (b >= SnapshotMode.values().length) {
-                            return a;
-                        }
-                        return b;
-                    });
+                    verticalIndex.next();
                     break;
                 case SMALLER:
-                    modeIndex.accumulateAndGet(modeIndex.get() - 1,
-                        (int a, int b) -> {
-                        if (b < 0) {
-                            return a;
-                        }
-                        return b;
-                    });
+                    verticalIndex.back();
                     break;
                 default:
             }
-        } else if (component.getName().contains("s")) {
-            pressed.set(component.getPollData() == stickPressValue);
+        } else if (name.contains("s")) {
+            pressed.set(data == stickPressValue);
         }
     }
     @Override
@@ -285,6 +293,63 @@ public class StickTrigger implements ControllerFactory.Trigger, FrameProcessor {
             }
         } catch (IOException | InterruptedException e) {
             LOG.error(e);
+        }
+    }
+    private static class ArgumentFileRunnable implements Taskable {
+        private final WatchService watcher = FileSystems.getDefault().newWatchService();
+        private final Path watchedDir;
+        private final String keyFileName;
+        private final File contentFile;
+        private final BiConsumer<String, Double> consumer;
+        ArgumentFileRunnable(final Path watchedDir, final String keyFileName,
+            final File contentFile, final BiConsumer<String, Double> consumer) throws IOException {
+            this.watchedDir = watchedDir;
+            watchedDir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+            this.keyFileName = keyFileName;
+            this.contentFile = contentFile;
+            this.consumer = consumer;
+        }
+        @Override
+        public void close() throws IOException {
+            watcher.close();
+        }
+        @Override
+        public void work() throws Exception {
+            WatchKey key = watcher.take();
+            Optional<Path> triggerFile = key.pollEvents().stream()
+                    .filter(v -> v.kind() == ENTRY_CREATE)
+                    .filter(v -> v.context() instanceof Path)
+                    .map(v -> (Path) v.context())
+                    .filter(v -> v.getFileName().toString().equals(keyFileName))
+                    .findFirst();
+
+            boolean reset = key.reset();
+            if (!reset) {
+                return;
+            }
+            if (!triggerFile.isPresent() || !contentFile.exists()) {
+                return;
+            }
+            try (BufferedReader reader = new BufferedReader(new FileReader(contentFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] args = line.split("=");
+                    if (args.length != 2) {
+                        continue;
+                    }
+                    try {
+                        double v = Double.valueOf(args[1]);
+                        consumer.accept(args[0], v);
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            } catch (IOException e) {
+                LOG.error(e);
+            }
+            File f = new File(watchedDir.toString(), triggerFile.get().toString());
+            if (f.exists() && f.isFile()) {
+                f.delete();
+            }
         }
     }
 }

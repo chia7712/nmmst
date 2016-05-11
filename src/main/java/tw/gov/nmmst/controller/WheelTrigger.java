@@ -133,12 +133,10 @@ public final class WheelTrigger implements ControllerFactory.Trigger, FrameProce
                 final int currentIndex = buffer.getCurrentMovieIndex();
                 final int lastIndex = buffer.getLastMovieIndex();
                 if (currentIndex != lastIndex) {
-                    LOG.debug("current index does not match last index");
                     return;
                 }
                 Pair<Integer, Integer> selectableIndexes = selectable.get(currentIndex);
                 if (selectableIndexes == null) {
-                    LOG.debug("current index does not have selectable index");
                     return;
                 }
                 final long currentTimestamp = buffer.getCurrentTimestamp();

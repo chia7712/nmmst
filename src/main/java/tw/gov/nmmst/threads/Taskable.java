@@ -1,14 +1,16 @@
 package tw.gov.nmmst.threads;
 
 import java.io.Closeable;
+import java.io.IOException;
 /**
  * A thread interface for doing the loop work.
  */
 public interface Taskable extends Closeable {
     /**
      * Periodically work.
+     * @throws java.lang.Exception
      */
-    void work();
+    void work() throws Exception;
     /**
      * Initialize this thread.
      */
@@ -20,6 +22,6 @@ public interface Taskable extends Closeable {
     default void clear() {
     }
     @Override
-    default void close() {
+    default void close() throws IOException {
     }
 }

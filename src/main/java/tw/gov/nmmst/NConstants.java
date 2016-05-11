@@ -158,28 +158,51 @@ public final class NConstants {
      * The valid max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    public static final String STICK_MAX_VALUE = "stick.max.value";
+    public static final String STICK_VERTICAL_MAX_VALUE = "stick.vertical.max.value";
     /**
      * The valid min value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    public static final String STICK_MIN_VALUE = "stick.min.value";
+    public static final String STICK_VERTICAL_MIN_VALUE = "stick.vertical.min.value";
     /**
      * The valid init max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    public static final String STICK_MAX_INIT_VALUE = "stick.max.init.value";
+    public static final String STICK_VERTICAL_MAX_INIT_VALUE = "stick.vertical.max.init.value";
+    
+    public static final String STICK_VERTICAL_SAMPLE = "stick.vertical.sample";
+    /**
+     * The valid init min value for shifting stick.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String STICK_VERTICAL_MIN_INIT_VALUE = "stick.vertical.min.init.value";
+    /**
+     * The valid max value for shifting stick.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String STICK_HORIZONTAL_MAX_VALUE = "stick.horizontal.max.value";
+    /**
+     * The valid min value for shifting stick.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String STICK_HORIZONTAL_MIN_VALUE = "stick.horizontal.min.value";
+    /**
+     * The valid init max value for shifting stick.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String STICK_HORIZONTAL_MAX_INIT_VALUE = "stick.horizontal.max.init.value";
+    /**
+     * The valid init min value for shifting stick.
+     * @see net.nmmst.controller.StickTrigger
+     */
+    public static final String STICK_HORIZONTAL_MIN_INIT_VALUE = "stick.horizontal.min.init.value";
+    public static final String STICK_HORIZONTAL_SAMPLE = "stick.horizontal.sample";
     /**
      * Enables the scalable snapshot.
      * @see net.nmmst.controller.StickTrigger
      */
     public static final String ENABLE_SCALABLE_SNAPSHOT = "enable.scalable.snapshot";
     public static final String ENABLE_SELECTABLE_SNAPSHOT = "enable.selectable.snapshot";
-    /**
-     * The valid init min value for shifting stick.
-     * @see net.nmmst.controller.StickTrigger
-     */
-    public static final String STICK_MIN_INIT_VALUE = "stick.min.init.value";
     /**
      * The valid value for pressing stick.
      * @see net.nmmst.controller.StickTrigger

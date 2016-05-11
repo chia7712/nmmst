@@ -1,5 +1,6 @@
 package tw.gov.nmmst.threads;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,7 +52,7 @@ public class AtomicCloser implements Closer {
                         timer.sleep();
                     }
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 LOG.error(e);
             } finally {
                 task.clear();
@@ -63,7 +64,13 @@ public class AtomicCloser implements Closer {
     public final void close() {
         if (closed.compareAndSet(false, true)) {
             service.shutdownNow();
-            tasks.stream().forEach(task -> task.close());
+            tasks.stream().forEach(task -> {
+                try {
+                    task.close();
+                } catch (IOException e) {
+                    LOG.error(e);
+                }
+            });
         }
     }
     @Override

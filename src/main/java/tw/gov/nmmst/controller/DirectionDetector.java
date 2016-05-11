@@ -1,5 +1,6 @@
 package tw.gov.nmmst.controller;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import javafx.util.Pair;
 
 /**
@@ -32,23 +33,25 @@ public class DirectionDetector {
     /**
      * Max threshold.
      */
-    private final double maxValue;
+    private double maxValue;
     /**
      * Min threshold.
      */
-    private final double minValue;
+    private double minValue;
     /**
      * Max init value.
      */
-    private final double maxInit;
+    private double maxInit;
     /**
      * Min init value.
      */
-    private final double minInit;
+    private double minInit;
     /**
      * Initialized flag.
      */
     private boolean initialized = true;
+    private int sampleFreq;
+    private final AtomicInteger actionCount = new AtomicInteger(0);
     /**
      * A lock for synchronizing the direction.
      */
@@ -68,6 +71,50 @@ public class DirectionDetector {
                             initLimit.getValue());
         minInit = Math.min(initLimit.getKey(),
                             initLimit.getValue());
+        sampleFreq = 1;
+    }
+    /**
+     * A detector with specified thresholds.
+     * @param directionLimit Max and min threshold
+     * @param initLimit Intial limit
+     * @param sampleFreq
+     */
+    public DirectionDetector(final Pair<Double, Double> directionLimit,
+                           final Pair<Double, Double> initLimit, final int sampleFreq) {
+        maxValue = Math.max(directionLimit.getKey(),
+                            directionLimit.getValue());
+        minValue = Math.min(directionLimit.getKey(),
+                            directionLimit.getValue());
+        maxInit = Math.max(initLimit.getKey(),
+                            initLimit.getValue());
+        minInit = Math.min(initLimit.getKey(),
+                            initLimit.getValue());
+        this.sampleFreq = sampleFreq;
+    }
+    public void setSampleFreq(final int freq) {
+        synchronized (lock) {
+            sampleFreq = freq;
+        }
+    }
+    public void setMinInitValue(final double value) {
+        synchronized (lock) {
+            minInit = value;
+        }
+    }
+    public void setMaxInitValue(final double value) {
+        synchronized (lock) {
+            maxInit = value;
+        }
+    }
+    public void setMinValue(final double value) {
+        synchronized (lock) {
+            minValue = value;
+        }
+    }
+    public void setMaxValue(final double value) {
+        synchronized (lock) {
+            maxValue = value;
+        }
     }
     /**
      * Detects current trend.
@@ -75,6 +122,9 @@ public class DirectionDetector {
      * @return The trend
      */
     public final Trend detect(final double value) {
+        if (actionCount.getAndIncrement() % sampleFreq != 0) {
+            return Trend.NONE;
+        }
         synchronized (lock) {
             if (initialized && value >= maxValue) {
                 initialized = false;

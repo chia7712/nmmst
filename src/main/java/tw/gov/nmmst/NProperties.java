@@ -223,8 +223,9 @@ public class NProperties {
      */
     public static final long WHEEL_ENABLE_MIN_MICROTIME_PERIOD
         = 4 * 1000 * 1000;
-    private static final boolean ENABLE_SCALABLE_SNAPSHOT = false;
+    private static final boolean ENABLE_SCALABLE_SNAPSHOT = true;
     private static final boolean ENABLE_SELECTABLE_SNAPSHOT = true;
+    
     /**
      * The valid max value for shifting wheel.
      * @see net.nmmst.controller.WheelTrigger
@@ -253,22 +254,28 @@ public class NProperties {
      * The valid max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    private static final double STICK_MAX_VALUE = 1.0f;
+    private static final double STICK_HORIZONTAL_MAX_VALUE = 1.0f;
+    private static final int STICK_HORIZONTAL_SAMPLE = 1;
     /**
      * The valid min value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    private static final double STICK_MIN_VALUE = -1.0f;
+    private static final double STICK_HORIZONTAL_MIN_VALUE = -1.0f;
+    private static final int STICK_VERTICAL_SAMPLE = 2;
+    private static final double STICK_VERTICAL_MAX_INIT_VALUE = 0.2;
+    private static final double STICK_VERTICAL_MIN_INIT_VALUE = -0.2;
+    private static final double STICK_VERTICAL_MAX_VALUE = 0.45;
+    private static final double STICK_VERTICAL_MIN_VALUE = -0.82;
     /**
      * The valid init max value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    private static final double STICK_MAX_INIT_VALUE = 0.1;
+    private static final double STICK_HORIZONTAL_MAX_INIT_VALUE = 0.1;
     /**
      * The valid init min value for shifting stick.
      * @see net.nmmst.controller.StickTrigger
      */
-    private static final double STICK_MIN_INIT_VALUE = -0.1;
+    private static final double STICK_HORIZONTAL_MIN_INIT_VALUE = -0.1;
     /**
      * The valid value for pressing stick.
      * @see net.nmmst.controller.StickTrigger
@@ -552,14 +559,26 @@ public class NProperties {
             String.valueOf(WHEEL_MIN_INIT_VALUE));
         setIfAbsent(NConstants.STICK_ENABLE,
             String.valueOf(STICK_ENABLE));
-        setIfAbsent(NConstants.STICK_MAX_VALUE,
-            String.valueOf(STICK_MAX_VALUE));
-        setIfAbsent(NConstants.STICK_MIN_VALUE,
-            String.valueOf(STICK_MIN_VALUE));
-        setIfAbsent(NConstants.STICK_MAX_INIT_VALUE,
-            String.valueOf(STICK_MAX_INIT_VALUE));
-        setIfAbsent(NConstants.STICK_MIN_INIT_VALUE,
-            String.valueOf(STICK_MIN_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_HORIZONTAL_MAX_INIT_VALUE,
+            String.valueOf(STICK_HORIZONTAL_MAX_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_HORIZONTAL_MIN_INIT_VALUE,
+            String.valueOf(STICK_HORIZONTAL_MIN_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_HORIZONTAL_MAX_VALUE,
+            String.valueOf(STICK_HORIZONTAL_MAX_VALUE));
+        setIfAbsent(NConstants.STICK_HORIZONTAL_MIN_VALUE,
+            String.valueOf(STICK_HORIZONTAL_MIN_VALUE));
+        setIfAbsent(NConstants.STICK_HORIZONTAL_SAMPLE,
+            String.valueOf(STICK_HORIZONTAL_SAMPLE));
+        setIfAbsent(NConstants.STICK_VERTICAL_MAX_INIT_VALUE,
+            String.valueOf(STICK_VERTICAL_MAX_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_VERTICAL_MIN_INIT_VALUE,
+            String.valueOf(STICK_VERTICAL_MIN_INIT_VALUE));
+        setIfAbsent(NConstants.STICK_VERTICAL_MAX_VALUE,
+            String.valueOf(STICK_VERTICAL_MAX_VALUE));
+        setIfAbsent(NConstants.STICK_VERTICAL_MIN_VALUE,
+            String.valueOf(STICK_VERTICAL_MIN_VALUE));
+        setIfAbsent(NConstants.STICK_VERTICAL_SAMPLE,
+            String.valueOf(STICK_VERTICAL_SAMPLE));
         setIfAbsent(
             NConstants.STICK_PRESS_VALUE,
             String.valueOf(STICK_PRESS_VALUE));

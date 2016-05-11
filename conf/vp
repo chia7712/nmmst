@@ -1,0 +1,4 @@
+stick.vertical.min.value=-1.0
+stick.vertical.max.value=1.0
+stick.vertical.min.init.value=-0.1
+stick.vertical.max.init.value=0.1
