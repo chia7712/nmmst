@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>tw.gov</groupId>
   <artifactId>nmmst</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -92,7 +92,6 @@
         <configuration>
           <!--<configLocation>${basedir}/src/main/resources/nmmst_checks.xml</configLocation>-->
           <configLocation>google_checks.xml</configLocation>
-          <suppressionsLocation>${basedir}/src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
         </configuration>
       </plugin>
     </plugins>  
