@@ -3,13 +3,13 @@
     "-//Puppy Crawl//DTD Suppressions 1.0//EN"
     "http://www.puppycrawl.com/dtds/suppressions_1_0.dtd">
 <suppressions>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.controller.DioBdaq"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.WolUtil"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.ProjectorUtil"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.ProcessorFactory"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.LinearProcessor"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.NProperties"/>
-      <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.Painter"/>
-      <suppress checks="." files="tw.gov.nmmst.tools.*"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.controller.DioBdaq"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.WolUtil"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.ProjectorUtil"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.ProcessorFactory"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.processor.LinearProcessor"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.NProperties"/>
+  <suppress checks="MagicNumberCheck" files="tw.gov.nmmst.utils.Painter"/>
+  <suppress checks="." files="tw.gov.nmmst.tools.*"/>
       
 </suppressions>
